@@ -9,8 +9,11 @@ import AddIcon from "../assets/icons/addPlus.svg";
 import BurgerIcon from "../assets/icons/hamburger.svg";
 import content from "~/assets/testContent";
 import MainItem from "~/components/MainItem";
+import { useRouter } from "next/router";
 
 export default function Home() {
+  const router = useRouter();
+
   return (
     <>
       <TopPannel>
@@ -22,6 +25,7 @@ export default function Home() {
       <MainContent>
         {content.map((item, index) => (
           <MainItem
+            onClick={() => router.push("/clli0trg90002d7w8ibuhws4x/expenses")}
             key={index}
             name={item.name}
             description={item.description}

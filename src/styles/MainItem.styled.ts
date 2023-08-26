@@ -1,6 +1,8 @@
 import styled from "styled-components";
 
 export const MainItemDiv = styled.div`
+  display: flex;
+  justify-content: space-between;
   padding: 5px 20px;
 
   h2 {
