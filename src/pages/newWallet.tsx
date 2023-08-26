@@ -16,7 +16,7 @@ export default function MainItemPage() {
 
   return (
     <>
-      <h1>Feed</h1>
+      <h1>NewWallet</h1>
     </>
   );
 }
