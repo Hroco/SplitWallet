@@ -7,7 +7,10 @@ await import("./src/env.mjs");
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
-
+  images: { domains: ["cdn.discordapp.com", "platform-lookaside.fbsbx.com", "st2.depositphotos.com"] },
+  compiler: {
+    styledComponents: true,
+  },
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.
    *
