@@ -32,7 +32,7 @@ export default function Home() {
           />
         ))}
       </MainContent>
-      <AddButton>
+      <AddButton onClick={() => router.push("/newWallet")}>
         <Image priority src={AddIcon} alt="add icon" />
       </AddButton>
     </>
