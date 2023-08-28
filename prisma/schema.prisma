@@ -18,19 +18,32 @@ model Wallets {
     id          String       @id @default(cuid())
     name        String
     description String
-    curency     String
+    currency    String
     category    String
     createdAt   DateTime     @default(now())
     updatedAt   DateTime     @updatedAt
-    users       User[]
+    walletUsers WalletUser[]
     walletItems WalletItem[]
+}
+
+model WalletUser {
+    id           String         @id @default(cuid())
+    name         String
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    users        User?          @relation(fields: [userId], references: [id])
+    WalletItem   WalletItem[]
+    RecieverData RecieverData[]
+    Wallets      Wallets        @relation(fields: [walletsId], references: [id])
+    walletsId    String
+    userId       String?
 }
 
 model WalletItem {
     id        String         @id @default(cuid())
     name      String
     tags      String[]
-    payer     User           @relation(fields: [userId], references: [id])
+    payer     WalletUser     @relation(fields: [userId], references: [id])
     amount    Float
     date      DateTime
     recievers RecieverData[]
@@ -43,7 +56,7 @@ model WalletItem {
 
 model RecieverData {
     id           String     @id @default(cuid())
-    reciever     User       @relation(fields: [userId], references: [id])
+    reciever     WalletUser @relation(fields: [userId], references: [id])
     amount       Float
     createdAt    DateTime   @default(now())
     updatedAt    DateTime   @updatedAt
@@ -80,16 +93,14 @@ model Session {
 }
 
 model User {
-    id            String         @id @default(cuid())
+    id            String       @id @default(cuid())
     name          String?
-    email         String?        @unique
+    email         String       @unique
     emailVerified DateTime?
     image         String?
     accounts      Account[]
     sessions      Session[]
-    Wallets       Wallets[]
-    WalletItem    WalletItem[]
-    RecieverData  RecieverData[]
+    WalletUser    WalletUser[]
 }
 
 model VerificationToken {

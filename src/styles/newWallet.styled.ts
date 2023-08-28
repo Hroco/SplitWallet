@@ -70,3 +70,28 @@ export const BurgerButton = styled.button`
   border: none;
   cursor: pointer;
 `;
+
+interface CategoryButtonProps {
+  clicked?: boolean;
+}
+
+export const CategoryButton = styled.button<CategoryButtonProps>`
+  background-color: ${(props) =>
+    props.clicked
+      ? `${props.theme.colors.backgroundColorOrange}`
+      : `${props.theme.colors.backgroundColorDarkGrey}`};
+
+  color: ${(props) =>
+    props.clicked
+      ? `${props.theme.colors.backgroundColorDarkGrey}`
+      : `${props.theme.colors.backgroundColorOrange}`};
+
+  border: 1px solid
+    ${(props) =>
+      props.clicked
+        ? `${props.theme.colors.backgroundColorDarkGrey}`
+        : `${props.theme.colors.backgroundColorOrange}`};
+  border-radius: 5px;
+  padding: 10px 20px;
+  margin: 5px 10px;
+`;

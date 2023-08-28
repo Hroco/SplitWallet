@@ -16,6 +16,10 @@ export default function MainItem({
   date,
   onClick,
 }: MainItemProps) {
+  // console.log(name, description, price, date);
+
+  if (description == "") description = "No description";
+
   return (
     <>
       <MainItemDiv onClick={onClick}>

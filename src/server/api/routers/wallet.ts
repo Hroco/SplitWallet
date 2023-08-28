@@ -7,19 +7,79 @@ import {
 
 const WalletSchema = z.object({
   name: z.string(),
-  description: z.string().optional(),
-  curency: z.string(),
+  description: z.string(),
+  currency: z.string(),
   category: z.string(),
-  emailList: z.array(z.string()),
+  userList: z.array(
+    z.object({ name: z.string(), email: z.string().optional() })
+  ),
 });
 
 export const walletRouter = createTRPCRouter({
+  getWalletsWithEmail: publicProcedure
+    .input(z.object({ email: z.string() }))
+    .query(async ({ input: { email }, ctx }) => {
+      console.log("getWalletsWithEmail", email);
+
+      const user = await ctx.prisma.user.findUnique({
+        where: { email: email },
+      });
+
+      if (!user) {
+        console.log("User not found");
+        return;
+      }
+
+      console.log("user.id", user.id);
+
+      // Find wallets associated with the user
+      const wallets = await ctx.prisma.wallets.findMany({
+        where: { walletUsers: { some: { userId: user.id } } },
+      });
+
+      console.log("wallets", wallets);
+
+      return { wallets };
+    }),
   addWallet: publicProcedure
     .input(WalletSchema)
     .mutation(async ({ input, ctx }) => {
-      console.log("addWallet");
+      console.log("addWallet", input);
 
-      const usersToConnect = input.emailList.map((email: string) => ({
+      const walletUsersToCreate = input.userList.map((userList) => {
+        console.log("userList", userList);
+
+        if (!userList.email) {
+          return {
+            name: userList.name,
+          };
+        }
+
+        return {
+          name: userList.name,
+          users: {
+            connect: {
+              email: userList.email,
+            },
+          },
+        };
+      });
+
+      console.log("walletUsersToCreate", walletUsersToCreate);
+
+      await ctx.prisma.wallets.create({
+        data: {
+          name: input.name,
+          description: input.description,
+          currency: input.currency,
+          category: input.category,
+          walletUsers: {
+            create: walletUsersToCreate,
+          },
+        },
+      });
+
+      /*const usersToConnect = input.emailList.map((email: string) => ({
         email: email,
       }));
 
@@ -27,12 +87,12 @@ export const walletRouter = createTRPCRouter({
         data: {
           name: input.name,
           description: input.description,
-          curency: input.curency,
+          currency: input.currency,
           category: input.category,
           users: {
             connect: usersToConnect,
           },
         },
-      });
+      });*/
     }),
 });
