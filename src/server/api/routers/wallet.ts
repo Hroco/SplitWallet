@@ -41,6 +41,27 @@ export const walletRouter = createTRPCRouter({
 
       return { wallets };
     }),
+  getWalletById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input: { id }, ctx }) => {
+      console.log("getWalletById", id);
+
+      const wallet = await ctx.prisma.wallets.findUnique({
+        where: { id: id },
+        include: {
+          walletUsers: true,
+        },
+      });
+
+      if (!wallet) {
+        console.log("Wallet not found");
+        return;
+      }
+
+      console.log("wallet", wallet);
+
+      return { wallet };
+    }),
   addWallet: publicProcedure
     .input(WalletSchema)
     .mutation(async ({ input, ctx }) => {

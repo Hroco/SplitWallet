@@ -17,11 +17,11 @@ import BackIcon from "../../assets/icons/back.svg";
 export default function MainItemPage() {
   const router = useRouter();
   console.log("router.query", router.query);
-  const { id } = router.query;
+  const { walletId } = router.query;
 
   useEffect(() => {
-    console.log("MainItemPage", id);
-  }, [id]);
+    console.log("MainItemPage", walletId);
+  }, [walletId]);
 
   if (!router.isReady) {
     return null;
@@ -55,7 +55,7 @@ export default function MainItemPage() {
           <p>MY TOTAL</p>
           <h2>267.35</h2>
         </div>
-        <AddButton>
+        <AddButton onClick={() => router.push(`/${walletId}/add`)}>
           <Image priority src={AddIcon} alt="add icon" />
         </AddButton>
         <div>
