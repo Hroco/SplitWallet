@@ -3,11 +3,11 @@ import { useRouter } from "next/router";
 
 export default function MainItemPage() {
   const router = useRouter();
-  console.log("router.query", router.query);
+  // console.log("router.query", router.query);
   const { id } = router.query;
 
   useEffect(() => {
-    console.log("MainItemPage", id);
+    // console.log("MainItemPage", id);
   }, [id]);
 
   if (!router.isReady) {

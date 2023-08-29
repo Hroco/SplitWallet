@@ -13,15 +13,24 @@ import {
 import AddIcon from "../../assets/icons/addPlus.svg";
 import BurgerIcon from "../../assets/icons/hamburger.svg";
 import BackIcon from "../../assets/icons/back.svg";
+import { api } from "~/utils/api";
 
 export default function MainItemPage() {
   const router = useRouter();
-  console.log("router.query", router.query);
   const { walletId } = router.query;
 
-  useEffect(() => {
-    console.log("MainItemPage", walletId);
-  }, [walletId]);
+  if (walletId == undefined) throw new Error("WalletId is undefined.");
+  if (typeof walletId != "string") throw new Error("WalletId is not string.");
+
+  const walletItemsFromServer = api.wallet.getWalletItemsByWalletId.useQuery(
+    { id: walletId },
+    {
+      enabled: true,
+    }
+  );
+  const walletItems = walletItemsFromServer.data?.walletItems;
+
+  console.log(walletItems);
 
   if (!router.isReady) {
     return null;
@@ -39,16 +48,17 @@ export default function MainItemPage() {
         </BurgerButton>
       </TopPannel>
       <MainContent>
-        {contentData.map((item, index) => (
-          <MainItem
-            onClick={() => router.push("/")}
-            key={index}
-            name={item.name}
-            description={item.description}
-            price={item.price}
-            date={item.date}
-          />
-        ))}
+        {walletItems &&
+          walletItems.map((walletItem, index) => (
+            <MainItem
+              onClick={() => router.push("/")}
+              key={index}
+              name={walletItem.name}
+              description={walletItem.payer.name}
+              price={walletItem.amount}
+              date={walletItem.date.toISOString()}
+            />
+          ))}
       </MainContent>
       <BottomPannel>
         <div>

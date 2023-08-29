@@ -37,12 +37,12 @@ export default function Home() {
   const router = useRouter();
   const editCutomerById = api.wallet.addWallet.useMutation({
     onSuccess: () => {
-      console.log("success");
+      // console.log("success");
     },
   });
 
   function handleAddWallet() {
-    console.log(participants);
+    // console.log(participants);
 
     const userList: z.infer<typeof UserListSchema> = participants.map(
       (name, index) => {
@@ -58,7 +58,7 @@ export default function Home() {
       }
     );
 
-    console.log(userList);
+    // console.log(userList);
     editCutomerById.mutate({
       name: title,
       description: decription,

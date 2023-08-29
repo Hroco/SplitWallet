@@ -23,7 +23,7 @@ export default function Home() {
   );
   const walletsList = userWalletsFromServer.data?.wallets;
 
-  console.log(walletsList);
+  // console.log(walletsList);
 
   return (
     <>

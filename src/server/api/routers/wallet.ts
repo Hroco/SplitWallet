@@ -15,36 +15,48 @@ const WalletSchema = z.object({
   ),
 });
 
+const WalletItemSchema = z.object({
+  walletId: z.string(),
+  name: z.string(),
+  amount: z.number(),
+  date: z.date(),
+  payer: z.string(),
+  tags: z.string().optional(),
+  recieversData: z.array(
+    z.object({ id: z.string(), cutFromAmount: z.number() })
+  ),
+});
+
 export const walletRouter = createTRPCRouter({
   getWalletsWithEmail: publicProcedure
     .input(z.object({ email: z.string() }))
     .query(async ({ input: { email }, ctx }) => {
-      console.log("getWalletsWithEmail", email);
+      // console.log("getWalletsWithEmail", email);
 
       const user = await ctx.prisma.user.findUnique({
         where: { email: email },
       });
 
       if (!user) {
-        console.log("User not found");
+        // console.log("User not found");
         return;
       }
 
-      console.log("user.id", user.id);
+      // console.log("user.id", user.id);
 
       // Find wallets associated with the user
       const wallets = await ctx.prisma.wallets.findMany({
         where: { walletUsers: { some: { userId: user.id } } },
       });
 
-      console.log("wallets", wallets);
+      // console.log("wallets", wallets);
 
       return { wallets };
     }),
   getWalletById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input: { id }, ctx }) => {
-      console.log("getWalletById", id);
+      // console.log("getWalletById", id);
 
       const wallet = await ctx.prisma.wallets.findUnique({
         where: { id: id },
@@ -54,21 +66,19 @@ export const walletRouter = createTRPCRouter({
       });
 
       if (!wallet) {
-        console.log("Wallet not found");
+        // console.log("Wallet not found");
         return;
       }
-
-      console.log("wallet", wallet);
 
       return { wallet };
     }),
   addWallet: publicProcedure
     .input(WalletSchema)
     .mutation(async ({ input, ctx }) => {
-      console.log("addWallet", input);
+      // console.log("addWallet", input);
 
       const walletUsersToCreate = input.userList.map((userList) => {
-        console.log("userList", userList);
+        // console.log("userList", userList);
 
         if (!userList.email) {
           return {
@@ -86,7 +96,7 @@ export const walletRouter = createTRPCRouter({
         };
       });
 
-      console.log("walletUsersToCreate", walletUsersToCreate);
+      // console.log("walletUsersToCreate", walletUsersToCreate);
 
       await ctx.prisma.wallets.create({
         data: {
@@ -115,5 +125,47 @@ export const walletRouter = createTRPCRouter({
           },
         },
       });*/
+    }),
+  addWalletItem: publicProcedure
+    .input(WalletItemSchema)
+    .mutation(async ({ input, ctx }) => {
+      console.log("addWalletItem", input);
+      const createdWalletItem = await ctx.prisma.walletItem.create({
+        data: {
+          name: input.name,
+          amount: input.amount,
+          date: input.date,
+          tags: input.tags ? input.tags.split(",") : [], // Assuming tags is a comma-separated string
+          payer: {
+            connect: { id: input.payer },
+          },
+          recievers: {
+            create: input.recieversData.map((receiver: any) => ({
+              amount: receiver.cutFromAmount,
+              reciever: {
+                connect: { id: receiver.id },
+              },
+            })),
+          },
+          Wallets: {
+            connect: { id: input.walletId },
+          },
+        },
+      });
+    }),
+  getWalletItemsByWalletId: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input: { id }, ctx }) => {
+      console.log("getWalletItemByWalletId", id);
+
+      // Find wallets associated with the user
+      const walletItems = await ctx.prisma.walletItem.findMany({
+        where: { walletsId: id },
+        include: {
+          payer: true,
+        },
+      });
+
+      return { walletItems };
     }),
 });
