@@ -15,6 +15,8 @@ export const TopPannel = styled.div`
 
 export const MainContent = styled.div`
   background-color: ${({ theme }) => theme.colors.backgroundColorLightGrey};
+  height: 100%;
+  overflow: scroll;
 `;
 
 export const AddButton = styled.button`
@@ -22,9 +24,9 @@ export const AddButton = styled.button`
   background-color: ${({ theme }) => theme.colors.backgroundColorOrange};
   height: 80px;
   width: 80px;
-  position: sticky;
+  position: absolute;
   bottom: 20px;
-  left: calc(100% - 100px);
+  right: 20px;
   outline: none;
   border: none;
 `;

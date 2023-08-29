@@ -41,6 +41,8 @@ export const BottomPannel = styled.div`
 
 export const MainContent = styled.div`
   background-color: ${({ theme }) => theme.colors.backgroundColorLightGrey};
+  height: 100%;
+  overflow: scroll;
 `;
 
 export const AddButton = styled.button`
@@ -56,7 +58,13 @@ export const AddButton = styled.button`
   border: none;
 `;
 
-export const BurgerButton = styled.button`
+interface BurgerButtonProps {
+  rotate?: string;
+}
+
+export const BurgerButton = styled.button<BurgerButtonProps>`
+  display: flex;
+  align-items: center;
   border-radius: 50%;
   background-color: ${({ theme }) => theme.colors.backgroundColorDarkGrey};
   height: 50px;
@@ -64,4 +72,12 @@ export const BurgerButton = styled.button`
   outline: none;
   border: none;
   cursor: pointer;
+  color: ${({ theme }) => theme.colors.mainFontColor};
+  text-align: center;
+
+  img {
+    transform: rotate(
+      ${(props) => (props.rotate ? `${props.rotate}deg` : "0deg")}
+    );
+  }
 `;

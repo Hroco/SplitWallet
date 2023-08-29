@@ -51,7 +51,7 @@ export default function MainItemPage() {
         {walletItems &&
           walletItems.map((walletItem, index) => (
             <MainItem
-              onClick={() => router.push("/")}
+              onClick={() => router.push(`/${walletId}/${walletItem.id}/open`)}
               key={index}
               name={walletItem.name}
               description={walletItem.payer.name}

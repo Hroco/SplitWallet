@@ -67,7 +67,7 @@ export default function Home() {
       userList: userList,
     });
 
-    /*router.push("/");*/
+    router.push("/");
   }
 
   function getName(i: number): string {
