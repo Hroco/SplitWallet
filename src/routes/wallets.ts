@@ -161,9 +161,9 @@ router.post("/addWallet", async (req: Request, res: Response) => {
 
 router.post("/addWalletItem", async (req: Request, res: Response) => {
   try {
+    // Validate input
     const input = req.body; // Extract required fields from req.body
     const validationResult = WalletItemSchema.safeParse(input);
-
     if (!validationResult.success) {
       console.log(validationResult);
       const customErrors = validationResult.error.issues.map(
@@ -174,7 +174,8 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid input data." });
     }
 
-    const createdWalletItem = await prisma.walletItem.create({
+    // Create wallet item
+    await prisma.walletItem.create({
       data: {
         name: input.name,
         amount: input.amount,
@@ -195,6 +196,43 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
           connect: { id: input.walletId },
         },
       },
+    });
+
+    // Update bliance of payer
+    const walletUser = await prisma.walletUser.findFirst({
+      where: { id: input.payer },
+    });
+
+    if (!walletUser) {
+      return res.sendStatus(404);
+    }
+
+    const newBilance = walletUser.bilance + input.amount;
+
+    await prisma.walletUser.update({
+      where: { id: input.payer },
+      data: {
+        bilance: newBilance,
+      },
+    });
+
+    // Update bliance of recievers
+    input.recieversData.map(async (receiver: any) => {
+      const walletUser = await prisma.walletUser.findFirst({
+        where: { id: receiver.id },
+      });
+
+      if (!walletUser) {
+        return res.sendStatus(404);
+      }
+
+      const newBilance = walletUser.bilance - receiver.cutFromAmount;
+      await prisma.walletUser.update({
+        where: { id: receiver.id },
+        data: {
+          bilance: newBilance,
+        },
+      });
     });
 
     res.sendStatus(201); // 201 Created - Resource successfully created

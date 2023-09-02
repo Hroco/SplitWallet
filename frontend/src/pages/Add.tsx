@@ -12,6 +12,7 @@ import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { set } from 'mongoose';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -40,11 +41,26 @@ const WalletItemSchema = z.object({
   ),
 });
 
+function arraysAreEqual(arr1: any, arr2: any) {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (JSON.stringify(arr1[i]) !== JSON.stringify(arr2[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export default function Add() {
   const [title, setTitle] = useState<string>('');
   const [amount, setAmount] = useState<number>(0);
   const [date, setDate] = useState<Date>(new Date());
   const [payerId, setPayerId] = useState<string>('');
+  const [mainCheckBoxMode, setMainCheckBoxMode] = useState<string>('checked');
   const [mainCheckBox, setMainCheckBox] = useState<boolean>(true);
   const [participants, setParticipants] = useState<
     z.infer<typeof ParticipantsSchema>
@@ -68,6 +84,77 @@ export default function Add() {
   }, []);
 
   useEffect(() => {
+    const numberOfCheckedUsers = participants.filter(
+      (participant) => participant.checked === true
+    ).length;
+    if (numberOfCheckedUsers > 0) {
+      const newUserAmount = amount / numberOfCheckedUsers;
+
+      // Use map to create a new array with updated amount for checked participants
+      const updatedParticipants = participants.map((participant) => {
+        if (participant.checked) {
+          return {
+            ...participant,
+            cutFromAmount: newUserAmount,
+          };
+        } else {
+          return {
+            ...participant,
+            cutFromAmount: 0,
+          };
+        }
+        return participant; // for unchecked participants, keep the original object
+      });
+
+      // Update the state with the new array of participants
+      if (!arraysAreEqual(updatedParticipants, participants)) {
+        // console.log('updatedParticipants', updatedParticipants);
+        // console.log('participants', participants);
+        setParticipants(updatedParticipants);
+      }
+    }
+  }, [amount, participants]);
+
+  function handleMainCheckBoxClick() {
+    if (mainCheckBoxMode == 'checked') {
+      setMainCheckBoxMode('unchecked');
+      setParticipants(
+        participants.map((participant) => {
+          return {
+            ...participant,
+            checked: false,
+          };
+        })
+      );
+    } else if (
+      mainCheckBoxMode == 'unchecked' ||
+      mainCheckBoxMode == 'crossed'
+    ) {
+      setMainCheckBoxMode('checked');
+      setParticipants(
+        participants.map((participant) => {
+          return {
+            ...participant,
+            checked: true,
+          };
+        })
+      );
+    }
+  }
+
+  useEffect(() => {
+    // update state of main checbox to one of three posible states
+    const numberOfCheckedUsers = participants.filter(
+      (participant) => participant.checked === true
+    ).length;
+
+    if (numberOfCheckedUsers == participants.length)
+      setMainCheckBoxMode('checked');
+    else if (numberOfCheckedUsers == 0) setMainCheckBoxMode('unchecked');
+    else setMainCheckBoxMode('crossed');
+  }, [participants]);
+
+  useEffect(() => {
     const { wallet } = postResponse || {};
     setWallet(wallet);
   }, [postResponse]);
@@ -84,7 +171,7 @@ export default function Add() {
 
         const newItem = {
           id: walletUser.id,
-          cutFromAmount: 10,
+          cutFromAmount: 0,
           checked: true,
         };
         newParticipants[i] = newItem;
@@ -104,6 +191,12 @@ export default function Add() {
   // if (wallet == undefined) return <h1>Loading</h1>;
 
   function handleAddWalletItem() {
+    const numberOfCheckedUsers = participants.filter(
+      (participant) => participant.checked === true
+    ).length;
+
+    if (numberOfCheckedUsers == 0)
+      throw new Error('The amount should concert at least one participant.');
     if (walletId == undefined) throw new Error('WalletId is undefined.');
     if (typeof walletId != 'string') throw new Error('WalletId is not string.');
 
@@ -121,7 +214,7 @@ export default function Add() {
       }
     }
 
-    const output: z.infer<typeof WalletItemSchema> = {
+    const newWalletItem: z.infer<typeof WalletItemSchema> = {
       walletId: walletId,
       name: title,
       amount: amount,
@@ -131,7 +224,7 @@ export default function Add() {
       recieversData: participantData,
     };
 
-    axios.post('/api/wallets/addWalletItem/', output);
+    axios.post('/api/wallets/addWalletItem/', newWalletItem);
 
     navigate(`/${walletId}/expenses`);
   }
@@ -173,6 +266,8 @@ export default function Add() {
   if (wallet == undefined) return <h1>Loading</h1>;
 
   const walletUsers = wallet.walletUsers;
+
+  // console.log('participants', participants);
 
   const participantElements = [];
   for (let i = 0; i < walletUsers.length; i++) {
@@ -252,14 +347,7 @@ export default function Add() {
         </select>
       </MainContent>
       <MiddlePannel>
-        <input
-          type="checkbox"
-          id="name"
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            setMainCheckBox(event.target.checked)
-          }
-          checked={mainCheckBox}
-        />
+        <button onClick={handleMainCheckBoxClick}>{mainCheckBoxMode}</button>
         <p>For whom</p>
         <button>Advanced</button>
       </MiddlePannel>

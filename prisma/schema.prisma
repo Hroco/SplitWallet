@@ -29,6 +29,7 @@ model Wallets {
 model WalletUser {
   id           String         @id @default(cuid())
   name         String
+  bilance      Float          @default(0)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   users        User?          @relation(fields: [userId], references: [id])
