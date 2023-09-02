@@ -8,10 +8,12 @@ import {
   AddButton,
   BurgerButton,
   BottomPannel,
+  ExpenseButton,
 } from '../styles/MainItemPage.styled';
 import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
+import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
 import axios from 'axios';
 
 export default function Expenses() {
@@ -19,6 +21,7 @@ export default function Expenses() {
   const navigate = useNavigate();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletItems, setWalletItems] = useState<any>(null);
+  const [wallet, setWallet] = useState<any>(null);
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
@@ -34,11 +37,15 @@ export default function Expenses() {
   }, []);
 
   useEffect(() => {
-    const { walletItems } = postResponse || {};
+    const { wallet, walletItems } = postResponse || {};
+    console.log('wallet', wallet);
     setWalletItems(walletItems);
+    setWallet(wallet);
   }, [postResponse]);
 
   console.log('walletItems', walletItems);
+
+  if (wallet == undefined) return <h1>Loading</h1>;
 
   return (
     <>
@@ -46,10 +53,21 @@ export default function Expenses() {
         <BurgerButton onClick={() => navigate('/')}>
           <BackIcon />
         </BurgerButton>
-        <h1>Grappe 2023</h1>
+        <h1>{wallet.name}</h1>
+        <BurgerButton onClick={() => navigate(`/${walletId}/feed`)}>
+          <HistoryIcon />
+        </BurgerButton>
         <BurgerButton>
           <BurgerIcon />
         </BurgerButton>
+      </TopPannel>
+      <TopPannel>
+        <ExpenseButton onClick={() => navigate(`/${walletId}/expenses`)}>
+          <h1>MY EXPENSES</h1>
+        </ExpenseButton>
+        <ExpenseButton onClick={() => navigate(`/${walletId}/balances`)}>
+          <h1>BALANCES</h1>
+        </ExpenseButton>
       </TopPannel>
       <MainContent>
         {walletItems &&

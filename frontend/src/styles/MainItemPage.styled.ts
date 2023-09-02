@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
 export const TopPannel = styled.div`
   position: sticky;
@@ -93,7 +93,7 @@ export const BurgerButton = styled.button<BurgerButtonProps>`
 
   img {
     transform: rotate(
-      ${(props) => (props.rotate ? `${props.rotate}deg` : "0deg")}
+      ${(props) => (props.rotate ? `${props.rotate}deg` : '0deg')}
     );
   }
 `;

@@ -94,7 +94,18 @@ router.get(
         return res.sendStatus(404);
       }
 
-      res.json({ walletItems });
+      const wallet = await prisma.wallets.findUnique({
+        where: { id: id },
+        include: {
+          walletUsers: true,
+        },
+      });
+
+      if (!wallet) {
+        return res.sendStatus(404);
+      }
+
+      res.json({ wallet, walletItems });
     } catch (error) {
       console.error(error);
       res.sendStatus(500);
