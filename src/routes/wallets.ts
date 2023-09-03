@@ -61,7 +61,13 @@ router.get("/getWalletById/:id", async (req: Request, res: Response) => {
     const wallet = await prisma.wallets.findUnique({
       where: { id: id },
       include: {
-        walletUsers: true,
+        walletUsers: {
+          include: {
+            users: true,
+            WalletItem: true,
+            RecieverData: true,
+          },
+        },
       },
     });
 
@@ -388,7 +394,7 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
       },
     });
 
-    // Create wallet item
+    // Update wallet item
     await prisma.walletItem.update({
       where: { id: id },
       data: {
@@ -518,6 +524,104 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
         error: "Error.",
       });
     }*/
+
+    res.sendStatus(200);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.put("/editWallet/:id", async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    console.log("editWallet", id);
+
+    // Validate input
+    const input = req.body; // Extract required fields from req.body
+    const validationResult = WalletSchema.safeParse(input);
+    if (!validationResult.success) {
+      console.log(validationResult);
+      const customErrors = validationResult.error.issues.map(
+        (issue) => issue.message
+      );
+      const errorMessage = "CHYBA \n" + customErrors.join("\n");
+      console.log(errorMessage);
+      return res.status(400).json({ error: "Invalid input data." });
+    }
+
+    const oldWallet = await prisma.wallets.findFirst({
+      where: { id: id },
+      include: {
+        walletUsers: true,
+      },
+    });
+
+    if (!oldWallet) {
+      return res.sendStatus(404);
+    }
+
+    const createOperations: any[] = [];
+
+    for (const user of input.userList) {
+      if (user.id == null) {
+        createOperations.push({
+          name: user.name,
+        });
+      }
+    }
+
+    let updateOperations: any[] = [];
+
+    for (const user of input.userList) {
+      if (user.id != null) {
+        const existingItem = oldWallet.walletUsers.find(
+          (dbItem) => dbItem.id === user.id
+        );
+
+        if (!existingItem) {
+          // Item no longer exists in the walletUsers array, mark it for deletion
+          updateOperations.push({
+            where: { id: user.id },
+            delete: true,
+          });
+        }
+
+        updateOperations.push({
+          where: { id: user.id },
+          data: {
+            name: user.name,
+          },
+        });
+      }
+    }
+
+    if (updateOperations) {
+      updateOperations = updateOperations.filter((op: any) => !op.delete);
+    }
+
+    // Determine items to delete
+    const itemsToDelete = oldWallet.walletUsers
+      .filter(
+        (dbUser) =>
+          !input.userList.some((newUser: any) => newUser.id === dbUser.id)
+      )
+      .map((dbUser) => ({ id: dbUser.id }));
+
+    // Update wallet
+    await prisma.wallets.update({
+      where: { id: id },
+      data: {
+        name: input.name,
+        description: input.description,
+        currency: input.currency,
+        category: input.category,
+        walletUsers: {
+          ...(createOperations.length > 0 ? { create: createOperations } : {}),
+          ...(updateOperations.length > 0 ? { update: updateOperations } : {}),
+          ...(itemsToDelete.length > 0 ? { delete: itemsToDelete } : {}),
+        },
+      },
+    });
 
     res.sendStatus(200);
   } catch (error) {

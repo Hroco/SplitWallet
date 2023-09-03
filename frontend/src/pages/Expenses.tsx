@@ -15,6 +15,7 @@ import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
 import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
+import EditIcon from '-!svg-react-loader!../assets/icons/edit.svg';
 import axios from 'axios';
 
 export default function Expenses() {
@@ -82,6 +83,9 @@ export default function Expenses() {
         <h1>{wallet.name}</h1>
         <BurgerButton onClick={() => navigate(`/${walletId}/feed`)}>
           <HistoryIcon />
+        </BurgerButton>
+        <BurgerButton onClick={() => navigate(`/${walletId}/edit`)}>
+          <EditIcon />
         </BurgerButton>
         <BurgerButton onClick={deleteWallet}>
           <TrashIcon />

@@ -8,6 +8,7 @@ import Expenses from './pages/Expenses';
 import Feed from './pages/Feed';
 import Open from './pages/Open';
 import Edit from './pages/Edit';
+import EditWallet from './pages/EditWallet';
 
 function App() {
   return (
@@ -18,6 +19,9 @@ function App() {
         </Routes>
         <Routes>
           <Route path="/:walletId/add" element={<Add />} />
+        </Routes>
+        <Routes>
+          <Route path="/:walletId/edit" element={<EditWallet />} />
         </Routes>
         <Routes>
           <Route path="/:walletId/:walletItemId/edit" element={<Edit />} />
