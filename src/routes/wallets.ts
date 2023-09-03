@@ -525,6 +525,98 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.delete(
+  "/deleteWalletItemById/:id",
+  async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id;
+
+      const oldWalletItem = await prisma.walletItem.findFirst({
+        where: { id: id },
+        include: {
+          payer: true,
+          recievers: {
+            include: {
+              reciever: true, // Include the reciever from RecieverData
+            },
+          },
+        },
+      });
+
+      if (!oldWalletItem) {
+        return res.sendStatus(404);
+      }
+
+      // Remove bliance from old payer
+      const oldWalletUser = await prisma.walletUser.findFirst({
+        where: { id: oldWalletItem.payer.id },
+      });
+
+      if (!oldWalletUser) {
+        return res.sendStatus(404);
+      }
+
+      const oldBilance = oldWalletUser.bilance - oldWalletItem.amount;
+
+      await prisma.walletUser.update({
+        where: { id: oldWalletItem.payer.id },
+        data: {
+          bilance: oldBilance,
+        },
+      });
+
+      // Remove Wallet Total of payer
+      const wallet = await prisma.wallets.findFirst({
+        where: { id: oldWalletItem.walletsId },
+      });
+
+      if (!wallet) {
+        return res.sendStatus(404);
+      }
+
+      // Remove old total and apply new total
+      const newTotal = wallet.total - oldWalletItem.amount;
+
+      await prisma.wallets.update({
+        where: { id: oldWalletItem.walletsId },
+        data: {
+          total: newTotal,
+        },
+      });
+
+      // Remove old bliance from old recievers
+      for (const receiver of oldWalletItem.recievers) {
+        const walletUser = await prisma.walletUser.findFirst({
+          where: { id: receiver.reciever.id },
+        });
+
+        if (!walletUser) {
+          return res.sendStatus(404);
+        }
+
+        const oldBilance = walletUser.bilance + receiver.amount;
+        const oldTotal = walletUser.total - receiver.amount;
+
+        await prisma.walletUser.update({
+          where: { id: receiver.reciever.id },
+          data: {
+            bilance: oldBilance,
+            total: oldTotal,
+          },
+        });
+      }
+
+      await prisma.walletItem.delete({
+        where: { id: id },
+      });
+
+      res.sendStatus(200);
+    } catch (error) {
+      res.sendStatus(500);
+    }
+  }
+);
+
 router.delete("/deleteWalletById/:id", async (req: Request, res: Response) => {
   try {
     const id = req.params.id;

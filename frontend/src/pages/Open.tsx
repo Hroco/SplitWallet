@@ -6,6 +6,7 @@ import {
   BottomPannel,
 } from '../styles/MainItemPage.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
+import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import MainItem from '../components/MainItem';
@@ -57,15 +58,23 @@ export default function Open() {
     (reciever: any) => reciever.reciever.id == currentWalletUser.id
   );
 
-  console.log('isCurrentUserOneOfRecievers', isCurrentUserOneOfRecievers);
+  // console.log('isCurrentUserOneOfRecievers', isCurrentUserOneOfRecievers);
+
+  function deleteWalletItem() {
+    axios.delete(`/api/wallets/deleteWalletItemById/${walletItemId}`);
+    navigate(`/${walletId}/expenses`);
+  }
 
   return (
     <>
       <TopPannel>
-        <BurgerButton onClick={() => navigate('/')}>
+        <BurgerButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <BackIcon />
         </BurgerButton>
         <h1>{walletItem.name}</h1>
+        <BurgerButton onClick={deleteWalletItem}>
+          <TrashIcon />
+        </BurgerButton>
         <BurgerButton
           onClick={() => navigate(`/${walletId}/${walletItemId}/edit`)}
         >
