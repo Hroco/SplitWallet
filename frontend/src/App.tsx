@@ -7,6 +7,7 @@ import Balances from './pages/Balances';
 import Expenses from './pages/Expenses';
 import Feed from './pages/Feed';
 import Open from './pages/Open';
+import Edit from './pages/Edit';
 
 function App() {
   return (
@@ -17,6 +18,9 @@ function App() {
         </Routes>
         <Routes>
           <Route path="/:walletId/add" element={<Add />} />
+        </Routes>
+        <Routes>
+          <Route path="/:walletId/:walletItemId/edit" element={<Edit />} />
         </Routes>
         <Routes>
           <Route path="/:walletId/balances" element={<Balances />} />

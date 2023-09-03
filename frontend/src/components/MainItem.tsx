@@ -3,7 +3,7 @@ import { MainItemDiv, MainItemHR } from '../styles/MainItem.styled';
 
 type MainItemProps = {
   name: string;
-  description: string;
+  description?: string;
   price?: number;
   date?: string;
   onClick?: () => void;
