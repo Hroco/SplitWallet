@@ -20,6 +20,7 @@ model Wallets {
   description String
   currency    String
   category    String
+  total       Float        @default(0)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   walletUsers WalletUser[]
@@ -30,12 +31,13 @@ model WalletUser {
   id           String         @id @default(cuid())
   name         String
   bilance      Float          @default(0)
+  total        Float          @default(0)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   users        User?          @relation(fields: [userId], references: [id])
   WalletItem   WalletItem[]
   RecieverData RecieverData[]
-  Wallets      Wallets        @relation(fields: [walletsId], references: [id])
+  Wallets      Wallets        @relation(fields: [walletsId], references: [id], onDelete: Cascade)
   walletsId    String
   userId       String?
 }
@@ -50,18 +52,18 @@ model WalletItem {
   recievers RecieverData[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
-  Wallets   Wallets        @relation(fields: [walletsId], references: [id])
+  Wallets   Wallets        @relation(fields: [walletsId], references: [id], onDelete: Cascade)
   walletsId String
   userId    String
 }
 
 model RecieverData {
   id           String     @id @default(cuid())
-  reciever     WalletUser @relation(fields: [userId], references: [id])
+  reciever     WalletUser @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount       Float
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  WalletItem   WalletItem @relation(fields: [walletItemId], references: [id])
+  WalletItem   WalletItem @relation(fields: [walletItemId], references: [id], onDelete: Cascade)
   walletItemId String
   userId       String
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   TopPannel,
@@ -8,7 +8,7 @@ import {
   BottomPannel,
   ExpenseButton,
 } from '../styles/MainItemPage.styled';
-import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
+import BalanceItem from '../components/BalanceItem';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import axios from 'axios';
@@ -16,8 +16,36 @@ import axios from 'axios';
 export default function Balances() {
   const { walletId } = useParams();
   const navigate = useNavigate();
+  const [postResponse, setPostResponse] = useState<any>(null);
+  const [walletUsers, setWalletUsers] = useState<any>(null);
+  const [bilanceBarRatio, setBilanceBarRatio] = useState<number>(0);
 
-  console.log('Balances', walletId);
+  useEffect(() => {
+    (async () => {
+      const id = walletId;
+      const response = await axios.get(
+        `/api/wallets/getWalletUsersByWalletId/${id}`
+      );
+      setPostResponse(response.data);
+    })();
+  }, []);
+
+  useEffect(() => {
+    const { walletUsers } = postResponse || {};
+    // console.log('walletUsers', walletUsers);
+    setWalletUsers(walletUsers);
+  }, [postResponse]);
+
+  useEffect(() => {
+    if (walletUsers == undefined) return;
+
+    const highestValueObject = walletUsers.reduce((prev: any, current: any) =>
+      Math.abs(prev.value) > Math.abs(current.value) ? prev : current
+    );
+    setBilanceBarRatio(100 / Math.abs(highestValueObject.bilance));
+  }, [walletUsers]);
+
+  // console.log('bilanceBarRatio', bilanceBarRatio);
 
   return (
     <>
@@ -39,7 +67,15 @@ export default function Balances() {
         </ExpenseButton>
       </TopPannel>
       <MainContent>
-        <h1>Balances</h1>
+        {walletUsers &&
+          walletUsers.map((walletUser: any, index: number) => (
+            <BalanceItem
+              key={index}
+              name={walletUser.name}
+              value={walletUser.bilance}
+              ratio={bilanceBarRatio}
+            />
+          ))}
       </MainContent>
     </>
   );

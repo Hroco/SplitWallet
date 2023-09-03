@@ -20,7 +20,7 @@ export const TopPannel = styled.div`
 `;
 
 export const BottomPannel = styled.div`
-  position: sticky;
+  position: absolute;
   width: 100%;
   height: 100px;
   bottom: 0;

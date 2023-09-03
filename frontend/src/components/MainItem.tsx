@@ -1,5 +1,5 @@
-import React from "react";
-import { MainItemDiv, MainItemHR } from "../styles/MainItem.styled";
+import React from 'react';
+import { MainItemDiv, MainItemHR } from '../styles/MainItem.styled';
 
 type MainItemProps = {
   name: string;
@@ -18,7 +18,7 @@ export default function MainItem({
 }: MainItemProps) {
   // console.log(name, description, price, date);
 
-  if (description == "") description = "No description";
+  if (description == '') description = 'No description';
 
   return (
     <>

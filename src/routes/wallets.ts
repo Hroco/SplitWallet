@@ -77,6 +77,36 @@ router.get("/getWalletById/:id", async (req: Request, res: Response) => {
 });
 
 router.get(
+  "/getWalletUserByEmailAndWalletId/:data",
+  async (req: Request, res: Response) => {
+    console.log("getWalletUserByEmailAndWalletId");
+    try {
+      const [email, id] = req.params.data.split(",");
+
+      const user = await prisma.user.findUnique({
+        where: { email: email },
+      });
+
+      if (!user) {
+        return res.sendStatus(404);
+      }
+
+      const walletUser = await prisma.walletUser.findFirst({
+        where: {
+          walletsId: id,
+          userId: user.id,
+        },
+      });
+
+      res.json({ walletUser });
+    } catch (error) {
+      console.error(error);
+      res.sendStatus(500);
+    }
+  }
+);
+
+router.get(
   "/getWalletItemsByWalletId/:id",
   async (req: Request, res: Response) => {
     console.log("get wallets");
@@ -106,6 +136,28 @@ router.get(
       }
 
       res.json({ wallet, walletItems });
+    } catch (error) {
+      console.error(error);
+      res.sendStatus(500);
+    }
+  }
+);
+
+router.get(
+  "/getWalletUsersByWalletId/:id",
+  async (req: Request, res: Response) => {
+    console.log("getWalletUsersByWalletId");
+    try {
+      const id = req.params.id;
+      const walletUsers = await prisma.walletUser.findMany({
+        where: { walletsId: id },
+      });
+
+      if (!walletUsers) {
+        return res.sendStatus(404);
+      }
+
+      res.json({ walletUsers });
     } catch (error) {
       console.error(error);
       res.sendStatus(500);
@@ -216,6 +268,24 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
       },
     });
 
+    // Update Wallet Total of payer
+    const wallet = await prisma.wallets.findFirst({
+      where: { id: input.walletId },
+    });
+
+    if (!wallet) {
+      return res.sendStatus(404);
+    }
+
+    const newTotal = wallet.total + input.amount;
+
+    await prisma.wallets.update({
+      where: { id: input.walletId },
+      data: {
+        total: newTotal,
+      },
+    });
+
     // Update bliance of recievers
     input.recieversData.map(async (receiver: any) => {
       const walletUser = await prisma.walletUser.findFirst({
@@ -227,10 +297,13 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
       }
 
       const newBilance = walletUser.bilance - receiver.cutFromAmount;
+      const newTotal = walletUser.total + receiver.cutFromAmount;
+
       await prisma.walletUser.update({
         where: { id: receiver.id },
         data: {
           bilance: newBilance,
+          total: newTotal,
         },
       });
     });
@@ -258,18 +331,31 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
-});
+});*/
 
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/deleteWalletById/:id", async (req: Request, res: Response) => {
   try {
-    if (false) {
+    const id = req.params.id;
+
+    const wallet = await prisma.wallets.findUnique({
+      where: { id: id },
+      include: {
+        walletUsers: true,
+      },
+    });
+
+    if (!wallet) {
       return res.sendStatus(404);
     }
+
+    await prisma.wallets.delete({
+      where: { id: id },
+    });
 
     res.sendStatus(200);
   } catch (error) {
     res.sendStatus(500);
   }
-});*/
+});
 
 export default router;
