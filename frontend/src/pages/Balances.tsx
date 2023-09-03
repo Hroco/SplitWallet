@@ -18,7 +18,10 @@ export default function Balances() {
   const navigate = useNavigate();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletUsers, setWalletUsers] = useState<any>(null);
-  const [bilanceBarRatio, setBilanceBarRatio] = useState<number>(0);
+  const [bilanceBarPositiveRatio, setBilanceBarPositiveRatio] =
+    useState<number>(0);
+  const [bilanceBarNegativeRatio, setBilanceBarNegativeRatio] =
+    useState<number>(0);
 
   useEffect(() => {
     (async () => {
@@ -39,13 +42,19 @@ export default function Balances() {
   useEffect(() => {
     if (walletUsers == undefined) return;
 
-    const highestValueObject = walletUsers.reduce((prev: any, current: any) =>
-      Math.abs(prev.value) > Math.abs(current.value) ? prev : current
+    const lowestValueObject = walletUsers.reduce((prev: any, current: any) =>
+      prev.value > current.value ? current : prev
     );
-    setBilanceBarRatio(100 / Math.abs(highestValueObject.bilance));
+    setBilanceBarPositiveRatio(100 / Math.abs(lowestValueObject.bilance));
+
+    const highestValueObject = walletUsers.reduce((prev: any, current: any) =>
+      prev.value > current.value ? prev : current
+    );
+    setBilanceBarNegativeRatio(100 / Math.abs(highestValueObject.bilance));
   }, [walletUsers]);
 
-  // console.log('bilanceBarRatio', bilanceBarRatio);
+  // console.log('bilanceBarPositiveRatio', bilanceBarPositiveRatio);
+  // console.log('bilanceBarNegativeRatio', bilanceBarNegativeRatio);
 
   return (
     <>
@@ -73,7 +82,11 @@ export default function Balances() {
               key={index}
               name={walletUser.name}
               value={walletUser.bilance}
-              ratio={bilanceBarRatio}
+              ratio={
+                walletUser.bilance > 0
+                  ? bilanceBarPositiveRatio
+                  : bilanceBarNegativeRatio
+              }
             />
           ))}
       </MainContent>
