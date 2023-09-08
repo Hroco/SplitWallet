@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  TopPannel,
-  MainContent,
-  AddButton,
-  BurgerButton,
-  BottomPannel,
-  ExpenseButton,
-} from '../styles/MainItemPage.styled';
+import { BalancesMainContent, Navbar } from '../styles/mainContainers.styled';
+import { BurgerButton, ExpenseButton } from '../styles/MainItemPage.styled';
 import BalanceItem from '../components/BalanceItem';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
@@ -58,7 +52,7 @@ export default function Balances() {
 
   return (
     <>
-      <TopPannel>
+      <Navbar>
         <BurgerButton onClick={() => navigate('/')}>
           <BackIcon />
         </BurgerButton>
@@ -66,16 +60,16 @@ export default function Balances() {
         <BurgerButton>
           <BurgerIcon />
         </BurgerButton>
-      </TopPannel>
-      <TopPannel>
+      </Navbar>
+      <Navbar>
         <ExpenseButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <h1>MY EXPENSES</h1>
         </ExpenseButton>
         <ExpenseButton onClick={() => navigate(`/${walletId}/balances`)}>
           <h1>BALANCES</h1>
         </ExpenseButton>
-      </TopPannel>
-      <MainContent>
+      </Navbar>
+      <BalancesMainContent>
         {walletUsers &&
           walletUsers.map((walletUser: any, index: number) => (
             <BalanceItem
@@ -89,7 +83,7 @@ export default function Balances() {
               }
             />
           ))}
-      </MainContent>
+      </BalancesMainContent>
     </>
   );
 }

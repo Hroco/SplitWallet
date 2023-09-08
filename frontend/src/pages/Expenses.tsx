@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import contentData from '../assets/testContentData';
-import MainItem from '../components/MainItem';
+import ExpenseItem from '../components/ExpenseItem';
 import {
   TopPannel,
   MainContent,
   AddButton,
   BurgerButton,
-  BottomPannel,
   ExpenseButton,
+  TotalExpenseDiv,
 } from '../styles/MainItemPage.styled';
+import {
+  ExpenseMainContent,
+  Navbar,
+  ExpenseFooter,
+} from '../styles/mainContainers.styled';
 import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
@@ -76,7 +81,7 @@ export default function Expenses() {
 
   return (
     <>
-      <TopPannel>
+      <Navbar>
         <BurgerButton onClick={() => navigate('/')}>
           <BackIcon />
         </BurgerButton>
@@ -93,41 +98,41 @@ export default function Expenses() {
         <BurgerButton>
           <BurgerIcon />
         </BurgerButton>
-      </TopPannel>
-      <TopPannel>
+      </Navbar>
+      <Navbar>
         <ExpenseButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <h1>MY EXPENSES</h1>
         </ExpenseButton>
         <ExpenseButton onClick={() => navigate(`/${walletId}/balances`)}>
           <h1>BALANCES</h1>
         </ExpenseButton>
-      </TopPannel>
-      <MainContent>
+      </Navbar>
+      <ExpenseMainContent>
         {walletItems &&
           walletItems.map((walletItem: any, index: number) => (
-            <MainItem
+            <ExpenseItem
               onClick={() => navigate(`/${walletId}/${walletItem.id}/open`)}
               key={index}
               name={walletItem.name}
-              description={walletItem.description}
-              price={walletItem.price}
+              payer={walletItem.payer.name}
+              price={walletItem.amount}
               date={walletItem.date}
             />
           ))}
-      </MainContent>
-      <BottomPannel>
+      </ExpenseMainContent>
+      <ExpenseFooter>
         <div>
           <p>MY TOTAL</p>
-          <h2>{currentWalletUser.total}</h2>
+          <h2>€ {currentWalletUser.total.toFixed(2)}</h2>
         </div>
         <AddButton onClick={() => navigate(`/${walletId}/add`)}>
           <AddIcon />
         </AddButton>
-        <div>
-          <p>TOTAL EXPENSE</p>
-          <h2>{wallet.total}</h2>
-        </div>
-      </BottomPannel>
+        <TotalExpenseDiv>
+          <p>TOTAL EXPENSES</p>
+          <h2>€ {wallet.total.toFixed(2)}</h2>
+        </TotalExpenseDiv>
+      </ExpenseFooter>
     </>
   );
 }

@@ -19,26 +19,6 @@ export const TopPannel = styled.div`
   }
 `;
 
-export const BottomPannel = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100px;
-  bottom: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: ${({ theme }) => theme.colors.backgroundColorDarkGrey};
-  padding: 5px;
-
-  h2 {
-    font-size: 1em;
-  }
-
-  p {
-    opacity: 0.8;
-  }
-`;
-
 export const MainContent = styled.div`
   background-color: ${({ theme }) => theme.colors.backgroundColorLightGrey};
   height: 100%;
@@ -95,5 +75,11 @@ export const BurgerButton = styled.button<BurgerButtonProps>`
     transform: rotate(
       ${(props) => (props.rotate ? `${props.rotate}deg` : '0deg')}
     );
+  }
+`;
+
+export const TotalExpenseDiv = styled.div`
+  h2 {
+    text-align: right;
   }
 `;

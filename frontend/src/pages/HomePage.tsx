@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  TopPannel,
+  Navbar,
   MainContent,
   AddButton,
   BurgerButton,
@@ -10,12 +10,14 @@ import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import content from '../assets/testContent';
 import MainItem from '../components/MainItem';
 import { useNavigate } from 'react-router-dom';
+import BurgerMenu from '../components/DropDownMenu';
 import axios from 'axios';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletsList, setWalletsList] = useState<any>(null);
+  const [shouldShowBurgerMenu, setShouldShowBurgerMenu] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -47,13 +49,37 @@ export default function HomePage() {
 
   return (
     <>
-      <TopPannel>
+      <Navbar>
         <h1>SplitWallet</h1>
-        <BurgerButton>
+        <BurgerButton onClick={() => setShouldShowBurgerMenu(true)}>
           <BurgerIcon />
         </BurgerButton>
-      </TopPannel>
+        {shouldShowBurgerMenu && (
+          <BurgerMenu
+            isOpen={shouldShowBurgerMenu}
+            setIsOpen={setShouldShowBurgerMenu}
+          />
+        )}
+      </Navbar>
       <MainContent>
+        {walletsList &&
+          walletsList.map((item: any, index: number) => (
+            <MainItem
+              onClick={() => navigate(`/${item.id}/expenses`)}
+              key={index}
+              name={item.name}
+              description={item.description}
+            />
+          ))}
+        {walletsList &&
+          walletsList.map((item: any, index: number) => (
+            <MainItem
+              onClick={() => navigate(`/${item.id}/expenses`)}
+              key={index}
+              name={item.name}
+              description={item.description}
+            />
+          ))}
         {walletsList &&
           walletsList.map((item: any, index: number) => (
             <MainItem

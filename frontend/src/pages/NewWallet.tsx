@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { z } from 'zod';
 import {
-  TopPannel,
-  MainContent,
   BurgerButton,
-  MiddlePannel,
-  BottomContent,
   ParticipantInputDiv,
   CategoryButton,
+  MainContentItem,
 } from '../styles/newWallet.styled';
+import {
+  TopPannel,
+  MainContent,
+  MiddlePannel,
+  BottomContent,
+  Navbar,
+} from '../styles/mainContainers.styled';
+import { Input, Select, Label } from '../styles/Input.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { useNavigate } from 'react-router-dom';
@@ -67,27 +72,41 @@ export default function NewWallet() {
     setParticipants(newParticipants);
   }
 
+  function deleteUser(i: number) {
+    const newParticipants = [...participants];
+    if (i >= 0 && i < newParticipants.length) {
+      newParticipants.splice(i, 1);
+      setParticipants(newParticipants);
+    } else {
+      console.error('Invalid index');
+    }
+  }
+
   const participantElements = [];
   for (let i = 0; i < participants.length + 1; i++) {
     participantElements.push(
-      <ParticipantInputDiv>
-        <div>
-          <label htmlFor="name">Name</label>
-          <input
-            type="text"
-            id="name"
-            value={getName(i)}
-            onChange={(e) => setName(i, e.target.value)}
-          />
-        </div>
-        <button>Add</button>
-      </ParticipantInputDiv>
+      <MainContentItem>
+        <ParticipantInputDiv>
+          <div>
+            <Label htmlFor="name">Name</Label>
+            <Input
+              type="text"
+              id="name"
+              value={getName(i)}
+              onChange={(e) => setName(i, e.target.value)}
+            />
+          </div>
+          {getName(i) != '' && (
+            <button onClick={() => deleteUser(i)}>Delete</button>
+          )}
+        </ParticipantInputDiv>
+      </MainContentItem>
     );
   }
 
   return (
     <>
-      <TopPannel>
+      <Navbar>
         <BurgerButton onClick={() => navigate('/')}>
           <BackIcon />
         </BurgerButton>
@@ -95,80 +114,92 @@ export default function NewWallet() {
         <BurgerButton onClick={() => handleAddWallet()}>
           <CheckedIcon />
         </BurgerButton>
-      </TopPannel>
+      </Navbar>
       <MainContent>
-        <label htmlFor="title">Title</label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <label htmlFor="description">Description</label>
-        <input
-          type="text"
-          id="description"
-          value={decription}
-          onChange={(e) => setDecription(e.target.value)}
-        />
-        <label htmlFor="currency">Title</label>
-        <select
-          id="currency"
-          value={currency as string}
-          onChange={(e) => setCurrency(e.target.value)}
-        >
-          <option value="eur">Eur</option>
-          <option value="usd">Usd</option>
-          <option value="czk">Czech Koruna</option>
-        </select>
-        <p>
-          Specify the curency that will be used to balance the splitwallet.
-          Other curencies can be used for expenses.
-        </p>
-        <p>Category</p>
-        <div>
-          <CategoryButton
-            clicked={category == 'trip'}
-            onClick={() => setCategory('trip')}
-          >
-            Trip
-          </CategoryButton>
-          <CategoryButton
-            clicked={category == 'sharedHouse'}
-            onClick={() => setCategory('sharedHouse')}
-          >
-            Shared house
-          </CategoryButton>
-          <CategoryButton
-            clicked={category == 'couple'}
-            onClick={() => setCategory('couple')}
-          >
-            Couple
-          </CategoryButton>
-          <CategoryButton
-            clicked={category == 'event'}
-            onClick={() => setCategory('event')}
-          >
-            Event
-          </CategoryButton>
-          <CategoryButton
-            clicked={category == 'project'}
-            onClick={() => setCategory('project')}
-          >
-            Project
-          </CategoryButton>
-          <CategoryButton
-            clicked={category == 'other'}
-            onClick={() => setCategory('other')}
-          >
-            Other
-          </CategoryButton>
-        </div>
+        <TopPannel>
+          <MainContentItem>
+            <Label htmlFor="title">Title</Label>
+            <Input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="description">Description</Label>
+            <Input
+              type="text"
+              id="description"
+              value={decription}
+              onChange={(e) => setDecription(e.target.value)}
+            />
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="currency">Currency</Label>
+            <Select
+              id="currency"
+              value={currency as string}
+              onChange={(e) => setCurrency(e.target.value)}
+            >
+              <option value="eur">Eur</option>
+              <option value="usd">Usd</option>
+              <option value="czk">Czech Koruna</option>
+            </Select>
+          </MainContentItem>
+          <MainContentItem>
+            <p>
+              Specify the curency that will be used to balance the splitwallet.
+              Other curencies can be used for expenses.
+            </p>
+          </MainContentItem>
+          <MainContentItem>
+            <p>Category</p>
+            <div>
+              <CategoryButton
+                clicked={category == 'trip'}
+                onClick={() => setCategory('trip')}
+              >
+                Trip
+              </CategoryButton>
+              <CategoryButton
+                clicked={category == 'sharedHouse'}
+                onClick={() => setCategory('sharedHouse')}
+              >
+                Shared house
+              </CategoryButton>
+              <CategoryButton
+                clicked={category == 'couple'}
+                onClick={() => setCategory('couple')}
+              >
+                Couple
+              </CategoryButton>
+              <CategoryButton
+                clicked={category == 'event'}
+                onClick={() => setCategory('event')}
+              >
+                Event
+              </CategoryButton>
+              <CategoryButton
+                clicked={category == 'project'}
+                onClick={() => setCategory('project')}
+              >
+                Project
+              </CategoryButton>
+              <CategoryButton
+                clicked={category == 'other'}
+                onClick={() => setCategory('other')}
+              >
+                Other
+              </CategoryButton>
+            </div>
+          </MainContentItem>
+        </TopPannel>
+        <MiddlePannel>
+          <p>Participants ( x / 50 )</p>
+        </MiddlePannel>
+        <BottomContent>{participantElements}</BottomContent>
       </MainContent>
-      <MiddlePannel>
-        <p>Participants ( x / 50 )</p>
-      </MiddlePannel>
-      <BottomContent>{participantElements}</BottomContent>
     </>
   );
 }

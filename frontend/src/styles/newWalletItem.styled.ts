@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
 export const TopPannel = styled.div`
   display: flex;
@@ -53,7 +53,7 @@ export const ParticipantInputDiv = styled.div`
   }
 
   input {
-    width: 25%;
+    /*width: 25%;*/
     margin: 10px 10px 10px 10px;
     border: 0;
     border-radius: 5px;

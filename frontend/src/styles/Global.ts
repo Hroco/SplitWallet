@@ -1,4 +1,4 @@
-import styled, { createGlobalStyle } from "styled-components";
+import styled, { createGlobalStyle } from 'styled-components';
 
 const GlobalStyles = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
@@ -28,6 +28,7 @@ const GlobalStyles = createGlobalStyle`
 export const AppWrapper = styled.div`
   height: 100vh;
   width: 100vw;
+  overflow: hidden;
 `;
 
 export default GlobalStyles;

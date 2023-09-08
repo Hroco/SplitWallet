@@ -1,10 +1,11 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
-export const TopPannel = styled.div`
+export const Navbar = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: ${({ theme }) => theme.colors.backgroundColorDarkGrey};
+  height: ${({ theme }) => theme.navbarHeight};
   padding: 5px;
 
   h1 {
@@ -16,7 +17,8 @@ export const TopPannel = styled.div`
 export const MainContent = styled.div`
   background-color: ${({ theme }) => theme.colors.backgroundColorLightGrey};
   height: 100%;
-  overflow: scroll;
+  overflow-x: hidden;
+  overflow-y: auto;
 `;
 
 export const AddButton = styled.button`

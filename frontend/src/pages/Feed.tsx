@@ -6,9 +6,9 @@ import {
   MainContent,
   AddButton,
   BurgerButton,
-  BottomPannel,
   ExpenseButton,
 } from '../styles/MainItemPage.styled';
+import { FeedFooter } from '../styles/mainContainers.styled';
 import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
@@ -55,9 +55,9 @@ export default function Feed() {
       <MainContent>
         <h1>Feed</h1>
       </MainContent>
-      <BottomPannel>
+      <FeedFooter>
         <h1>New message input here</h1>
-      </BottomPannel>
+      </FeedFooter>
     </>
   );
 }

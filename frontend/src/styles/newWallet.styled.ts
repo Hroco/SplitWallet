@@ -1,45 +1,9 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
-export const TopPannel = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: ${({ theme }) => theme.colors.backgroundColorDarkGrey};
-  padding: 5px;
-
-  h1 {
-    font-size: 1.5em;
-    margin-left: 15px;
-  }
-`;
-
-export const MiddlePannel = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: ${({ theme }) => theme.colors.backgroundColorDarkGrey};
-  padding: 5px;
-
-  h1 {
-    font-size: 1.5em;
-    margin-left: 15px;
-  }
-`;
-
-export const MainContent = styled.div`
+export const MainContentItem = styled.div`
   display: flex;
   flex-direction: column;
-  background-color: ${({ theme }) => theme.colors.backgroundColorLightGrey};
-
-  p {
-    font-size: 0.9em;
-  }
-`;
-
-export const BottomContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  background-color: ${({ theme }) => theme.colors.backgroundColorLightGrey};
+  margin-bottom: 10px;
 `;
 
 export const ParticipantInputDiv = styled.div`

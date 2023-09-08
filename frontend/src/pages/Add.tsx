@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import {
-  TopPannel,
-  MainContent,
   BurgerButton,
-  MiddlePannel,
-  BottomContent,
   ParticipantInputDiv,
 } from '../styles/newWalletItem.styled';
+import {
+  TopPannel,
+  MainContent,
+  MiddlePannel,
+  BottomContent,
+  Navbar,
+} from '../styles/mainContainers.styled';
+import { MainContentItem } from '../styles/newWallet.styled';
+import { Input, Select, Label } from '../styles/Input.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { set } from 'mongoose';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -279,7 +283,7 @@ export default function Add() {
     participantElements.push(
       <ParticipantInputDiv key={i}>
         <div>
-          <input
+          <Input
             type="checkbox"
             id="name"
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
@@ -287,10 +291,10 @@ export default function Add() {
             }
             checked={state}
           />
-          <label htmlFor="name">{user.name}</label>
+          <Label htmlFor="name">{user.name}</Label>
         </div>
 
-        <input
+        <Input
           type="number"
           value={getCutFromAmount(i)}
           onChange={(e) => setCutFromAmount(i, parseInt(e.target.value))}
@@ -301,7 +305,7 @@ export default function Add() {
 
   return (
     <>
-      <TopPannel>
+      <Navbar>
         <BurgerButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <BackIcon />
         </BurgerButton>
@@ -309,49 +313,59 @@ export default function Add() {
         <BurgerButton onClick={() => handleAddWalletItem()}>
           <CheckedIcon />
         </BurgerButton>
-      </TopPannel>
+      </Navbar>
       <MainContent>
-        <label htmlFor="title">Title</label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <label htmlFor="amount">Amount</label>
-        <input
-          type="number"
-          id="amount"
-          value={amount}
-          onChange={(e) => setAmount(parseFloat(e.target.value))}
-        />
-        <label htmlFor="date">Date</label>
-        <input
-          type="date"
-          id="date"
-          value={date.toISOString().split('T')[0]}
-          onChange={(e) => setDate(new Date(e.target.value))}
-        />
-        <label htmlFor="payer">Paid by</label>
-        <select
-          id="payer"
-          value={payerId as string}
-          onChange={(e) => setPayerId(e.target.value)}
-        >
-          {walletUsers &&
-            walletUsers.map((walletUser: any, index: number) => (
-              <option key={walletUser.id} value={walletUser.id}>
-                {walletUser.name}
-              </option>
-            ))}
-        </select>
+        <TopPannel>
+          <MainContentItem>
+            <Label htmlFor="title">Title</Label>
+            <Input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              type="number"
+              id="amount"
+              value={amount}
+              onChange={(e) => setAmount(parseFloat(e.target.value))}
+            />
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="date">Date</Label>
+            <Input
+              type="date"
+              id="date"
+              value={date.toISOString().split('T')[0]}
+              onChange={(e) => setDate(new Date(e.target.value))}
+            />
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="payer">Paid by</Label>
+            <Select
+              id="payer"
+              value={payerId as string}
+              onChange={(e) => setPayerId(e.target.value)}
+            >
+              {walletUsers &&
+                walletUsers.map((walletUser: any, index: number) => (
+                  <option key={walletUser.id} value={walletUser.id}>
+                    {walletUser.name}
+                  </option>
+                ))}
+            </Select>
+          </MainContentItem>
+        </TopPannel>
+        <MiddlePannel>
+          <button onClick={handleMainCheckBoxClick}>{mainCheckBoxMode}</button>
+          <p>For whom</p>
+          <button>Advanced</button>
+        </MiddlePannel>
+        <BottomContent>{participantElements}</BottomContent>
       </MainContent>
-      <MiddlePannel>
-        <button onClick={handleMainCheckBoxClick}>{mainCheckBoxMode}</button>
-        <p>For whom</p>
-        <button>Advanced</button>
-      </MiddlePannel>
-      <BottomContent>{participantElements}</BottomContent>
     </>
   );
 }

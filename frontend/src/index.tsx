@@ -17,6 +17,9 @@ const theme = {
   },
   mobile: '768px',
   navbarHeight: '60px',
+  expenseFooterHeight: '80px',
+  feedFooterHeight: '60px',
+  openFooterHeight: '60px',
 };
 
 root.render(
