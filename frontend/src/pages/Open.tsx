@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { MainContent, BurgerButton } from '../styles/MainItemPage.styled';
 import {
-  TopPannel,
-  MainContent,
-  BurgerButton,
-} from '../styles/MainItemPage.styled';
-import { OpenFooter } from '../styles/mainContainers.styled';
+  Navbar,
+  OpenFooter,
+  OpenMainContent,
+} from '../styles/mainContainers.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -67,7 +67,7 @@ export default function Open() {
 
   return (
     <>
-      <TopPannel>
+      <Navbar>
         <BurgerButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <BackIcon />
         </BurgerButton>
@@ -80,8 +80,8 @@ export default function Open() {
         >
           Edit
         </BurgerButton>
-      </TopPannel>
-      <MainContent>
+      </Navbar>
+      <OpenMainContent>
         <p>Paid by {walletItem.payer.name}</p>
         <p>Date {walletItem.date}</p>
         <p>
@@ -96,7 +96,7 @@ export default function Open() {
               price={reciever.amount}
             />
           ))}
-      </MainContent>
+      </OpenMainContent>
       <OpenFooter>
         <BurgerButton onClick={() => navigate('/')}>
           <BackIcon />

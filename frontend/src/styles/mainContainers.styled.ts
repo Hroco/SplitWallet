@@ -36,6 +36,13 @@ export const ExpenseMainContent = styled(MainContent)`
   );
 `;
 
+export const OpenMainContent = styled(MainContent)`
+  height: calc(
+    100% - ${({ theme }) => theme.navbarHeight} -
+      ${({ theme }) => theme.openFooterHeight}
+  );
+`;
+
 export const TopPannel = styled.div`
   padding: 20px 20px;
 `;
