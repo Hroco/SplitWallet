@@ -24,3 +24,21 @@ export const MainItemHR = styled.hr`
   border: 1px solid ${({ theme }) => theme.colors.backgroundColorDarkGrey};
   margin: 0;
 `;
+
+export const ExpenseItemDivGreen = styled(ExpenseItemDiv)`
+  h2 {
+    color: ${({ theme }) => theme.colors.fontColorGreen};
+  }
+`;
+
+export const ExpenseItemDivOrange = styled(ExpenseItemDiv)`
+  h2 {
+    color: ${({ theme }) => theme.colors.fontColorOrange};
+  }
+`;
+
+export const ExpenseItemDivBlue = styled(ExpenseItemDiv)`
+  h2 {
+    color: ${({ theme }) => theme.colors.fontColorBlue};
+  }
+`;

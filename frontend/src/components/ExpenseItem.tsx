@@ -3,6 +3,9 @@ import {
   ExpenseItemDiv,
   MainItemHR,
   DateAndPriceDiv,
+  ExpenseItemDivOrange,
+  ExpenseItemDivGreen,
+  ExpenseItemDivBlue,
 } from '../styles/ExpenseItem.styled';
 
 type ExpenseItemProps = {
@@ -10,6 +13,7 @@ type ExpenseItemProps = {
   payer: string;
   price: number;
   date: Date;
+  type: string;
   onClick?: () => void;
 };
 
@@ -26,23 +30,56 @@ export default function ExpenseItem({
   payer,
   price,
   date,
+  type,
   onClick,
 }: ExpenseItemProps) {
   const dateInput = new Date(date);
   const formatedDate = formatDate(dateInput);
 
-  return (
-    <>
-      <ExpenseItemDiv onClick={onClick}>
+  function drawItemContent() {
+    return (
+      <>
         <div>
           <h2>{name}</h2>
           <p>paid by {payer}</p>
         </div>
         <DateAndPriceDiv>
-          <h2>€ {price.toFixed(2)}</h2>
+          <h2>
+            {type == 'income' && '-'}€{price.toFixed(2)}
+          </h2>
           <p>{formatedDate}</p>
         </DateAndPriceDiv>
-      </ExpenseItemDiv>
+      </>
+    );
+  }
+
+  function drawExpenseItem() {
+    if (type === 'expense') {
+      return (
+        <ExpenseItemDivOrange onClick={onClick}>
+          {drawItemContent()}
+        </ExpenseItemDivOrange>
+      );
+    }
+    if (type === 'income') {
+      return (
+        <ExpenseItemDivGreen onClick={onClick}>
+          {drawItemContent()}
+        </ExpenseItemDivGreen>
+      );
+    }
+    if (type === 'moneyTransfer') {
+      return (
+        <ExpenseItemDivBlue onClick={onClick}>
+          {drawItemContent()}
+        </ExpenseItemDivBlue>
+      );
+    }
+  }
+
+  return (
+    <>
+      {drawExpenseItem()}
       <MainItemHR />
     </>
   );

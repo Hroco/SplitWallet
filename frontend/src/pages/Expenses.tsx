@@ -116,6 +116,7 @@ export default function Expenses() {
               payer={walletItem.payer.name}
               price={walletItem.amount}
               date={walletItem.date}
+              type={walletItem.type}
             />
           ))}
       </ExpenseMainContent>
