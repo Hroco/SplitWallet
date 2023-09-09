@@ -1,11 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BalancesMainContent, Navbar } from '../styles/mainContainers.styled';
+import {
+  BalancesMainContent,
+  Navbar,
+  MiddlePannel,
+  BottomContent,
+} from '../styles/mainContainers.styled';
 import { BurgerButton, ExpenseButton } from '../styles/buttons.styled';
 import BalanceItem from '../components/BalanceItem';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import axios from 'axios';
+import ReimbursementItem from '../components/ReimbursementItem';
+
+function deepCopy(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    const copyArray = [];
+    for (let i = 0; i < obj.length; i++) {
+      copyArray[i] = deepCopy(obj[i]);
+    }
+    return copyArray;
+  }
+
+  const copyObject: any = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      copyObject[key] = deepCopy(obj[key]);
+    }
+  }
+
+  return copyObject;
+}
 
 export default function Balances() {
   const { walletId } = useParams();
@@ -16,6 +45,7 @@ export default function Balances() {
     useState<number>(0);
   const [bilanceBarNegativeRatio, setBilanceBarNegativeRatio] =
     useState<number>(0);
+  const [reimbursements, setReimbursements] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -29,13 +59,12 @@ export default function Balances() {
 
   useEffect(() => {
     const { walletUsers } = postResponse || {};
-    // console.log('walletUsers', walletUsers);
+    if (walletUsers == undefined) return;
     setWalletUsers(walletUsers);
   }, [postResponse]);
 
   useEffect(() => {
     if (walletUsers == undefined) return;
-
     const lowestValueObject = walletUsers.reduce((prev: any, current: any) =>
       prev.value > current.value ? current : prev
     );
@@ -45,10 +74,70 @@ export default function Balances() {
       prev.value > current.value ? prev : current
     );
     setBilanceBarNegativeRatio(100 / Math.abs(highestValueObject.bilance));
+
+    calculateReimbursements();
   }, [walletUsers]);
 
-  // console.log('bilanceBarPositiveRatio', bilanceBarPositiveRatio);
-  // console.log('bilanceBarNegativeRatio', bilanceBarNegativeRatio);
+  useEffect(() => {}, [walletUsers]);
+
+  function calculateReimbursements() {
+    if (walletUsers == undefined) return;
+
+    const users = deepCopy(walletUsers);
+
+    // Calculate the total balance of all users
+    const totalBalance = users.reduce(
+      (total: any, user: any) => total + user.bilance,
+      0
+    );
+
+    // Calculate the average balance per user
+    const averageBalance = totalBalance / users.length;
+
+    // Create lists for users who owe money and are owed money
+    const debtors = users.filter((user: any) => user.bilance < averageBalance);
+    const creditors = users.filter(
+      (user: any) => user.bilance > averageBalance
+    );
+
+    // Sort debtors and creditors by their balances in descending order
+    debtors.sort((a: any, b: any) => b.bilance - a.bilance);
+    creditors.sort((a: any, b: any) => a.bilance - b.bilance);
+
+    // Perform debt optimization
+    const transactions = [];
+
+    for (const debtor of debtors) {
+      while (debtor.bilance < averageBalance) {
+        const creditor = creditors.pop();
+
+        if (!creditor) {
+          // No creditor left to reimburse the debtor
+          break;
+        }
+
+        const amount = Math.min(
+          averageBalance - debtor.bilance,
+          creditor.bilance
+        );
+
+        debtor.bilance += amount;
+        creditor.bilance -= amount;
+
+        transactions.push({
+          from: creditor.name,
+          to: debtor.name,
+          amount,
+        });
+
+        if (creditor.bilance > averageBalance) {
+          // Creditor can reimburse more debtors in the future
+          creditors.push(creditor);
+        }
+      }
+    }
+    setReimbursements(transactions);
+  }
 
   return (
     <>
@@ -83,6 +172,18 @@ export default function Balances() {
               }
             />
           ))}
+        <MiddlePannel>HOW SHOULD I BALANCE</MiddlePannel>
+        <BottomContent>
+          {reimbursements &&
+            reimbursements.map((reimbursement: any, index: number) => (
+              <ReimbursementItem
+                key={index}
+                payer={reimbursement.from}
+                debtor={reimbursement.to}
+                price={reimbursement.amount}
+              />
+            ))}
+        </BottomContent>
       </BalancesMainContent>
     </>
   );

@@ -10,6 +10,7 @@ const root = ReactDOM.createRoot(
 
 const theme = {
   colors: {
+    backgroundColorWhite: '#FFFFFF',
     backgroundColorDarkGrey: '#181818',
     backgroundColorLightGrey: '#1F1F1F',
     backgroundColorOrange: '#F09B59',

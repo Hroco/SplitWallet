@@ -15,6 +15,7 @@ type BalanceItemProps = {
 };
 
 export default function BalanceItem({ name, value, ratio }: BalanceItemProps) {
+  // console.log('BalanceItem', name, value, ratio);
   const percentage = ratio * value;
   const width = Math.abs(percentage / 2);
   const absValue = Math.abs(value);
