@@ -13,6 +13,34 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import axios from 'axios';
 import ReimbursementItem from '../components/ReimbursementItem';
 
+function findLowestBalanceObject(data: any[]) {
+  let lowestBalanceObject = null;
+  let lowestBalance = Infinity; // Initialize with a high value
+
+  for (const item of data) {
+    if (item.bilance < lowestBalance) {
+      lowestBalance = item.bilance;
+      lowestBalanceObject = item;
+    }
+  }
+
+  return lowestBalanceObject;
+}
+
+function findHighestBalanceObject(data: any[]) {
+  let highestBalanceObject = null;
+  let highestBalance = Infinity; // Initialize with a high value
+
+  for (const item of data) {
+    if (item.bilance < highestBalance) {
+      highestBalance = item.bilance;
+      highestBalanceObject = item;
+    }
+  }
+
+  return highestBalanceObject;
+}
+
 function deepCopy(obj: any): any {
   if (obj === null || typeof obj !== 'object') {
     return obj;
@@ -65,25 +93,27 @@ export default function Balances() {
 
   useEffect(() => {
     if (walletUsers == undefined) return;
-    const lowestValueObject = walletUsers.reduce((prev: any, current: any) =>
+    const lowestValueObject = findLowestBalanceObject(walletUsers);
+    /* walletUsers.reduce((prev: any, current: any) =>
       prev.value > current.value ? current : prev
-    );
+    );*/
+    console.log('lowestValueObject', lowestValueObject);
     setBilanceBarPositiveRatio(100 / Math.abs(lowestValueObject.bilance));
 
-    const highestValueObject = walletUsers.reduce((prev: any, current: any) =>
+    const highestValueObject = findHighestBalanceObject(walletUsers);
+    /* const highestValueObject = walletUsers.reduce((prev: any, current: any) =>
       prev.value > current.value ? prev : current
-    );
+    );*/
+    console.log('highestValueObject', highestValueObject);
     setBilanceBarNegativeRatio(100 / Math.abs(highestValueObject.bilance));
 
     calculateReimbursements();
   }, [walletUsers]);
 
-  useEffect(() => {}, [walletUsers]);
-
   function calculateReimbursements() {
     if (walletUsers == undefined) return;
-
     const users = deepCopy(walletUsers);
+    users.sort((a: any, b: any) => a.name.localeCompare(b.name));
 
     // Calculate the total balance of all users
     const totalBalance = users.reduce(
@@ -101,16 +131,14 @@ export default function Balances() {
     );
 
     // Sort debtors and creditors by their balances in descending order
-    debtors.sort((a: any, b: any) => b.bilance - a.bilance);
-    creditors.sort((a: any, b: any) => a.bilance - b.bilance);
+    debtors.sort((a: any, b: any) => a.name.localeCompare(b.name));
+    creditors.sort((a: any, b: any) => b.name.localeCompare(a.name));
 
-    // Perform debt optimization
     const transactions = [];
 
     for (const debtor of debtors) {
       while (debtor.bilance < averageBalance) {
         const creditor = creditors.pop();
-
         if (!creditor) {
           // No creditor left to reimburse the debtor
           break;
@@ -139,6 +167,8 @@ export default function Balances() {
     setReimbursements(transactions);
   }
 
+  console.log('walletUsers', walletUsers);
+
   return (
     <>
       <Navbar>
@@ -160,26 +190,28 @@ export default function Balances() {
       </Navbar>
       <BalancesMainContent>
         {walletUsers &&
-          walletUsers.map((walletUser: any, index: number) => (
-            <BalanceItem
-              key={index}
-              name={walletUser.name}
-              value={walletUser.bilance}
-              ratio={
-                walletUser.bilance > 0
-                  ? bilanceBarPositiveRatio
-                  : bilanceBarNegativeRatio
-              }
-            />
-          ))}
+          walletUsers
+            .sort((a: any, b: any) => a.name.localeCompare(b.name))
+            .map((walletUser: any, index: number) => (
+              <BalanceItem
+                key={index}
+                name={walletUser.name}
+                value={walletUser.bilance}
+                ratio={
+                  walletUser.bilance > 0
+                    ? bilanceBarPositiveRatio
+                    : bilanceBarNegativeRatio
+                }
+              />
+            ))}
         <MiddlePannel>HOW SHOULD I BALANCE</MiddlePannel>
         <BottomContent>
           {reimbursements &&
             reimbursements.map((reimbursement: any, index: number) => (
               <ReimbursementItem
                 key={index}
-                payer={reimbursement.from}
-                debtor={reimbursement.to}
+                payer={reimbursement.to}
+                debtor={reimbursement.from}
                 price={reimbursement.amount}
               />
             ))}

@@ -35,7 +35,7 @@ interface BalanceBarProps {
 
 export const PositiveBalanceBar = styled.div<BalanceBarProps>`
   position: absolute;
-  background-color: green;
+  background-color: ${({ theme }) => theme.colors.bilanceGreenColor};
   width: ${(props) => (props.width ? `${props.width}vw` : 'vw')};
   height: 100%;
   top: 0;
@@ -44,7 +44,7 @@ export const PositiveBalanceBar = styled.div<BalanceBarProps>`
 
 export const NegativeBalanceBar = styled.div<BalanceBarProps>`
   position: absolute;
-  background-color: red;
+  background-color: ${({ theme }) => theme.colors.bilanceRedColor};
   width: ${(props) => (props.width ? `${props.width}vw` : 'vw')};
   height: 100%;
   top: 0;

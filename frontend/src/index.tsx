@@ -18,6 +18,8 @@ const theme = {
     fontColorGreen: '#5DB075',
     fontColorBlue: '#5D9DB0',
     mainFontColor: '#FFFFFF',
+    bilanceRedColor: '#925B4E',
+    bilanceGreenColor: '#567D5A',
   },
   mobile: '768px',
   navbarHeight: '60px',
