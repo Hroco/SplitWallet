@@ -3,12 +3,14 @@ import { WalletAddButton, BurgerButton } from '../styles/buttons.styled';
 import { MainContent, Navbar } from '../styles/mainContainers.styled';
 import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
+import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import content from '../assets/testContent';
 import MainItem from '../components/MainItem';
 import { useNavigate } from 'react-router-dom';
 import BurgerMenu from '../components/DropDownMenu';
 import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
+import { Button } from '../styles/DropDownMenu.styled';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -57,7 +59,12 @@ export default function HomePage() {
           <BurgerMenu
             isOpen={shouldShowBurgerMenu}
             setIsOpen={setShouldShowBurgerMenu}
-          />
+          >
+            <Button onClick={() => navigate(`/mysettings`)}>
+              <BackIcon />
+              My settings
+            </Button>
+          </BurgerMenu>
         )}
       </Navbar>
       <MainContent>
