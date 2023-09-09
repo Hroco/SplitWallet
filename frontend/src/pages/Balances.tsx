@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BalancesMainContent, Navbar } from '../styles/mainContainers.styled';
-import { BurgerButton, ExpenseButton } from '../styles/MainItemPage.styled';
+import { BurgerButton, ExpenseButton } from '../styles/buttons.styled';
 import BalanceItem from '../components/BalanceItem';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';

@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MainItem from '../components/MainItem';
+import { BurgerButton } from '../styles/buttons.styled';
 import {
-  TopPannel,
   MainContent,
-  AddButton,
-  BurgerButton,
-  ExpenseButton,
-} from '../styles/MainItemPage.styled';
-import { FeedFooter } from '../styles/mainContainers.styled';
+  FeedFooter,
+  Navbar,
+} from '../styles/mainContainers.styled';
 import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
 import axios from 'axios';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Feed() {
   const { walletId } = useParams();
@@ -42,16 +41,16 @@ export default function Feed() {
     setWallet(wallet);
   }, [postResponse]);
 
-  if (wallet == undefined) return <h1>Loading</h1>;
+  if (wallet == undefined) return <LoadingScreen />;
 
   return (
     <>
-      <TopPannel>
+      <Navbar>
         <BurgerButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <BackIcon />
         </BurgerButton>
         <h1>History: {wallet.name}</h1>
-      </TopPannel>
+      </Navbar>
       <MainContent>
         <h1>Feed</h1>
       </MainContent>

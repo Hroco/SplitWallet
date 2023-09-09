@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BurgerButton } from '../styles/newWallet.styled';
+import { BurgerButton } from '../styles/buttons.styled';
 import {
   MainContent,
   MiddlePannel,

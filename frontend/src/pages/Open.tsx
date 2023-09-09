@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MainContent, BurgerButton } from '../styles/MainItemPage.styled';
+import { BurgerButton } from '../styles/buttons.styled';
 import {
   Navbar,
   OpenFooter,
@@ -10,6 +10,7 @@ import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import MainItem from '../components/MainItem';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Open() {
   const { walletId, walletItemId } = useParams();
@@ -51,8 +52,8 @@ export default function Open() {
     setCurrentWalletUser(walletUser);
   }, [postResponse2]);
 
-  if (walletItem == undefined) return <h1>Loading</h1>;
-  if (currentWalletUser == undefined) return <h1>Loading</h1>;
+  if (walletItem == undefined) return <LoadingScreen />;
+  if (currentWalletUser == undefined) return <LoadingScreen />;
 
   const isCurrentUserOneOfRecievers = walletItem.recievers.some(
     (reciever: any) => reciever.reciever.id == currentWalletUser.id

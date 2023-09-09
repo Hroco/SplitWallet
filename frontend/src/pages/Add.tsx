@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  BurgerButton,
-  ParticipantInputDiv,
-} from '../styles/newWalletItem.styled';
+import { BurgerButton } from '../styles/buttons.styled';
+import { ParticipantInputDiv } from '../styles/newWalletItem.styled';
 import {
   TopPannel,
   MainContent,
@@ -17,6 +15,7 @@ import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import LoadingScreen from '../components/LoadingScreen';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -192,7 +191,7 @@ export default function Add() {
     if (payerId == '') setPayerId(currentWalletUser.id);
   }, [postResponse]);
 
-  // if (wallet == undefined) return <h1>Loading</h1>;
+  // if (wallet == undefined) return <LoadingScreen />;
 
   function handleAddWalletItem() {
     const numberOfCheckedUsers = participants.filter(
@@ -267,7 +266,7 @@ export default function Add() {
     setParticipants(newParticipants);
   }
 
-  if (wallet == undefined) return <h1>Loading</h1>;
+  if (wallet == undefined) return <LoadingScreen />;
 
   const walletUsers = wallet.walletUsers;
 

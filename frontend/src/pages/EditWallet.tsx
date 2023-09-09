@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import {
-  BurgerButton,
   ParticipantInputDiv,
-  CategoryButton,
   MainContentItem,
 } from '../styles/newWallet.styled';
+import { BurgerButton, CategoryButton } from '../styles/buttons.styled';
 import {
   TopPannel,
   MainContent,

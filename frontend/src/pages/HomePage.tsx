@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Navbar,
-  MainContent,
-  AddButton,
-  BurgerButton,
-} from '../styles/index.styled';
+import { WalletAddButton, BurgerButton } from '../styles/buttons.styled';
+import { MainContent, Navbar } from '../styles/mainContainers.styled';
 import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import content from '../assets/testContent';
@@ -12,6 +8,7 @@ import MainItem from '../components/MainItem';
 import { useNavigate } from 'react-router-dom';
 import BurgerMenu from '../components/DropDownMenu';
 import axios from 'axios';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -46,6 +43,8 @@ export default function HomePage() {
   const walletsList = userWalletsFromServer.data?.wallets;*/
 
   // console.log(walletsList);
+
+  // if (true) return <LoadingScreen />;
 
   return (
     <>
@@ -90,9 +89,9 @@ export default function HomePage() {
             />
           ))}
       </MainContent>
-      <AddButton onClick={() => navigate('/newWallet')}>
+      <WalletAddButton onClick={() => navigate('/newWallet')}>
         <AddIcon />
-      </AddButton>
+      </WalletAddButton>
     </>
   );
 }

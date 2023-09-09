@@ -2,14 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import contentData from '../assets/testContentData';
 import ExpenseItem from '../components/ExpenseItem';
+import { TotalExpenseDiv } from '../styles/MainItemPage.styled';
 import {
-  TopPannel,
-  MainContent,
-  AddButton,
+  WalletItemAddButton,
   BurgerButton,
   ExpenseButton,
-  TotalExpenseDiv,
-} from '../styles/MainItemPage.styled';
+} from '../styles/buttons.styled';
 import {
   ExpenseMainContent,
   Navbar,
@@ -22,6 +20,7 @@ import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
 import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
 import EditIcon from '-!svg-react-loader!../assets/icons/edit.svg';
 import axios from 'axios';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Expenses() {
   const { walletId } = useParams();
@@ -76,8 +75,8 @@ export default function Expenses() {
     navigate('/');
   }
 
-  if (wallet == undefined) return <h1>Loading</h1>;
-  if (currentWalletUser == undefined) return <h1>Loading</h1>;
+  if (wallet == undefined) return <LoadingScreen />;
+  if (currentWalletUser == undefined) return <LoadingScreen />;
 
   return (
     <>
@@ -125,9 +124,9 @@ export default function Expenses() {
           <p>MY TOTAL</p>
           <h2>€ {currentWalletUser.total.toFixed(2)}</h2>
         </div>
-        <AddButton onClick={() => navigate(`/${walletId}/add`)}>
+        <WalletItemAddButton onClick={() => navigate(`/${walletId}/add`)}>
           <AddIcon />
-        </AddButton>
+        </WalletItemAddButton>
         <TotalExpenseDiv>
           <p>TOTAL EXPENSES</p>
           <h2>€ {wallet.total.toFixed(2)}</h2>

@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import {
-  TopPannel,
   MainContent,
-  BurgerButton,
   MiddlePannel,
   BottomContent,
-  ParticipantInputDiv,
-} from '../styles/newWalletItem.styled';
+  Navbar,
+} from '../styles/mainContainers.styled';
+import { ParticipantInputDiv } from '../styles/newWalletItem.styled';
+import { BurgerButton } from '../styles/buttons.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { set } from 'mongoose';
+import LoadingScreen from '../components/LoadingScreen';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -259,7 +260,7 @@ export default function Edit() {
     // if (payerId == '') setPayerId(currentWalletUser.id);
   }, [postResponse]);*/
 
-  // if (wallet == undefined) return <h1>Loading</h1>;
+  // if (wallet == undefined) return <LoadingScreen />;
 
   function handleEditWalletItem() {
     const numberOfCheckedUsers = participants.filter(
@@ -334,8 +335,8 @@ export default function Edit() {
     setParticipants(newParticipants);
   }
 
-  if (wallet == undefined) return <h1>Loading</h1>;
-  if (participants == undefined) return <h1>Loading</h1>;
+  if (wallet == undefined) return <LoadingScreen />;
+  if (participants == undefined) return <LoadingScreen />;
 
   const walletUsers = wallet.walletUsers;
 
@@ -373,7 +374,7 @@ export default function Edit() {
 
   return (
     <>
-      <TopPannel>
+      <Navbar>
         <BurgerButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <BackIcon />
         </BurgerButton>
@@ -381,7 +382,7 @@ export default function Edit() {
         <BurgerButton onClick={() => handleEditWalletItem()}>
           <CheckedIcon />
         </BurgerButton>
-      </TopPannel>
+      </Navbar>
       <MainContent>
         <label htmlFor="title">Title</label>
         <input

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { z } from 'zod';
+import { BurgerButton, CategoryButton } from '../styles/buttons.styled';
 import {
-  BurgerButton,
   ParticipantInputDiv,
-  CategoryButton,
   MainContentItem,
 } from '../styles/newWallet.styled';
 import {
