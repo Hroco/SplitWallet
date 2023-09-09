@@ -5,6 +5,7 @@ import {
   Navbar,
   MiddlePannel,
   BottomContent,
+  BalancesTopPannel,
 } from '../styles/mainContainers.styled';
 import { BurgerButton, ExpenseButton } from '../styles/buttons.styled';
 import BalanceItem from '../components/BalanceItem';
@@ -189,21 +190,23 @@ export default function Balances() {
         </ExpenseButton>
       </Navbar>
       <BalancesMainContent>
-        {walletUsers &&
-          walletUsers
-            .sort((a: any, b: any) => a.name.localeCompare(b.name))
-            .map((walletUser: any, index: number) => (
-              <BalanceItem
-                key={index}
-                name={walletUser.name}
-                value={walletUser.bilance}
-                ratio={
-                  walletUser.bilance > 0
-                    ? bilanceBarPositiveRatio
-                    : bilanceBarNegativeRatio
-                }
-              />
-            ))}
+        <BalancesTopPannel>
+          {walletUsers &&
+            walletUsers
+              .sort((a: any, b: any) => a.name.localeCompare(b.name))
+              .map((walletUser: any, index: number) => (
+                <BalanceItem
+                  key={index}
+                  name={walletUser.name}
+                  value={walletUser.bilance}
+                  ratio={
+                    walletUser.bilance > 0
+                      ? bilanceBarPositiveRatio
+                      : bilanceBarNegativeRatio
+                  }
+                />
+              ))}
+        </BalancesTopPannel>
         <MiddlePannel>HOW SHOULD I BALANCE</MiddlePannel>
         <BottomContent>
           {reimbursements &&

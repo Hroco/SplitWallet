@@ -17,7 +17,8 @@ export const MainItemDiv = styled.div`
 export const BalanceItemDiv = styled.div`
   display: flex;
   justify-content: space-between;
-
+  height: ${({ theme }) => theme.balanceBarHeight}px;
+  align-items: center;
   p {
     width: 50%;
     z-index: 7;
@@ -36,18 +37,22 @@ interface BalanceBarProps {
 export const PositiveBalanceBar = styled.div<BalanceBarProps>`
   position: absolute;
   background-color: ${({ theme }) => theme.colors.bilanceGreenColor};
-  width: ${(props) => (props.width ? `${props.width}vw` : 'vw')};
-  height: 100%;
-  top: 0;
+  width: calc(${(props) => (props.width ? `${props.width}vw` : 'vw')} - 5px);
+  height: ${({ theme }) => theme.balanceBarHeight - 10}px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  top: calc(0px - ${({ theme }) => theme.balanceBarHeight / 2 - 5}px);
   z-index: 5;
 `;
 
 export const NegativeBalanceBar = styled.div<BalanceBarProps>`
   position: absolute;
   background-color: ${({ theme }) => theme.colors.bilanceRedColor};
-  width: ${(props) => (props.width ? `${props.width}vw` : 'vw')};
-  height: 100%;
-  top: 0;
+  width: calc(${(props) => (props.width ? `${props.width}vw` : 'vw')} - 5px);
+  height: ${({ theme }) => theme.balanceBarHeight - 10}px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  top: calc(0px - ${({ theme }) => theme.balanceBarHeight / 2 - 5}px);
   right: 0;
   z-index: 5;
 `;

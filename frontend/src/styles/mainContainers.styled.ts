@@ -48,6 +48,8 @@ export const TopPannel = styled.div`
   padding: 20px 20px;
 `;
 
+export const BalancesTopPannel = styled.div``;
+
 export const MiddlePannel = styled.div`
   display: flex;
   justify-content: space-between;

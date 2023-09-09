@@ -26,6 +26,7 @@ const theme = {
   expenseFooterHeight: '80px',
   feedFooterHeight: '60px',
   openFooterHeight: '60px',
+  balanceBarHeight: 50,
 };
 
 root.render(
