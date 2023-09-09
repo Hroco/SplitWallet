@@ -24,6 +24,7 @@ const WalletItemSchema = z.object({
   recieversData: z.array(
     z.object({ id: z.string(), cutFromAmount: z.number() })
   ),
+  type: z.string(),
 });
 
 router.get(
@@ -268,6 +269,7 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
         name: input.name,
         amount: input.amount,
         date: input.date,
+        type: input.type,
         tags: input.tags ? input.tags.split(",") : [], // Assuming tags is a comma-separated string
         payer: {
           connect: { id: input.payer },
@@ -295,7 +297,13 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
       return res.sendStatus(404);
     }
 
-    const newBilance = walletUser.bilance + input.amount;
+    let newBilance = walletUser.bilance;
+    if (input.type === "expense" || input.type === "moneyTransfer") {
+      newBilance += input.amount;
+    }
+    if (input.type === "income") {
+      newBilance -= input.amount;
+    }
 
     await prisma.walletUser.update({
       where: { id: input.payer },
@@ -313,7 +321,14 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
       return res.sendStatus(404);
     }
 
-    const newTotal = wallet.total + input.amount;
+    let newTotal = wallet.total;
+    if (input.type === "expense") {
+      newTotal += input.amount;
+    }
+    if (input.type === "income") {
+      newTotal -= input.amount;
+    }
+    // Monney transfer doesnt affect total
 
     await prisma.wallets.update({
       where: { id: input.walletId },
@@ -332,8 +347,23 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
         return res.sendStatus(404);
       }
 
-      const newBilance = walletUser.bilance - receiver.cutFromAmount;
-      const newTotal = walletUser.total + receiver.cutFromAmount;
+      let newBilance = walletUser.bilance;
+      let newTotal = walletUser.total;
+
+      if (input.type === "expense") {
+        newBilance -= receiver.cutFromAmount;
+        newTotal += receiver.cutFromAmount;
+      }
+      if (input.type === "income") {
+        newBilance += receiver.cutFromAmount;
+        newTotal -= receiver.cutFromAmount;
+      }
+      if (input.type === "moneyTransfer") {
+        newBilance -= receiver.cutFromAmount;
+      }
+
+      // const newBilance = walletUser.bilance - receiver.cutFromAmount;
+      // const newTotal = walletUser.total + receiver.cutFromAmount;
 
       await prisma.walletUser.update({
         where: { id: receiver.id },
@@ -402,6 +432,7 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
         amount: input.amount,
         date: input.date,
         tags: input.tags ? input.tags.split(",") : [], // Assuming tags is a comma-separated string
+        type: input.type,
         payer: {
           connect: { id: input.payer },
         },
@@ -429,7 +460,16 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
       return res.sendStatus(404);
     }
 
-    const oldBilance = oldWalletUser.bilance - input.amount;
+    let oldBilance = oldWalletUser.bilance;
+    if (
+      oldWalletItem.type === "expense" ||
+      oldWalletItem.type === "moneyTransfer"
+    ) {
+      oldBilance -= oldWalletItem.amount;
+    }
+    if (oldWalletItem.type === "income") {
+      oldBilance += oldWalletItem.amount;
+    }
 
     await prisma.walletUser.update({
       where: { id: oldWalletItem.payer.id },
@@ -447,7 +487,13 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
       return res.sendStatus(404);
     }
 
-    const newBilance = walletUser.bilance + input.amount;
+    let newBilance = walletUser.bilance;
+    if (input.type === "expense" || input.type === "moneyTransfer") {
+      newBilance += input.amount;
+    }
+    if (input.type === "income") {
+      newBilance -= input.amount;
+    }
 
     await prisma.walletUser.update({
       where: { id: input.payer },
@@ -465,8 +511,24 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
       return res.sendStatus(404);
     }
 
-    // Remove old total and apply new total
-    const newTotal = wallet.total - oldWalletItem.amount + input.amount;
+    // Remove old total
+    let newTotal = wallet.total;
+    if (oldWalletItem.type === "expense") {
+      newTotal -= oldWalletItem.amount;
+    }
+    if (oldWalletItem.type === "income") {
+      newTotal += oldWalletItem.amount;
+    }
+    // Monney transfer doesnt affect total
+
+    // Apply new total
+    if (input.type === "expense") {
+      newTotal += input.amount;
+    }
+    if (input.type === "income") {
+      newTotal -= input.amount;
+    }
+    // Monney transfer doesnt affect total
 
     await prisma.wallets.update({
       where: { id: input.walletId },
@@ -485,8 +547,19 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
         return res.sendStatus(404);
       }
 
-      const oldBilance = walletUser.bilance + receiver.amount;
-      const oldTotal = walletUser.total - receiver.amount;
+      let oldBilance = walletUser.bilance;
+      let oldTotal = walletUser.total;
+      if (oldWalletItem.type === "expense") {
+        oldBilance += receiver.amount;
+        oldTotal -= receiver.amount;
+      }
+      if (oldWalletItem.type === "income") {
+        oldBilance -= receiver.amount;
+        oldTotal += receiver.amount;
+      }
+      if (oldWalletItem.type === "moneyTransfer") {
+        oldBilance += receiver.amount;
+      }
 
       await prisma.walletUser.update({
         where: { id: receiver.reciever.id },
@@ -507,8 +580,20 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
         return res.sendStatus(404);
       }
 
-      const newBilance = walletUser.bilance - receiver.cutFromAmount;
-      const newTotal = walletUser.total + receiver.cutFromAmount;
+      let newBilance = walletUser.bilance;
+      let newTotal = walletUser.total;
+
+      if (input.type === "expense") {
+        newBilance -= receiver.cutFromAmount;
+        newTotal += receiver.cutFromAmount;
+      }
+      if (input.type === "income") {
+        newBilance += receiver.cutFromAmount;
+        newTotal -= receiver.cutFromAmount;
+      }
+      if (input.type === "moneyTransfer") {
+        newBilance -= receiver.cutFromAmount;
+      }
 
       await prisma.walletUser.update({
         where: { id: receiver.id },
@@ -660,7 +745,16 @@ router.delete(
         return res.sendStatus(404);
       }
 
-      const oldBilance = oldWalletUser.bilance - oldWalletItem.amount;
+      let oldBilance = oldWalletUser.bilance;
+      if (
+        oldWalletItem.type === "expense" ||
+        oldWalletItem.type === "moneyTransfer"
+      ) {
+        oldBilance -= oldWalletItem.amount;
+      }
+      if (oldWalletItem.type === "income") {
+        oldBilance += oldWalletItem.amount;
+      }
 
       await prisma.walletUser.update({
         where: { id: oldWalletItem.payer.id },
@@ -679,7 +773,14 @@ router.delete(
       }
 
       // Remove old total and apply new total
-      const newTotal = wallet.total - oldWalletItem.amount;
+      let newTotal = wallet.total;
+      if (oldWalletItem.type === "expense") {
+        newTotal -= oldWalletItem.amount;
+      }
+      if (oldWalletItem.type === "income") {
+        newTotal += oldWalletItem.amount;
+      }
+      // Monney transfer doesnt affect total
 
       await prisma.wallets.update({
         where: { id: oldWalletItem.walletsId },
@@ -698,8 +799,19 @@ router.delete(
           return res.sendStatus(404);
         }
 
-        const oldBilance = walletUser.bilance + receiver.amount;
-        const oldTotal = walletUser.total - receiver.amount;
+        let oldBilance = walletUser.bilance;
+        let oldTotal = walletUser.total;
+        if (oldWalletItem.type === "expense") {
+          oldBilance += receiver.amount;
+          oldTotal -= receiver.amount;
+        }
+        if (oldWalletItem.type === "income") {
+          oldBilance -= receiver.amount;
+          oldTotal += receiver.amount;
+        }
+        if (oldWalletItem.type === "moneyTransfer") {
+          oldBilance += receiver.amount;
+        }
 
         await prisma.walletUser.update({
           where: { id: receiver.reciever.id },

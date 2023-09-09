@@ -48,6 +48,7 @@ model WalletItem {
   tags      String[]
   payer     WalletUser     @relation(fields: [userId], references: [id])
   amount    Float
+  type      String
   date      DateTime
   recievers RecieverData[]
   createdAt DateTime       @default(now())

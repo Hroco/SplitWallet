@@ -42,6 +42,7 @@ const WalletItemSchema = z.object({
   recieversData: z.array(
     z.object({ id: z.string(), cutFromAmount: z.number() })
   ),
+  type: z.string(),
 });
 
 function arraysAreEqual(arr1: any, arr2: any) {
@@ -63,6 +64,7 @@ export default function Add() {
   const [amount, setAmount] = useState<number>(0);
   const [date, setDate] = useState<Date>(new Date());
   const [payerId, setPayerId] = useState<string>('');
+  const [type, setType] = useState<string>('expense');
   const [mainCheckBoxMode, setMainCheckBoxMode] = useState<string>('checked');
   const [mainCheckBox, setMainCheckBox] = useState<boolean>(true);
   const [participants, setParticipants] = useState<
@@ -225,6 +227,7 @@ export default function Add() {
       payer: payerId,
       tags: 'Beer',
       recieversData: participantData,
+      type: type,
     };
 
     axios.post('/api/wallets/addWalletItem/', newWalletItem);
@@ -302,19 +305,41 @@ export default function Add() {
     );
   }
 
+  function setHeading() {
+    if (type == 'expense') return 'New expense';
+    if (type == 'income') return 'New income';
+    if (type == 'moneyTransfer') return 'New money transfer';
+  }
+
+  function setLabel() {
+    if (type == 'expense') return 'Paid by';
+    if (type == 'income') return 'Recieved by';
+    if (type == 'moneyTransfer') return 'Paid by';
+  }
+
   return (
     <>
       <Navbar>
         <BurgerButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <BackIcon />
         </BurgerButton>
-        <h1>New expense</h1>
+        <h1>{setHeading()}</h1>
         <BurgerButton onClick={() => handleAddWalletItem()}>
           <CheckedIcon />
         </BurgerButton>
       </Navbar>
       <MainContent>
         <TopPannel>
+          <MainContentItem>
+            <Select
+              value={type as string}
+              onChange={(e) => setType(e.target.value)}
+            >
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+              <option value="moneyTransfer">Money Transfer</option>
+            </Select>
+          </MainContentItem>
           <MainContentItem>
             <Label htmlFor="title">Title</Label>
             <Input
@@ -343,7 +368,7 @@ export default function Add() {
             />
           </MainContentItem>
           <MainContentItem>
-            <Label htmlFor="payer">Paid by</Label>
+            <Label htmlFor="payer">{setLabel()}</Label>
             <Select
               id="payer"
               value={payerId as string}

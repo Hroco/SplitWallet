@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   MainContent,
+  TopPannel,
   MiddlePannel,
   BottomContent,
   Navbar,
 } from '../styles/mainContainers.styled';
+import { MainContentItem } from '../styles/newWallet.styled';
+import { Input, Select, Label } from '../styles/Input.styled';
 import { ParticipantInputDiv } from '../styles/newWalletItem.styled';
 import { BurgerButton } from '../styles/buttons.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
@@ -40,6 +43,7 @@ const WalletItemSchema = z.object({
   recieversData: z.array(
     z.object({ id: z.string(), cutFromAmount: z.number() })
   ),
+  type: z.string(),
 });
 
 function arraysAreEqual(arr1: any, arr2: any) {
@@ -61,6 +65,7 @@ export default function Edit() {
   const [amount, setAmount] = useState<number>(0);
   const [date, setDate] = useState<Date>(new Date());
   const [payerId, setPayerId] = useState<string>('');
+  const [type, setType] = useState<string>('expense');
   const [mainCheckBoxMode, setMainCheckBoxMode] = useState<string>('checked');
   const [participants, setParticipants] = useState<
     z.infer<typeof ParticipantsSchema>
@@ -115,6 +120,7 @@ export default function Edit() {
     setAmount(walletItem.amount);
     setDate(new Date(walletItem.date));
     setPayerId(walletItem.payer.id);
+    setType(walletItem.type);
     console.log('participants', participants);
 
     if (wallet == undefined) return;
@@ -294,6 +300,7 @@ export default function Edit() {
       payer: payerId,
       tags: 'Beer',
       recieversData: participantData,
+      type: type,
     };
 
     axios.put(`/api/wallets/editWalletItem/${walletItemId}`, newWalletItem);
@@ -352,7 +359,7 @@ export default function Edit() {
     participantElements.push(
       <ParticipantInputDiv key={i}>
         <div>
-          <input
+          <Input
             type="checkbox"
             id="name"
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
@@ -360,10 +367,10 @@ export default function Edit() {
             }
             checked={state}
           />
-          <label htmlFor="name">{user.name}</label>
+          <Label htmlFor="name">{user.name}</Label>
         </div>
 
-        <input
+        <Input
           type="number"
           value={getCutFromAmount(i)}
           onChange={(e) => setCutFromAmount(i, parseInt(e.target.value))}
@@ -372,59 +379,91 @@ export default function Edit() {
     );
   }
 
+  function setHeading() {
+    if (type == 'expense') return 'Edit expense';
+    if (type == 'income') return 'Edit income';
+    if (type == 'moneyTransfer') return 'Edit money transfer';
+  }
+
+  function setLabel() {
+    if (type == 'expense') return 'Paid by';
+    if (type == 'income') return 'Recieved by';
+    if (type == 'moneyTransfer') return 'Paid by';
+  }
+
   return (
     <>
       <Navbar>
         <BurgerButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <BackIcon />
         </BurgerButton>
-        <h1>Edit expense</h1>
+        <h1>{setHeading()}</h1>
         <BurgerButton onClick={() => handleEditWalletItem()}>
           <CheckedIcon />
         </BurgerButton>
       </Navbar>
       <MainContent>
-        <label htmlFor="title">Title</label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <label htmlFor="amount">Amount</label>
-        <input
-          type="number"
-          id="amount"
-          value={amount}
-          onChange={(e) => setAmount(parseFloat(e.target.value))}
-        />
-        <label htmlFor="date">Date</label>
-        <input
-          type="date"
-          id="date"
-          value={date.toISOString().split('T')[0]}
-          onChange={(e) => setDate(new Date(e.target.value))}
-        />
-        <label htmlFor="payer">Paid by</label>
-        <select
-          id="payer"
-          value={payerId as string}
-          onChange={(e) => setPayerId(e.target.value)}
-        >
-          {walletUsers &&
-            walletUsers.map((walletUser: any, index: number) => (
-              <option key={walletUser.id} value={walletUser.id}>
-                {walletUser.name}
-              </option>
-            ))}
-        </select>
+        <TopPannel>
+          <MainContentItem>
+            <Select
+              value={type as string}
+              onChange={(e) => setType(e.target.value)}
+            >
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+              <option value="moneyTransfer">Money Transfer</option>
+            </Select>
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="title">Title</Label>
+            <Input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              type="number"
+              id="amount"
+              value={amount}
+              onChange={(e) => setAmount(parseFloat(e.target.value))}
+            />
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="date">Date</Label>
+            <Input
+              type="date"
+              id="date"
+              value={date.toISOString().split('T')[0]}
+              onChange={(e) => setDate(new Date(e.target.value))}
+            />
+          </MainContentItem>
+          <MainContentItem>
+            <Label htmlFor="payer">{setLabel()}</Label>
+            <Select
+              id="payer"
+              value={payerId as string}
+              onChange={(e) => setPayerId(e.target.value)}
+            >
+              {walletUsers &&
+                walletUsers.map((walletUser: any, index: number) => (
+                  <option key={walletUser.id} value={walletUser.id}>
+                    {walletUser.name}
+                  </option>
+                ))}
+            </Select>
+          </MainContentItem>
+        </TopPannel>
+        <MiddlePannel>
+          <button onClick={handleMainCheckBoxClick}>{mainCheckBoxMode}</button>
+          <p>For whom</p>
+          <button>Advanced</button>
+        </MiddlePannel>
+        <BottomContent>{participantElements}</BottomContent>
       </MainContent>
-      <MiddlePannel>
-        <button onClick={handleMainCheckBoxClick}>{mainCheckBoxMode}</button>
-        <p>For whom</p>
-        <button>Advanced</button>
-      </MiddlePannel>
-      <BottomContent>{participantElements}</BottomContent>
     </>
   );
 }
