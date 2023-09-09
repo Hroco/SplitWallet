@@ -19,5 +19,21 @@ module.exports = {
           variables: {}
         }
       }
-    ]
+    ],
+    babel: {
+      presets: ['@babel/preset-react'],
+      plugins: [
+        [
+          "babel-plugin-styled-components",
+          {
+            "displayName": true
+          }
+        ]
+      ],
+      loaderOptions: (babelLoaderOptions, { env, paths }) => {
+        console.log("BABEL");
+        console.log(babelLoaderOptions);
+        return babelLoaderOptions;
+      },
+    }
   };

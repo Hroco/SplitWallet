@@ -66,27 +66,33 @@ export const BurgerButton = styled.button<BurgerButtonProps>`
 `;
 
 export const WalletAddButton = styled.button`
+  --add-button-size: 80px;
+
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: calc(var(--add-button-size) / 4);
+  right: calc(var(--add-button-size) / 4);
 
   border-radius: 50%;
   background-color: ${({ theme }) => theme.colors.backgroundColorOrange};
-  height: 80px;
-  width: 80px;
+  height: var(--add-button-size);
+  width: var(--add-button-size);
   outline: none;
   border: none;
 `;
 
 export const WalletItemAddButton = styled.button`
+  --add-button-size: 60px;
+
   position: absolute;
-  bottom: calc(100px - 40px);
-  left: calc(50% - 40px);
+  bottom: calc(
+    ${({ theme }) => theme.expenseFooterHeight} - var(--add-button-size) / 2
+  );
+  left: calc(50% - var(--add-button-size) / 2);
 
   border-radius: 50%;
   background-color: ${({ theme }) => theme.colors.backgroundColorOrange};
-  height: 80px;
-  width: 80px;
+  height: var(--add-button-size);
+  width: var(--add-button-size);
   outline: none;
   border: none;
 `;

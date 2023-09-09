@@ -70,24 +70,6 @@ export default function HomePage() {
               description={item.description}
             />
           ))}
-        {walletsList &&
-          walletsList.map((item: any, index: number) => (
-            <MainItem
-              onClick={() => navigate(`/${item.id}/expenses`)}
-              key={index}
-              name={item.name}
-              description={item.description}
-            />
-          ))}
-        {walletsList &&
-          walletsList.map((item: any, index: number) => (
-            <MainItem
-              onClick={() => navigate(`/${item.id}/expenses`)}
-              key={index}
-              name={item.name}
-              description={item.description}
-            />
-          ))}
       </MainContent>
       <WalletAddButton onClick={() => navigate('/newWallet')}>
         <AddIcon />

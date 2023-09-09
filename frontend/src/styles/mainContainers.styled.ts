@@ -13,6 +13,7 @@ export const Navbar = styled.div`
     margin-left: 15px;
   }
 `;
+Navbar.displayName = 'Navbar';
 
 export const MainContent = styled.div`
   display: flex;
