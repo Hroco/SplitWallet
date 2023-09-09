@@ -49,7 +49,9 @@ export default function Expenses() {
   const [wallet, setWallet] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
   const [shouldShowBurgerMenu, setShouldShowBurgerMenu] = useState(false);
-  const [shouldShowSortingmenu, setShouldShowSortingMenu] = useState(false);
+  const [shouldShowSortingMenu, setShouldShowSortingMenu] = useState(false);
+  const [shouldShowPersonalModeMenu, setShouldShowPersonalModeMenu] =
+    useState(false);
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
 
@@ -93,6 +95,7 @@ export default function Expenses() {
           return 0;
       }
     });
+    console.log('walletItems', walletItems);
     setWalletItems(walletItems);
     setWallet(wallet);
   }, [postResponse]);
@@ -108,6 +111,7 @@ export default function Expenses() {
   }, []);
 
   useEffect(() => {
+    console.log('sortType', sortType);
     if (walletItems == undefined) return;
     walletItems.sort((a: any, b: any) => {
       switch (sortType) {
@@ -136,7 +140,7 @@ export default function Expenses() {
       }
     });
     setShouldShowBurgerMenu(false);
-    setWalletItems(walletItems);
+    setWalletItems([...walletItems]);
   }, [sortType]);
 
   useEffect(() => {
@@ -265,6 +269,7 @@ export default function Expenses() {
   }
 
   function toggleSortType(asc: SortType, desc: SortType) {
+    console.log('toggleSortType');
     if (sortType == asc) {
       setSortType(desc);
     } else {
@@ -282,9 +287,6 @@ export default function Expenses() {
           <BackIcon />
         </BurgerButton>
         <h1>{wallet.name}</h1>
-        <BurgerButton onClick={() => navigate(`/${walletId}/feed`)}>
-          <HistoryIcon />
-        </BurgerButton>
         <BurgerButton onClick={() => setShouldShowBurgerMenu(true)}>
           <BurgerIcon />
         </BurgerButton>
@@ -316,9 +318,9 @@ export default function Expenses() {
             </Button>
           </BurgerMenu>
         )}
-        {shouldShowSortingmenu && (
+        {shouldShowSortingMenu && (
           <BurgerMenu
-            isOpen={shouldShowSortingmenu}
+            isOpen={shouldShowSortingMenu}
             setIsOpen={setShouldShowSortingMenu}
           >
             <MenuHeading>Sort by</MenuHeading>
