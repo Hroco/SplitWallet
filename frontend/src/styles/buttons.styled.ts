@@ -65,6 +65,20 @@ export const BurgerButton = styled.button<BurgerButtonProps>`
   }
 `;
 
+export const NavigationNextItemButton = styled(BurgerButton)`
+  justify-content: flex-end;
+  gap: 10px;
+  text-align: right;
+  width: 100px;
+`;
+
+export const NavigationPrevItemButton = styled(BurgerButton)`
+  justify-content: flex-start;
+  gap: 10px;
+  text-align: left;
+  width: 100px;
+`;
+
 export const WalletAddButton = styled.button`
   --add-button-size: 80px;
 

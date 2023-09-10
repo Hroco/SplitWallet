@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { BurgerButton } from '../styles/buttons.styled';
 import {
+  BurgerButton,
+  NavigationNextItemButton,
+  NavigationPrevItemButton,
+} from '../styles/buttons.styled';
+import {
+  MiddlePannel,
   Navbar,
   OpenFooter,
   OpenMainContent,
@@ -11,6 +16,21 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import MainItem from '../components/MainItem';
 import LoadingScreen from '../components/LoadingScreen';
+import {
+  ImageIconMenu,
+  SecondaryItemMenu,
+  ThirdItemMenu,
+} from '../styles/Open.styled';
+import CameraIcon from '-!svg-react-loader!../assets/icons/camera.svg';
+import { ArrowRight } from '../styles/utills.styled';
+
+function formatDate(date: Date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear(); // Get year
+
+  return `${day}/${month}/${year}`;
+}
 
 export default function Open() {
   const { walletId, walletItemId } = useParams();
@@ -66,16 +86,16 @@ export default function Open() {
     navigate(`/${walletId}/expenses`);
   }
 
+  const dateInput = new Date(walletItem.date);
+  const formatedDate = formatDate(dateInput);
+
   return (
     <>
       <Navbar>
         <BurgerButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <BackIcon />
         </BurgerButton>
-        <h1>{walletItem.name}</h1>
-        <BurgerButton onClick={deleteWalletItem}>
-          <TrashIcon />
-        </BurgerButton>
+
         <BurgerButton
           onClick={() => navigate(`/${walletId}/${walletItemId}/edit`)}
         >
@@ -83,12 +103,25 @@ export default function Open() {
         </BurgerButton>
       </Navbar>
       <OpenMainContent>
-        <p>Paid by {walletItem.payer.name}</p>
-        <p>Date {walletItem.date}</p>
-        <p>
+        <h1>{walletItem.name}</h1>
+        <SecondaryItemMenu>
+          <div>
+            <h3>€{walletItem.amount}</h3>
+            <ThirdItemMenu>
+              <p>Paid by {walletItem.payer.name}</p>
+              <p>Date {formatedDate}</p>
+            </ThirdItemMenu>
+            <ImageIconMenu>
+              <CameraIcon />
+              <p>Add an Image</p>
+            </ImageIconMenu>
+          </div>
+        </SecondaryItemMenu>
+        <MiddlePannel>
           For {walletItem.recievers.length} participants,{' '}
           {isCurrentUserOneOfRecievers ? 'including me' : 'but not me'}
-        </p>
+        </MiddlePannel>
+
         {walletItem.recievers &&
           walletItem.recievers.map((reciever: any, index: number) => (
             <MainItem
@@ -99,14 +132,18 @@ export default function Open() {
           ))}
       </OpenMainContent>
       <OpenFooter>
-        <BurgerButton onClick={() => navigate('/')}>
-          <BackIcon />
+        <NavigationPrevItemButton onClick={() => navigate('/')}>
+          <div>
+            <BackIcon />
+          </div>
           <p>Previouse</p>
-        </BurgerButton>
-        <BurgerButton rotate={'180'} onClick={() => navigate('/')}>
+        </NavigationPrevItemButton>
+        <NavigationNextItemButton rotate={'180'} onClick={() => navigate('/')}>
           <p>Next</p>
-          <BackIcon />
-        </BurgerButton>
+          <ArrowRight>
+            <BackIcon />
+          </ArrowRight>
+        </NavigationNextItemButton>
       </OpenFooter>
     </>
   );

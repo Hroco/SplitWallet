@@ -42,6 +42,11 @@ export const OpenMainContent = styled(MainContent)`
     100% - ${({ theme }) => theme.navbarHeight} -
       ${({ theme }) => theme.openFooterHeight}
   );
+  h1 {
+    text-align: center;
+    background-color: ${({ theme }) => theme.colors.backgroundColorDarkGrey};
+    height: ${({ theme }) => theme.navbarHeight};
+  }
 `;
 
 export const TopPannel = styled.div`

@@ -28,7 +28,7 @@ export default function MainItem({
           <p>{description}</p>
         </div>
         <div>
-          <h2>{price}</h2>
+          <h2>{price && '€' + price.toFixed(2)}</h2>
           <p>{date}</p>
         </div>
       </MainItemDiv>

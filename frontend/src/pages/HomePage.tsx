@@ -11,6 +11,7 @@ import BurgerMenu from '../components/DropDownMenu';
 import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import { Button } from '../styles/DropDownMenu.styled';
+import { IonButton, IonContent, IonPopover } from '@ionic/react';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -52,10 +53,19 @@ export default function HomePage() {
     <>
       <Navbar>
         <h1>SplitWallet</h1>
-        <BurgerButton onClick={() => setShouldShowBurgerMenu(true)}>
+        <BurgerButton
+          id="click-trigger"
+          onClick={() => setShouldShowBurgerMenu(true)}
+        >
           <BurgerIcon />
         </BurgerButton>
-        {shouldShowBurgerMenu && (
+        <IonPopover trigger="click-trigger" triggerAction="click">
+          <IonContent class="ion-padding">Hello World!</IonContent>
+          <IonContent class="ion-padding">Hello World!</IonContent>
+          <IonContent class="ion-padding">Hello World!</IonContent>
+          <IonContent class="ion-padding">Hello World!</IonContent>
+        </IonPopover>
+        {/* shouldShowBurgerMenu && (
           <BurgerMenu
             isOpen={shouldShowBurgerMenu}
             setIsOpen={setShouldShowBurgerMenu}
@@ -65,7 +75,7 @@ export default function HomePage() {
               My settings
             </Button>
           </BurgerMenu>
-        )}
+        )*/}
       </Navbar>
       <MainContent>
         {walletsList &&
