@@ -375,7 +375,9 @@ export default function Expenses() {
         {walletItems &&
           walletItems.map((walletItem: any, index: number) => (
             <ExpenseItem
-              onClick={() => navigate(`/${walletId}/${walletItem.id}/open`)}
+              onClick={() =>
+                navigate(`/${walletId}/${walletItem.id}/open?sort=${sortType}`)
+              }
               key={index}
               name={walletItem.name}
               payer={walletItem.payer.name}

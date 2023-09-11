@@ -181,6 +181,87 @@ router.get(
 );
 
 router.get(
+  "/getPrevAndNextWalletItemByWalletItemIdAndSortType/:data",
+  async (req: Request, res: Response) => {
+    try {
+      console.log(
+        "getPrevAndNextWalletItemByWalletItemIdAndSortType",
+        req.params.data
+      );
+      const [walletItemId, sortType] = req.params.data.split(",");
+
+      const currentWalletItem = await prisma.walletItem.findFirst({
+        where: { id: walletItemId },
+      });
+
+      if (!currentWalletItem) {
+        return res.sendStatus(404);
+      }
+
+      const wallet = await prisma.wallets.findFirst({
+        where: { id: currentWalletItem.walletsId },
+        include: {
+          walletItems: true,
+        },
+      });
+
+      if (!wallet) {
+        return res.sendStatus(404);
+      }
+
+      const walletItems = wallet.walletItems;
+
+      walletItems.sort((a: any, b: any) => {
+        switch (sortType) {
+          case "DateAsc":
+            return a.date > b.date ? 1 : -1;
+          case "DateDesc":
+            return a.date < b.date ? 1 : -1;
+          case "AmountAsc":
+            return a.amount > b.amount ? 1 : -1;
+          case "AmountDesc":
+            return a.amount < b.amount ? 1 : -1;
+          case "TitleAsc":
+            return a.name > b.name ? 1 : -1;
+          case "TitleDesc":
+            return a.name < b.name ? 1 : -1;
+          case "PayerAsc":
+            return a.payer.name > b.payer.name ? 1 : -1;
+          case "PayerDesc":
+            return a.payer.name < b.payer.name ? 1 : -1;
+          case "CategoryAsc":
+            return a.type > b.type ? 1 : -1;
+          case "CategoryDesc":
+            return a.type < b.type ? 1 : -1;
+          default:
+            return 0;
+        }
+      });
+
+      const walletItemIndex = walletItems.findIndex(
+        (item: any) => item.id === walletItemId
+      );
+
+      let walletItemPrev = null;
+      let walletItemNext = null;
+
+      if (walletItemIndex > 0) {
+        walletItemPrev = walletItems[walletItemIndex - 1];
+      }
+
+      if (walletItemIndex < walletItems.length - 1) {
+        walletItemNext = walletItems[walletItemIndex + 1];
+      }
+
+      res.json({ walletItemPrev, walletItemNext });
+    } catch (error) {
+      console.error(error);
+      res.sendStatus(500);
+    }
+  }
+);
+
+router.get(
   "/getWalletUsersByWalletId/:id",
   async (req: Request, res: Response) => {
     console.log("getWalletUsersByWalletId");

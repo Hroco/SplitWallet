@@ -12,7 +12,7 @@ import {
 } from '../styles/mainContainers.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import MainItem from '../components/MainItem';
 import LoadingScreen from '../components/LoadingScreen';
@@ -34,11 +34,18 @@ function formatDate(date: Date) {
 
 export default function Open() {
   const { walletId, walletItemId } = useParams();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const sortType = searchParams.get('sort');
+  // console.log('sortType', sortType);
   const navigate = useNavigate();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletItem, setWalletItem] = useState<any>(null);
   const [postResponse2, setPostResponse2] = useState<any>(null);
+  const [postResponse3, setPostResponse3] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
+  const [prevWalletItem, setPrevWalletItem] = useState<any>(null);
+  const [nextWalletItem, setNextWalletItem] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
@@ -48,7 +55,7 @@ export default function Open() {
       );
       setPostResponse(response.data);
     })();
-  }, []);
+  }, [walletItemId]);
 
   useEffect(() => {
     const { walletItem } = postResponse || {};
@@ -64,13 +71,29 @@ export default function Open() {
       );
       setPostResponse2(response.data);
     })();
-  }, []);
+  }, [walletItemId]);
 
   useEffect(() => {
     const { walletUser } = postResponse2 || {};
     // console.log('walletUser', walletUser);
     setCurrentWalletUser(walletUser);
   }, [postResponse2]);
+
+  useEffect(() => {
+    (async () => {
+      const data = [walletItemId, sortType];
+      const response = await axios.get(
+        `/api/wallets/getPrevAndNextWalletItemByWalletItemIdAndSortType/${data}`
+      );
+      setPostResponse3(response.data);
+    })();
+  }, [walletItemId]);
+
+  useEffect(() => {
+    const { walletItemPrev, walletItemNext } = postResponse3 || {};
+    setPrevWalletItem(walletItemPrev);
+    setNextWalletItem(walletItemNext);
+  }, [postResponse3]);
 
   if (walletItem == undefined) return <LoadingScreen />;
   if (currentWalletUser == undefined) return <LoadingScreen />;
@@ -132,18 +155,38 @@ export default function Open() {
           ))}
       </OpenMainContent>
       <OpenFooter>
-        <NavigationPrevItemButton onClick={() => navigate('/')}>
-          <div>
-            <BackIcon />
-          </div>
-          <p>Previouse</p>
-        </NavigationPrevItemButton>
-        <NavigationNextItemButton rotate={'180'} onClick={() => navigate('/')}>
-          <p>Next</p>
-          <ArrowRight>
-            <BackIcon />
-          </ArrowRight>
-        </NavigationNextItemButton>
+        {prevWalletItem ? (
+          <NavigationPrevItemButton
+            onClick={() =>
+              navigate(
+                `/${walletId}/${prevWalletItem.id}/open?sort=${sortType}`
+              )
+            }
+          >
+            <div>
+              <BackIcon />
+            </div>
+            <p>Previouse</p>
+          </NavigationPrevItemButton>
+        ) : (
+          <div></div>
+        )}
+        {nextWalletItem ? (
+          <NavigationNextItemButton
+            onClick={() =>
+              navigate(
+                `/${walletId}/${nextWalletItem.id}/open?sort=${sortType}`
+              )
+            }
+          >
+            <p>Next</p>
+            <ArrowRight>
+              <BackIcon />
+            </ArrowRight>
+          </NavigationNextItemButton>
+        ) : (
+          <div></div>
+        )}
       </OpenFooter>
     </>
   );
