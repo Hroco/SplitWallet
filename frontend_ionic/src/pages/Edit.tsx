@@ -15,7 +15,6 @@ import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
 import { useHistory, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { set } from 'mongoose';
 import LoadingScreen from '../components/LoadingScreen';
 
 const ParticipantsSchema = z.array(
