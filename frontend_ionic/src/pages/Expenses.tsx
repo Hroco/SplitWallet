@@ -24,6 +24,7 @@ import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import { Button } from '../styles/DropDownMenu.styled';
 import { ArrowDown, ArrowUp } from '../styles/utills.styled';
+import { createOutline } from 'ionicons/icons';
 import {
   IonBackButton,
   IonButton,
@@ -320,8 +321,8 @@ export default function Expenses() {
                     detail={false}
                     onClick={() => history.push(`/${walletId}/edit`)}
                   >
-                    <EditIcon />
-                    Edit
+                    <IonIcon slot="start" icon={createOutline}></IonIcon>
+                    <IonTitle>Edit</IonTitle>
                   </IonItem>
                   <IonItem button={true} detail={true} id="nested-trigger">
                     <BackIcon />

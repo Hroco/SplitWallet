@@ -27,7 +27,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import { add } from 'ionicons/icons';
+import { add, settingsOutline } from 'ionicons/icons';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -95,8 +95,8 @@ export default function HomePage() {
                     detail={false}
                     onClick={() => history.push(`/mysettings`)}
                   >
-                    <BackIcon />
-                    My settings
+                    <IonIcon slot="start" icon={settingsOutline}></IonIcon>
+                    <IonTitle>My Settings</IonTitle>
                   </IonItem>
                 </IonList>
               </IonContent>
