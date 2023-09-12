@@ -24,7 +24,7 @@ import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import { Button } from '../styles/DropDownMenu.styled';
 import { ArrowDown, ArrowUp } from '../styles/utills.styled';
-import { createOutline } from 'ionicons/icons';
+import { createOutline, trashOutline } from 'ionicons/icons';
 import {
   IonBackButton,
   IonButton,
@@ -324,10 +324,13 @@ export default function Expenses() {
                     <IonIcon slot="start" icon={createOutline}></IonIcon>
                     <IonTitle>Edit</IonTitle>
                   </IonItem>
-                  <IonItem button={true} detail={true} id="nested-trigger">
+                  <IonItem 
+                  button={true} 
+                  detail={true} id="nested-trigger">
                     <BackIcon />
                     Sort
                   </IonItem>
+
                   <IonPopover
                     trigger="nested-trigger"
                     dismissOnSelect={false}
@@ -398,9 +401,12 @@ export default function Expenses() {
                       </IonList>
                     </IonContent>
                   </IonPopover>
-                  <IonItem button={true} detail={false} onClick={deleteWallet}>
-                    <TrashIcon />
-                    Delete
+                  <IonItem 
+                  button={true} 
+                  detail={false} 
+                  onClick={deleteWallet}>
+                    <IonIcon slot="start" icon={trashOutline}></IonIcon>
+                    <IonTitle>Delete</IonTitle>
                   </IonItem>
                   <IonItem
                     button={true}
