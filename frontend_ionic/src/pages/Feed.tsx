@@ -13,7 +13,17 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
 import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
-import { IonPage } from '@ionic/react';
+import {
+  IonBackButton,
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonFooter,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/react';
 
 interface RouteParams {
   walletId: string;
@@ -50,18 +60,24 @@ export default function Feed() {
 
   return (
     <IonPage>
-      <Navbar>
-        <BurgerButton onClick={() => history.push(`/${walletId}/expenses`)}>
-          <BackIcon />
-        </BurgerButton>
-        <h1>History: {wallet.name}</h1>
-      </Navbar>
-      <MainContent>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton
+              defaultHref={`/${walletId}/expenses`}
+            ></IonBackButton>
+          </IonButtons>
+          <IonTitle>History</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent>
         <h1>Feed</h1>
-      </MainContent>
-      <FeedFooter>
-        <h1>New message input here</h1>
-      </FeedFooter>
+      </IonContent>
+      <IonFooter>
+        <IonToolbar>
+          <IonTitle>New message input here</IonTitle>
+        </IonToolbar>
+      </IonFooter>
     </IonPage>
   );
 }

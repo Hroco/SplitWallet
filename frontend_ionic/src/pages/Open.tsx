@@ -23,7 +23,17 @@ import {
 } from '../styles/Open.styled';
 import CameraIcon from '-!svg-react-loader!../assets/icons/camera.svg';
 import { ArrowRight } from '../styles/utills.styled';
-import { IonPage } from '@ionic/react';
+import {
+  IonBackButton,
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonMenuButton,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/react';
 
 function formatDate(date: Date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -120,18 +130,23 @@ export default function Open() {
 
   return (
     <IonPage>
-      <Navbar>
-        <BurgerButton onClick={() => history.push(`/${walletId}/expenses`)}>
-          <BackIcon />
-        </BurgerButton>
-
-        <BurgerButton
-          onClick={() => history.push(`/${walletId}/${walletItemId}/edit`)}
-        >
-          Edit
-        </BurgerButton>
-      </Navbar>
-      <OpenMainContent>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton
+              defaultHref={`/${walletId}/expenses`}
+            ></IonBackButton>
+          </IonButtons>
+          <IonButtons slot="end">
+            <IonButton
+              onClick={() => history.push(`/${walletId}/${walletItemId}/edit`)}
+            >
+              Edit
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent>
         <h1>{walletItem.name}</h1>
         <SecondaryItemMenu>
           <div>
@@ -159,7 +174,7 @@ export default function Open() {
               price={reciever.amount}
             />
           ))}
-      </OpenMainContent>
+      </IonContent>
       <OpenFooter>
         {prevWalletItem ? (
           <NavigationPrevItemButton
