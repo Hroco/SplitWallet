@@ -13,7 +13,16 @@ import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import axios from 'axios';
 import ReimbursementItem from '../components/ReimbursementItem';
-import { IonPage } from '@ionic/react';
+import {
+  IonBackButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonMenuButton,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/react';
 
 function findLowestBalanceObject(data: any[]) {
   let lowestBalanceObject = null;
@@ -177,15 +186,20 @@ export default function Balances() {
 
   return (
     <IonPage>
-      <Navbar>
-        <BurgerButton onClick={() => history.push('/')}>
-          <BackIcon />
-        </BurgerButton>
-        <h1>Grappe 2023</h1>
-        <BurgerButton>
-          <BurgerIcon />
-        </BurgerButton>
-      </Navbar>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/"></IonBackButton>
+          </IonButtons>
+          <IonTitle>XXX</IonTitle>
+          <IonButtons slot="end">
+            <IonMenuButton
+              autoHide={false}
+              id="balance-popover"
+            ></IonMenuButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
       <Navbar>
         <ExpenseButton onClick={() => history.push(`/${walletId}/expenses`)}>
           <h1>MY EXPENSES</h1>
@@ -194,7 +208,7 @@ export default function Balances() {
           <h1>BALANCES</h1>
         </ExpenseButton>
       </Navbar>
-      <BalancesMainContent>
+      <IonContent>
         <BalancesTopPannel>
           {walletUsers &&
             walletUsers
@@ -224,7 +238,7 @@ export default function Balances() {
               />
             ))}
         </BottomContent>
-      </BalancesMainContent>
+      </IonContent>
     </IonPage>
   );
 }
