@@ -10,6 +10,7 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import { useHistory } from 'react-router-dom';
 // import axios from 'axios';
 import { Button } from '../styles/DropDownMenu.styled';
+import { IonPage } from '@ionic/react';
 
 export default function MySettings() {
   const history = useHistory();
@@ -17,7 +18,7 @@ export default function MySettings() {
   const [nick, setNick] = useState<string>('');
 
   return (
-    <>
+    <IonPage>
       <Navbar>
         <BurgerButton onClick={() => history.push(`/`)}>
           <BackIcon />
@@ -53,6 +54,6 @@ export default function MySettings() {
           <Button>SignOut</Button>
         </BottomContent>
       </MainContent>
-    </>
+    </IonPage>
   );
 }

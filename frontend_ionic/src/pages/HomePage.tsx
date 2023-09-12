@@ -13,11 +13,21 @@ import LoadingScreen from '../components/LoadingScreen';
 import { Button } from '../styles/DropDownMenu.styled';
 import {
   IonButton,
+  IonButtons,
   IonContent,
+  IonFab,
+  IonFabButton,
+  IonHeader,
+  IonIcon,
   IonItem,
   IonList,
+  IonMenuButton,
+  IonPage,
   IonPopover,
+  IonTitle,
+  IonToolbar,
 } from '@ionic/react';
+import { add } from 'ionicons/icons';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -39,7 +49,6 @@ export default function HomePage() {
   const history = useHistory();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletsList, setWalletsList] = useState<any>(null);
-  const [shouldShowBurgerMenu, setShouldShowBurgerMenu] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -72,68 +81,37 @@ export default function HomePage() {
   // if (true) return <LoadingScreen />;
 
   return (
-    <>
-      <Navbar>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>SplitWallet</IonTitle>
+          <IonButtons slot="end">
+            <IonMenuButton autoHide={false} id="popover-button"></IonMenuButton>
+            <IonPopover trigger="popover-button" dismissOnSelect={true}>
+              <IonContent>
+                <IonList>
+                  <IonItem
+                    button={true}
+                    detail={false}
+                    onClick={() => history.push(`/mysettings`)}
+                  >
+                    <BackIcon />
+                    My settings
+                  </IonItem>
+                </IonList>
+              </IonContent>
+            </IonPopover>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+      {/* <Navbar>
         <h1>SplitWallet</h1>
-        <BurgerButton
-          id="popover-button"
-          onClick={() => setShouldShowBurgerMenu(true)}
-        >
+        <BurgerButton>
           <BurgerIcon />
         </BurgerButton>
-        <IonPopover trigger="popover-button" dismissOnSelect={true}>
-          <IonContent>
-            <IonList>
-              <IonItem
-                button={true}
-                detail={false}
-                onClick={() => console.log(`/mysettings`)}
-              >
-                <BackIcon />
-                My settings
-              </IonItem>
-              <IonItem button={true} detail={false}>
-                Option 2
-              </IonItem>
-              <IonItem button={true} id="nested-trigger">
-                More options...
-              </IonItem>
-
-              <IonPopover
-                trigger="nested-trigger"
-                dismissOnSelect={true}
-                side="end"
-              >
-                <IonContent>
-                  <IonList>
-                    <IonItem button={true} detail={false}>
-                      Nested option
-                    </IonItem>
-                    <IonItem button={true} detail={false}>
-                      Nested option
-                    </IonItem>
-                    <IonItem button={true} detail={false}>
-                      Nested option
-                    </IonItem>
-                  </IonList>
-                </IonContent>
-              </IonPopover>
-            </IonList>
-          </IonContent>
-        </IonPopover>
-        {/* shouldShowBurgerMenu && (
-          <BurgerMenu
-            isOpen={shouldShowBurgerMenu}
-            setIsOpen={setShouldShowBurgerMenu}
-          >
-            <Button onClick={() => history.push(`/mysettings`)}>
-              <BackIcon />
-              My settings
-            </Button>
-          </BurgerMenu>
-        )*/}
-      </Navbar>
-      <MainContent>
+        
+  </Navbar>*/}
+      <IonContent>
         {walletsList &&
           walletsList.map((item: any, index: number) => (
             <MainItem
@@ -143,10 +121,12 @@ export default function HomePage() {
               description={item.description}
             />
           ))}
-      </MainContent>
-      <WalletAddButton onClick={() => history.push('/newWallet')}>
-        <AddIcon />
-      </WalletAddButton>
-    </>
+        <IonFab slot="fixed" vertical="bottom" horizontal="end">
+          <IonFabButton onClick={() => history.push('/newWallet')}>
+            <IonIcon icon={add}></IonIcon>
+          </IonFabButton>
+        </IonFab>
+      </IonContent>
+    </IonPage>
   );
 }

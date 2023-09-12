@@ -12,7 +12,7 @@ import EditWallet from './pages/EditWallet';
 import MySettings from './pages/MySettings';
 import './styles/global.css';
 
-import { IonApp, IonRouterOutlet } from '@ionic/react';
+import { IonApp, IonRouterOutlet, IonTabs } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 
 import { setupIonicReact } from '@ionic/react';

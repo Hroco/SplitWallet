@@ -13,6 +13,7 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
 import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
+import { IonPage } from '@ionic/react';
 
 interface RouteParams {
   walletId: string;
@@ -48,7 +49,7 @@ export default function Feed() {
   if (wallet == undefined) return <LoadingScreen />;
 
   return (
-    <>
+    <IonPage>
       <Navbar>
         <BurgerButton onClick={() => history.push(`/${walletId}/expenses`)}>
           <BackIcon />
@@ -61,6 +62,6 @@ export default function Feed() {
       <FeedFooter>
         <h1>New message input here</h1>
       </FeedFooter>
-    </>
+    </IonPage>
   );
 }

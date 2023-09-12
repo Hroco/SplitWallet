@@ -24,6 +24,21 @@ import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import { Button } from '../styles/DropDownMenu.styled';
 import { ArrowDown, ArrowUp } from '../styles/utills.styled';
+import {
+  IonBackButton,
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonItem,
+  IonList,
+  IonMenuButton,
+  IonPage,
+  IonPopover,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/react';
 
 enum SortType {
   DateAsc = 'DateAsc',
@@ -285,88 +300,121 @@ export default function Expenses() {
   if (currentWalletUser == undefined) return <LoadingScreen />;
 
   return (
-    <>
-      <Navbar>
-        <BurgerButton onClick={() => history.push('/')}>
-          <BackIcon />
-        </BurgerButton>
-        <h1>{wallet.name}</h1>
-        <BurgerButton onClick={() => setShouldShowBurgerMenu(true)}>
-          <BurgerIcon />
-        </BurgerButton>
-        {shouldShowBurgerMenu && (
-          <BurgerMenu
-            isOpen={shouldShowBurgerMenu}
-            setIsOpen={setShouldShowBurgerMenu}
-          >
-            <Button
-              onClick={() => {
-                setShouldShowBurgerMenu(false);
-                setShouldShowSortingMenu(true);
-              }}
-            >
-              <BackIcon />
-              Sort
-            </Button>
-            <Button onClick={() => history.push(`/${walletId}/edit`)}>
-              <EditIcon />
-              Edit
-            </Button>
-            <Button onClick={deleteWallet}>
-              <TrashIcon />
-              Delete
-            </Button>
-            <Button onClick={() => history.push(`/${walletId}/feed`)}>
-              <HistoryIcon />
-              History
-            </Button>
-          </BurgerMenu>
-        )}
-        {shouldShowSortingMenu && (
-          <BurgerMenu
-            isOpen={shouldShowSortingMenu}
-            setIsOpen={setShouldShowSortingMenu}
-          >
-            <MenuHeading>Sort by</MenuHeading>
-            <Button
-              onClick={() =>
-                toggleSortType(SortType.TitleAsc, SortType.TitleDesc)
-              }
-            >
-              {getIcon('title', sortType)} Title
-            </Button>
-            <Button
-              onClick={() =>
-                toggleSortType(SortType.AmountAsc, SortType.AmountDesc)
-              }
-            >
-              {getIcon('amount', sortType)} Amount
-            </Button>
-            <Button
-              onClick={() =>
-                toggleSortType(SortType.DateAsc, SortType.DateDesc)
-              }
-            >
-              {getIcon('date', sortType)}
-              Expense date
-            </Button>
-            <Button
-              onClick={() =>
-                toggleSortType(SortType.PayerAsc, SortType.PayerDesc)
-              }
-            >
-              {getIcon('payer', sortType)} Payer
-            </Button>
-            <Button
-              onClick={() =>
-                toggleSortType(SortType.CategoryAsc, SortType.CategoryDesc)
-              }
-            >
-              {getIcon('category', sortType)} Category
-            </Button>
-          </BurgerMenu>
-        )}
-      </Navbar>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/"></IonBackButton>
+          </IonButtons>
+          <IonTitle>{wallet.name}</IonTitle>
+          <IonButtons slot="end">
+            <IonMenuButton
+              autoHide={false}
+              id="expense-popover"
+            ></IonMenuButton>
+            <IonPopover trigger="expense-popover" dismissOnSelect={true}>
+              <IonContent>
+                <IonList>
+                  <IonItem
+                    button={true}
+                    detail={false}
+                    onClick={() => history.push(`/${walletId}/edit`)}
+                  >
+                    <EditIcon />
+                    Edit
+                  </IonItem>
+                  <IonItem button={true} detail={true} id="nested-trigger">
+                    <BackIcon />
+                    Sort
+                  </IonItem>
+                  <IonPopover
+                    trigger="nested-trigger"
+                    dismissOnSelect={false}
+                    side="end"
+                  >
+                    <IonContent>
+                      <IonList>
+                        <IonItem button={false} detail={false}>
+                          <MenuHeading>Sort by</MenuHeading>
+                        </IonItem>
+                        <IonItem
+                          button={true}
+                          detail={false}
+                          onClick={() =>
+                            toggleSortType(
+                              SortType.TitleAsc,
+                              SortType.TitleDesc
+                            )
+                          }
+                        >
+                          {getIcon('title', sortType)} Title
+                        </IonItem>
+                        <IonItem
+                          button={true}
+                          detail={false}
+                          onClick={() =>
+                            toggleSortType(
+                              SortType.AmountAsc,
+                              SortType.AmountDesc
+                            )
+                          }
+                        >
+                          {getIcon('amount', sortType)} Amount
+                        </IonItem>
+                        <IonItem
+                          button={true}
+                          detail={false}
+                          onClick={() =>
+                            toggleSortType(SortType.DateAsc, SortType.DateDesc)
+                          }
+                        >
+                          {getIcon('date', sortType)} Expense date
+                        </IonItem>
+                        <IonItem
+                          button={true}
+                          detail={false}
+                          onClick={() =>
+                            toggleSortType(
+                              SortType.PayerAsc,
+                              SortType.PayerDesc
+                            )
+                          }
+                        >
+                          {getIcon('payer', sortType)} Payer
+                        </IonItem>
+                        <IonItem
+                          button={true}
+                          detail={false}
+                          onClick={() =>
+                            toggleSortType(
+                              SortType.CategoryAsc,
+                              SortType.CategoryDesc
+                            )
+                          }
+                        >
+                          {getIcon('category', sortType)} Category
+                        </IonItem>
+                      </IonList>
+                    </IonContent>
+                  </IonPopover>
+                  <IonItem button={true} detail={false} onClick={deleteWallet}>
+                    <TrashIcon />
+                    Delete
+                  </IonItem>
+                  <IonItem
+                    button={true}
+                    detail={false}
+                    onClick={() => history.push(`/${walletId}/feed`)}
+                  >
+                    <HistoryIcon />
+                    History
+                  </IonItem>
+                </IonList>
+              </IonContent>
+            </IonPopover>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
       <Navbar>
         <ExpenseButton onClick={() => history.push(`/${walletId}/expenses`)}>
           <h1>MY EXPENSES</h1>
@@ -375,24 +423,26 @@ export default function Expenses() {
           <h1>BALANCES</h1>
         </ExpenseButton>
       </Navbar>
-      <ExpenseMainContent>
-        {walletItems &&
-          walletItems.map((walletItem: any, index: number) => (
-            <ExpenseItem
-              onClick={() =>
-                history.push(
-                  `/${walletId}/${walletItem.id}/open?sort=${sortType}`
-                )
-              }
-              key={index}
-              name={walletItem.name}
-              payer={walletItem.payer.name}
-              price={walletItem.amount}
-              date={walletItem.date}
-              type={walletItem.type}
-            />
-          ))}
-      </ExpenseMainContent>
+      <IonContent>
+        <IonList>
+          {walletItems &&
+            walletItems.map((walletItem: any, index: number) => (
+              <ExpenseItem
+                onClick={() =>
+                  history.push(
+                    `/${walletId}/${walletItem.id}/open?sort=${sortType}`
+                  )
+                }
+                key={index}
+                name={walletItem.name}
+                payer={walletItem.payer.name}
+                price={walletItem.amount}
+                date={walletItem.date}
+                type={walletItem.type}
+              />
+            ))}
+        </IonList>
+      </IonContent>
       <ExpenseFooter>
         <div>
           <p>MY TOTAL</p>
@@ -406,6 +456,6 @@ export default function Expenses() {
           <h2>€ {wallet.total.toFixed(2)}</h2>
         </TotalExpenseDiv>
       </ExpenseFooter>
-    </>
+    </IonPage>
   );
 }

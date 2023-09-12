@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { useHistory, useParams } from 'react-router-dom';
 import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
+import { IonPage } from '@ionic/react';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -322,7 +323,7 @@ export default function Add() {
   }
 
   return (
-    <>
+    <IonPage>
       <Navbar>
         <BurgerButton onClick={() => history.push(`/${walletId}/expenses`)}>
           <BackIcon />
@@ -394,6 +395,6 @@ export default function Add() {
         </MiddlePannel>
         <BottomContent>{participantElements}</BottomContent>
       </MainContent>
-    </>
+    </IonPage>
   );
 }

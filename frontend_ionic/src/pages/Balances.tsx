@@ -13,6 +13,7 @@ import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import axios from 'axios';
 import ReimbursementItem from '../components/ReimbursementItem';
+import { IonPage } from '@ionic/react';
 
 function findLowestBalanceObject(data: any[]) {
   let lowestBalanceObject = null;
@@ -175,7 +176,7 @@ export default function Balances() {
   console.log('walletUsers', walletUsers);
 
   return (
-    <>
+    <IonPage>
       <Navbar>
         <BurgerButton onClick={() => history.push('/')}>
           <BackIcon />
@@ -224,6 +225,6 @@ export default function Balances() {
             ))}
         </BottomContent>
       </BalancesMainContent>
-    </>
+    </IonPage>
   );
 }

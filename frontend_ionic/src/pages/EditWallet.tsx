@@ -17,6 +17,7 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { useHistory, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { IonPage } from '@ionic/react';
 
 const UserListSchema = z.array(
   z.object({
@@ -183,7 +184,7 @@ export default function EditWallet() {
   }
 
   return (
-    <>
+    <IonPage>
       <Navbar>
         <BurgerButton onClick={() => history.push('/')}>
           <BackIcon />
@@ -278,6 +279,6 @@ export default function EditWallet() {
         </MiddlePannel>
         <BottomContent>{participantElements}</BottomContent>
       </MainContent>
-    </>
+    </IonPage>
   );
 }

@@ -23,6 +23,7 @@ import {
 } from '../styles/Open.styled';
 import CameraIcon from '-!svg-react-loader!../assets/icons/camera.svg';
 import { ArrowRight } from '../styles/utills.styled';
+import { IonPage } from '@ionic/react';
 
 function formatDate(date: Date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -118,7 +119,7 @@ export default function Open() {
   const formatedDate = formatDate(dateInput);
 
   return (
-    <>
+    <IonPage>
       <Navbar>
         <BurgerButton onClick={() => history.push(`/${walletId}/expenses`)}>
           <BackIcon />
@@ -193,6 +194,6 @@ export default function Open() {
           <div></div>
         )}
       </OpenFooter>
-    </>
+    </IonPage>
   );
 }
