@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { WalletAddButton, BurgerButton } from '../styles/buttons.styled';
+import {
+  WalletAddButton,
+  BurgerButton,
+  IonFabButtonOrange,
+} from '../styles/buttons.styled';
 import { MainContent, Navbar } from '../styles/mainContainers.styled';
 import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
@@ -115,9 +119,9 @@ export default function HomePage() {
             />
           ))}
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButton onClick={() => history.push('/newWallet')}>
+          <IonFabButtonOrange onClick={() => history.push('/newWallet')}>
             <IonIcon icon={add}></IonIcon>
-          </IonFabButton>
+          </IonFabButtonOrange>
         </IonFab>
       </IonContent>
     </IonPage>

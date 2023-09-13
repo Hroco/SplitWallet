@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { IonCheckbox } from '@ionic/react';
 
 export const Input = styled.input`
   outline: none;
@@ -17,3 +18,7 @@ export const Select = styled.select`
 `;
 
 export const Label = styled.label``;
+
+export const IonCheckboxOrange = styled(IonCheckbox)`
+  --background-checked: ${({ theme }) => theme.colors.backgroundColorOrange};
+`;

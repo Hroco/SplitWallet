@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { IonFabButton } from '@ionic/react';
 
 interface CategoryButtonProps {
   clicked?: boolean;
@@ -63,6 +64,10 @@ export const BurgerButton = styled.button<BurgerButtonProps>`
       ${(props) => (props.rotate ? `${props.rotate}deg` : '0deg')}
     );
   }
+`;
+
+export const IonFabButtonOrange = styled(IonFabButton)`
+  --background: ${({ theme }) => theme.colors.backgroundColorOrange};
 `;
 
 export const NavigationNextItemButton = styled(BurgerButton)`

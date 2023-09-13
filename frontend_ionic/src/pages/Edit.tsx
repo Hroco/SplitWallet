@@ -7,7 +7,12 @@ import {
   Navbar,
 } from '../styles/mainContainers.styled';
 import { MainContentItem } from '../styles/newWallet.styled';
-import { Input, Select, Label } from '../styles/Input.styled';
+import {
+  Input,
+  Select,
+  Label,
+  IonCheckboxOrange,
+} from '../styles/Input.styled';
 import { ParticipantInputDiv } from '../styles/newWalletItem.styled';
 import { BurgerButton } from '../styles/buttons.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
@@ -380,13 +385,13 @@ export default function Edit() {
     participantElements.push(
       <ParticipantInputDiv key={i}>
         <div>
-          <IonCheckbox
+          <IonCheckboxOrange
             slot="start"
             checked={state}
             onIonChange={(event: any) =>
               setCheckedStatus(i, event.target.checked)
             }
-          ></IonCheckbox>
+          ></IonCheckboxOrange>
           <IonLabel>{user.name}</IonLabel>
         </div>
 
@@ -491,12 +496,12 @@ export default function Edit() {
           </IonItem>
         </IonList>
         <MiddlePannel>
-          <IonCheckbox
+          <IonCheckboxOrange
             slot="start"
             indeterminate={mainCheckBoxMode == 'crossed'}
             checked={mainCheckBoxMode == 'checked'}
             onIonChange={handleMainCheckBoxClick}
-          ></IonCheckbox>
+          ></IonCheckboxOrange>
           <p>For whom</p>
           <button>Advanced</button>
         </MiddlePannel>
