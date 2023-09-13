@@ -20,5 +20,7 @@ export const Select = styled.select`
 export const Label = styled.label``;
 
 export const IonCheckboxOrange = styled(IonCheckbox)`
-  --background-checked: ${({ theme }) => theme.colors.backgroundColorOrange};
+  --checkbox-background-checked: ${({ theme }) =>
+    theme.colors.backgroundColorOrange};
+  --border-color-checked: ${({ theme }) => theme.colors.backgroundColorOrange};
 `;

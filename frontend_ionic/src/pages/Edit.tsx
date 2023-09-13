@@ -397,7 +397,7 @@ export default function Edit() {
 
         <Input
           type="number"
-          value={getCutFromAmount(i)}
+          value={parseFloat(getCutFromAmount(i)).toFixed(2)}
           onChange={(e) => setCutFromAmount(i, parseInt(e.target.value))}
         />
       </ParticipantInputDiv>
