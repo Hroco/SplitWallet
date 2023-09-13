@@ -10,7 +10,15 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import { useHistory } from 'react-router-dom';
 // import axios from 'axios';
 import { Button } from '../styles/DropDownMenu.styled';
-import { IonPage } from '@ionic/react';
+import {
+  IonBackButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/react';
 
 export default function MySettings() {
   const history = useHistory();
@@ -19,13 +27,15 @@ export default function MySettings() {
 
   return (
     <IonPage>
-      <Navbar>
-        <BurgerButton onClick={() => history.push(`/`)}>
-          <BackIcon />
-        </BurgerButton>
-        <h1>My settings</h1>
-      </Navbar>
-      <MainContent>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/"></IonBackButton>
+          </IonButtons>
+          <IonTitle>My settings</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent>
         <p>Profile Image</p>
         <p>Welcome {'Samuel Hrotik'}</p>
         <p>Email</p>
@@ -53,7 +63,7 @@ export default function MySettings() {
         <BottomContent>
           <Button>SignOut</Button>
         </BottomContent>
-      </MainContent>
+      </IonContent>
     </IonPage>
   );
 }

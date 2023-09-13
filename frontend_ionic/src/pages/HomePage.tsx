@@ -104,13 +104,6 @@ export default function HomePage() {
           </IonButtons>
         </IonToolbar>
       </IonHeader>
-      {/* <Navbar>
-        <h1>SplitWallet</h1>
-        <BurgerButton>
-          <BurgerIcon />
-        </BurgerButton>
-        
-  </Navbar>*/}
       <IonContent>
         {walletsList &&
           walletsList.map((item: any, index: number) => (

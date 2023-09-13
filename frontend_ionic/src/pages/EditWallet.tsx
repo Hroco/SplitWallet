@@ -17,7 +17,23 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { useHistory, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { IonPage } from '@ionic/react';
+import {
+  IonBackButton,
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonInput,
+  IonItem,
+  IonList,
+  IonPage,
+  IonSelect,
+  IonSelectOption,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/react';
+import { checkmarkOutline } from 'ionicons/icons';
 
 const UserListSchema = z.array(
   z.object({
@@ -185,54 +201,60 @@ export default function EditWallet() {
 
   return (
     <IonPage>
-      <Navbar>
-        <BurgerButton onClick={() => history.push('/')}>
-          <BackIcon />
-        </BurgerButton>
-        <h1>Edit Wallet</h1>
-        <BurgerButton onClick={() => handleAddWallet()}>
-          <CheckedIcon />
-        </BurgerButton>
-      </Navbar>
-      <MainContent>
-        <TopPannel>
-          <MainContentItem>
-            <Label htmlFor="title">Title</Label>
-            <Input
-              type="text"
-              id="title"
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/"></IonBackButton>
+          </IonButtons>
+          <IonTitle>Edit Wallet</IonTitle>
+          <IonButtons slot="end">
+            <IonButton size="large" onClick={() => handleAddWallet()}>
+              <IonIcon icon={checkmarkOutline}></IonIcon>
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent>
+        <IonList>
+          <IonItem>
+            <IonInput
+              label="Title"
+              labelPlacement="floating"
+              counter={true}
+              maxlength={50}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </MainContentItem>
-          <MainContentItem>
-            <Label htmlFor="description">Description</Label>
-            <Input
-              type="text"
-              id="description"
+              onChange={(e) => setTitle(e.currentTarget.value as string)}
+            ></IonInput>
+          </IonItem>
+          <IonItem>
+            <IonInput
+              label="Description"
+              labelPlacement="floating"
+              counter={true}
+              maxlength={500}
               value={decription}
-              onChange={(e) => setDecription(e.target.value)}
-            />
-          </MainContentItem>
-          <MainContentItem>
-            <Label htmlFor="currency">Title</Label>
-            <Select
-              id="currency"
+              onChange={(e) => setDecription(e.currentTarget.value as string)}
+            ></IonInput>
+          </IonItem>
+          <IonItem>
+            <IonSelect
+              label="Currency"
+              placeholder="eur"
               value={currency as string}
-              onChange={(e) => setCurrency(e.target.value)}
+              onChange={(e) => setCurrency(e.currentTarget.value as string)}
             >
-              <option value="eur">Eur</option>
-              <option value="usd">Usd</option>
-              <option value="czk">Czech Koruna</option>
-            </Select>
-          </MainContentItem>
-          <MainContentItem>
+              <IonSelectOption value="eur">Eur</IonSelectOption>
+              <IonSelectOption value="usd">Usd</IonSelectOption>
+              <IonSelectOption value="czk">Czech Koruna</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+          <IonItem>
             <p>
               Specify the curency that will be used to balance the splitwallet.
               Other curencies can be used for expenses.
             </p>
-          </MainContentItem>
-          <MainContentItem>
+          </IonItem>
+          <IonItem>
             <p>Category</p>
             <div>
               <CategoryButton
@@ -272,13 +294,13 @@ export default function EditWallet() {
                 Other
               </CategoryButton>
             </div>
-          </MainContentItem>
-        </TopPannel>
+          </IonItem>
+        </IonList>
         <MiddlePannel>
           <p>Participants ( x / 50 )</p>
         </MiddlePannel>
         <BottomContent>{participantElements}</BottomContent>
-      </MainContent>
+      </IonContent>
     </IonPage>
   );
 }
