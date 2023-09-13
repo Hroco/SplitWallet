@@ -7,14 +7,13 @@ export const SecondaryItemMenu = styled.div`
   background-color: ${({ theme }) => theme.colors.backgroundColorDarkGrey};
 
   h1 {
-    font-size: 1.5em;
-    margin-left: 15px;
+    font-size: 2em;
     text-align: center;
+    font-family: sans-serif;
   }
 
-  p {
-    line-height: 1.25em;
-    text-align: center;
+  h3{
+    font-size: 1.25em;
   }
 
   div {

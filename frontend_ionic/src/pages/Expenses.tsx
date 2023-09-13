@@ -321,14 +321,14 @@ export default function Expenses() {
                     detail={false}
                     onClick={() => history.push(`/${walletId}/edit`)}
                   >
-                    <IonIcon slot="start" icon={createOutline}></IonIcon>
+                    <EditIcon/>
                     <IonTitle>Edit</IonTitle>
                   </IonItem>
                   <IonItem 
                   button={true} 
                   detail={true} id="nested-trigger">
                     <BackIcon />
-                    Sort
+                    <IonTitle>Sort</IonTitle>
                   </IonItem>
 
                   <IonPopover
@@ -405,7 +405,7 @@ export default function Expenses() {
                   button={true} 
                   detail={false} 
                   onClick={deleteWallet}>
-                    <IonIcon slot="start" icon={trashOutline}></IonIcon>
+                    <TrashIcon/>
                     <IonTitle>Delete</IonTitle>
                   </IonItem>
                   <IonItem
@@ -414,7 +414,7 @@ export default function Expenses() {
                     onClick={() => history.push(`/${walletId}/feed`)}
                   >
                     <HistoryIcon />
-                    History
+                    <IonTitle>History</IonTitle>
                   </IonItem>
                 </IonList>
               </IonContent>

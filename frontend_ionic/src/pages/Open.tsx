@@ -147,9 +147,9 @@ export default function Open() {
         </IonToolbar>
       </IonHeader>
       <IonContent>
-        <h1>{walletItem.name}</h1>
         <SecondaryItemMenu>
           <div>
+            <h1>{walletItem.name}</h1>
             <h3>€{walletItem.amount}</h3>
             <ThirdItemMenu>
               <p>Paid by {walletItem.payer.name}</p>
