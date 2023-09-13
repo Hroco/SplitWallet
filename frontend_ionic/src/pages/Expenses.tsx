@@ -39,6 +39,7 @@ import {
   IonPopover,
   IonTitle,
   IonToolbar,
+  useIonAlert,
 } from '@ionic/react';
 
 enum SortType {
@@ -68,6 +69,7 @@ export default function Expenses() {
   const [walletItems, setWalletItems] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
+  const [presentAlert] = useIonAlert();
   const [shouldShowBurgerMenu, setShouldShowBurgerMenu] = useState(false);
   const [shouldShowSortingMenu, setShouldShowSortingMenu] = useState(false);
   const [shouldShowPersonalModeMenu, setShouldShowPersonalModeMenu] =
@@ -321,12 +323,10 @@ export default function Expenses() {
                     detail={false}
                     onClick={() => history.push(`/${walletId}/edit`)}
                   >
-                    <EditIcon/>
+                    <EditIcon />
                     <IonTitle>Edit</IonTitle>
                   </IonItem>
-                  <IonItem 
-                  button={true} 
-                  detail={true} id="nested-trigger">
+                  <IonItem button={true} detail={true} id="nested-trigger">
                     <BackIcon />
                     <IonTitle>Sort</IonTitle>
                   </IonItem>
@@ -401,11 +401,32 @@ export default function Expenses() {
                       </IonList>
                     </IonContent>
                   </IonPopover>
-                  <IonItem 
-                  button={true} 
-                  detail={false} 
-                  onClick={deleteWallet}>
-                    <TrashIcon/>
+                  <IonItem
+                    button={true}
+                    detail={false}
+                    onClick={() =>
+                      presentAlert({
+                        header: 'Confirm delete?',
+                        buttons: [
+                          {
+                            text: 'CANCEL',
+                            role: 'cancel',
+                            handler: () => {
+                              console.log('Alert canceled');
+                            },
+                          },
+                          {
+                            text: 'DELETE',
+                            role: 'delete',
+                            handler: () => {
+                              deleteWallet();
+                            },
+                          },
+                        ],
+                      })
+                    }
+                  >
+                    <TrashIcon />
                     <IonTitle>Delete</IonTitle>
                   </IonItem>
                   <IonItem
