@@ -16,7 +16,24 @@ import { z } from 'zod';
 import { useHistory, useParams } from 'react-router-dom';
 import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
-import { IonPage } from '@ionic/react';
+import {
+  IonBackButton,
+  IonButton,
+  IonButtons,
+  IonCheckbox,
+  IonContent,
+  IonHeader,
+  IonInput,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonMenuButton,
+  IonPage,
+  IonSelect,
+  IonSelectOption,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/react';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -126,6 +143,7 @@ export default function Add() {
   }, [amount, participants]);
 
   function handleMainCheckBoxClick() {
+    console.log('handleMainCheckBoxClick');
     if (mainCheckBoxMode == 'checked') {
       setMainCheckBoxMode('unchecked');
       setParticipants(
@@ -290,15 +308,14 @@ export default function Add() {
     participantElements.push(
       <ParticipantInputDiv key={i}>
         <div>
-          <Input
-            type="checkbox"
-            id="name"
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+          <IonCheckbox
+            slot="start"
+            checked={state}
+            onIonChange={(event: any) =>
               setCheckedStatus(i, event.target.checked)
             }
-            checked={state}
-          />
-          <Label htmlFor="name">{user.name}</Label>
+          ></IonCheckbox>
+          <IonLabel>{user.name}</IonLabel>
         </div>
 
         <Input
@@ -324,77 +341,95 @@ export default function Add() {
 
   return (
     <IonPage>
-      <Navbar>
-        <BurgerButton onClick={() => history.push(`/${walletId}/expenses`)}>
-          <BackIcon />
-        </BurgerButton>
-        <h1>{setHeading()}</h1>
-        <BurgerButton onClick={() => handleAddWalletItem()}>
-          <CheckedIcon />
-        </BurgerButton>
-      </Navbar>
-      <MainContent>
-        <TopPannel>
-          <MainContentItem>
-            <Select
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton
+              defaultHref={`/${walletId}/expenses`}
+            ></IonBackButton>
+          </IonButtons>
+          <IonTitle>{setHeading()}</IonTitle>
+          <IonButtons slot="end">
+            <IonButton onClick={() => handleAddWalletItem()}>
+              <CheckedIcon />
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent>
+        <IonList>
+          <IonItem>
+            <IonSelect
+              label="Type"
+              placeholder="expense"
               value={type as string}
-              onChange={(e) => setType(e.target.value)}
+              onChange={(e) => setType(e.currentTarget.value as string)}
             >
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-              <option value="moneyTransfer">Money Transfer</option>
-            </Select>
-          </MainContentItem>
-          <MainContentItem>
-            <Label htmlFor="title">Title</Label>
-            <Input
-              type="text"
-              id="title"
+              <IonSelectOption value="expense">Expense</IonSelectOption>
+              <IonSelectOption value="income">Income</IonSelectOption>
+              <IonSelectOption value="moneyTransfer">
+                Money Transfer
+              </IonSelectOption>
+            </IonSelect>
+          </IonItem>
+          <IonItem>
+            <IonInput
+              label="Title"
+              labelPlacement="floating"
+              counter={true}
+              maxlength={50}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </MainContentItem>
-          <MainContentItem>
-            <Label htmlFor="amount">Amount</Label>
-            <Input
+              onChange={(e) => setTitle(e.currentTarget.value as string)}
+            ></IonInput>
+          </IonItem>
+          <IonItem>
+            <IonInput
+              label="Amount"
+              labelPlacement="floating"
               type="number"
-              id="amount"
+              placeholder="0"
               value={amount}
-              onChange={(e) => setAmount(parseFloat(e.target.value))}
-            />
-          </MainContentItem>
-          <MainContentItem>
-            <Label htmlFor="date">Date</Label>
-            <Input
+              onChange={(e) => setAmount(e.currentTarget.value as number)}
+            ></IonInput>
+          </IonItem>
+          <IonItem>
+            <IonInput
+              label="Date"
+              labelPlacement="floating"
               type="date"
-              id="date"
               value={date.toISOString().split('T')[0]}
-              onChange={(e) => setDate(new Date(e.target.value))}
-            />
-          </MainContentItem>
-          <MainContentItem>
-            <Label htmlFor="payer">{setLabel()}</Label>
-            <Select
-              id="payer"
+              onChange={(e) =>
+                setDate(new Date(e.currentTarget.value as string))
+              }
+            ></IonInput>
+          </IonItem>
+          <IonItem>
+            <IonSelect
+              label={setLabel()}
               value={payerId as string}
-              onChange={(e) => setPayerId(e.target.value)}
+              onChange={(e) => setPayerId(e.currentTarget.value as string)}
             >
               {walletUsers &&
                 walletUsers.map((walletUser: any, index: number) => (
-                  <option key={walletUser.id} value={walletUser.id}>
+                  <IonSelectOption key={walletUser.id} value={walletUser.id}>
                     {walletUser.name}
-                  </option>
+                  </IonSelectOption>
                 ))}
-            </Select>
-          </MainContentItem>
-        </TopPannel>
+            </IonSelect>
+          </IonItem>
+        </IonList>
         <MiddlePannel>
-          <button onClick={handleMainCheckBoxClick}>{mainCheckBoxMode}</button>
+          <IonCheckbox
+            slot="start"
+            indeterminate={mainCheckBoxMode == 'crossed'}
+            checked={mainCheckBoxMode == 'checked'}
+            onIonChange={handleMainCheckBoxClick}
+          ></IonCheckbox>
           <p>For whom</p>
           <button>Advanced</button>
         </MiddlePannel>
         <BottomContent>{participantElements}</BottomContent>
-      </MainContent>
+      </IonContent>
     </IonPage>
   );
 }
