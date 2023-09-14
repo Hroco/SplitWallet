@@ -30,31 +30,43 @@ import {
   IonPopover,
   IonTitle,
   IonToolbar,
+  useIonViewDidEnter,
+  useIonViewDidLeave,
+  useIonViewWillEnter,
+  useIonViewWillLeave,
 } from '@ionic/react';
 import { add, settingsOutline } from 'ionicons/icons';
-
-/* Core CSS required for Ionic components to work properly */
-import '@ionic/react/css/core.css';
-
-/* Basic CSS for apps built with Ionic */
-import '@ionic/react/css/normalize.css';
-import '@ionic/react/css/structure.css';
-import '@ionic/react/css/typography.css';
-
-/* Optional CSS utils that can be commented out */
-import '@ionic/react/css/padding.css';
-import '@ionic/react/css/float-elements.css';
-import '@ionic/react/css/text-alignment.css';
-import '@ionic/react/css/text-transformation.css';
-import '@ionic/react/css/flex-utils.css';
-import '@ionic/react/css/display.css';
 
 export default function HomePage() {
   const history = useHistory();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletsList, setWalletsList] = useState<any>(null);
 
-  useEffect(() => {
+  useIonViewWillEnter(() => {
+    // console.log('ionViewWillEnter event fired');
+    (async () => {
+      const email = 'samko1311@gmail.com';
+      const response = await axios.get(
+        `/api/wallets/getWalletsWithEmail/${email}`
+      );
+      setPostResponse(response.data);
+    })();
+  });
+
+  /* useIonViewDidEnter(() => {
+    console.log('ionViewDidEnter event fired');
+  });
+
+  useIonViewDidLeave(() => {
+    console.log('ionViewDidLeave event fired');
+  });
+
+  useIonViewWillLeave(() => {
+    console.log('ionViewWillLeave event fired');
+  });*/
+
+  /* useEffect(() => {
+    console.log('getting data from server');
     (async () => {
       const email = 'samko1311@gmail.com';
       const response = await axios.get(
@@ -63,26 +75,18 @@ export default function HomePage() {
       console.log('response', response);
       setPostResponse(response.data);
     })();
-  }, []);
+  }, []);*/
 
   useEffect(() => {
     const { wallets } = postResponse || {};
+
+    if (wallets == undefined) return;
+
+    wallets.sort((a: any, b: any) => {
+      return a.date > b.date ? 1 : -1;
+    });
     setWalletsList(wallets);
   }, [postResponse]);
-
-  /* const router = useRouter();
-  //email below is hardcoded for testing purposes
-  const userWalletsFromServer = api.wallet.getWalletsWithEmail.useQuery(
-    { email: "samko1311@gmail.com" },
-    {
-      enabled: true,
-    }
-  );
-  const walletsList = userWalletsFromServer.data?.wallets;*/
-
-  // console.log(walletsList);
-
-  // if (true) return <LoadingScreen />;
 
   return (
     <IonPage>

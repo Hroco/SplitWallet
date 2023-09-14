@@ -28,6 +28,7 @@ import {
   IonButton,
   IonButtons,
   IonContent,
+  IonFooter,
   IonHeader,
   IonMenuButton,
   IonPage,
@@ -175,40 +176,46 @@ export default function Open() {
             />
           ))}
       </IonContent>
-      <OpenFooter>
-        {prevWalletItem ? (
-          <NavigationPrevItemButton
-            onClick={() =>
-              history.push(
-                `/${walletId}/${prevWalletItem.id}/open?sort=${sortType}`
-              )
-            }
-          >
-            <div>
-              <BackIcon />
-            </div>
-            <p>Previouse</p>
-          </NavigationPrevItemButton>
-        ) : (
-          <div></div>
-        )}
-        {nextWalletItem ? (
-          <NavigationNextItemButton
-            onClick={() =>
-              history.push(
-                `/${walletId}/${nextWalletItem.id}/open?sort=${sortType}`
-              )
-            }
-          >
-            <p>Next</p>
-            <ArrowRight>
-              <BackIcon />
-            </ArrowRight>
-          </NavigationNextItemButton>
-        ) : (
-          <div></div>
-        )}
-      </OpenFooter>
+      <IonFooter>
+        <IonToolbar>
+          {prevWalletItem ? (
+            <IonButtons slot="start">
+              <IonButton
+                onClick={() =>
+                  history.push(
+                    `/${walletId}/${prevWalletItem.id}/open?sort=${sortType}`
+                  )
+                }
+              >
+                <div>
+                  <BackIcon />
+                </div>
+                <IonTitle>Previouse</IonTitle>
+              </IonButton>
+            </IonButtons>
+          ) : (
+            <div></div>
+          )}
+          {nextWalletItem ? (
+            <IonButtons slot="end">
+              <IonButton
+                onClick={() =>
+                  history.push(
+                    `/${walletId}/${nextWalletItem.id}/open?sort=${sortType}`
+                  )
+                }
+              >
+                <IonTitle>Next</IonTitle>
+                <ArrowRight>
+                  <BackIcon />
+                </ArrowRight>
+              </IonButton>
+            </IonButtons>
+          ) : (
+            <div></div>
+          )}
+        </IonToolbar>
+      </IonFooter>
     </IonPage>
   );
 }

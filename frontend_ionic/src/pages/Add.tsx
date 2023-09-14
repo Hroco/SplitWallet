@@ -368,7 +368,7 @@ export default function Add() {
               label="Type"
               placeholder="expense"
               value={type as string}
-              onChange={(e) => setType(e.currentTarget.value as string)}
+              onIonChange={(e) => setType(e.detail.value as string)}
             >
               <IonSelectOption value="expense">Expense</IonSelectOption>
               <IonSelectOption value="income">Income</IonSelectOption>
@@ -384,7 +384,7 @@ export default function Add() {
               counter={true}
               maxlength={50}
               value={title}
-              onChange={(e) => setTitle(e.currentTarget.value as string)}
+              onIonChange={(e) => setTitle(e.detail.value as string)}
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -394,7 +394,9 @@ export default function Add() {
               type="number"
               placeholder="0"
               value={amount}
-              onChange={(e) => setAmount(e.currentTarget.value as number)}
+              onIonChange={(e) =>
+                setAmount(parseFloat(e.detail.value as string))
+              }
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -403,16 +405,14 @@ export default function Add() {
               labelPlacement="floating"
               type="date"
               value={date.toISOString().split('T')[0]}
-              onChange={(e) =>
-                setDate(new Date(e.currentTarget.value as string))
-              }
+              onIonChange={(e) => setDate(new Date(e.detail.value as string))}
             ></IonInput>
           </IonItem>
           <IonItem>
             <IonSelect
               label={setLabel()}
               value={payerId as string}
-              onChange={(e) => setPayerId(e.currentTarget.value as string)}
+              onIonChange={(e) => setPayerId(e.detail.value as string)}
             >
               {walletUsers &&
                 walletUsers.map((walletUser: any, index: number) => (

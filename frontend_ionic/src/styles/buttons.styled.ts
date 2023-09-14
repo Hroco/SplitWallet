@@ -2,23 +2,23 @@ import styled from 'styled-components';
 import { IonFabButton } from '@ionic/react';
 
 interface CategoryButtonProps {
-  clicked?: boolean;
+  'data-clicked-state'?: boolean;
 }
 
 export const CategoryButton = styled.button<CategoryButtonProps>`
   background-color: ${(props) =>
-    props.clicked
+    props['data-clicked-state']
       ? `${props.theme.colors.backgroundColorOrange}`
       : `${props.theme.colors.backgroundColorDarkGrey}`};
 
   color: ${(props) =>
-    props.clicked
+    props['data-clicked-state']
       ? `${props.theme.colors.backgroundColorDarkGrey}`
       : `${props.theme.colors.backgroundColorOrange}`};
 
   border: 1px solid
     ${(props) =>
-      props.clicked
+      props['data-clicked-state']
         ? `${props.theme.colors.backgroundColorDarkGrey}`
         : `${props.theme.colors.backgroundColorOrange}`};
   border-radius: 5px;

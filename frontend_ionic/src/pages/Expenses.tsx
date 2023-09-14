@@ -40,6 +40,10 @@ import {
   IonTitle,
   IonToolbar,
   useIonAlert,
+  useIonViewDidEnter,
+  useIonViewDidLeave,
+  useIonViewWillEnter,
+  useIonViewWillLeave,
 } from '@ionic/react';
 
 enum SortType {
@@ -77,7 +81,8 @@ export default function Expenses() {
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
 
-  useEffect(() => {
+  useIonViewWillEnter(() => {
+    console.log('ionViewWillEnter event fired');
     (async () => {
       const id = walletId;
       const response = await axios.get(
@@ -85,7 +90,25 @@ export default function Expenses() {
       );
       setPostResponse(response.data);
     })();
-  }, []);
+
+    (async () => {
+      const data = ['samko1311@gmail.com', walletId];
+      const response = await axios.get(
+        `/api/wallets/getWalletUserByEmailAndWalletId/${data}`
+      );
+      setPostResponse2(response.data);
+    })();
+  });
+
+  /* useEffect(() => {
+    (async () => {
+      const id = walletId;
+      const response = await axios.get(
+        `/api/wallets/getWalletItemsByWalletId/${id}`
+      );
+      setPostResponse(response.data);
+    })();
+  }, []);*/
 
   useEffect(() => {
     const { wallet, walletItems } = postResponse || {};
@@ -122,7 +145,7 @@ export default function Expenses() {
     setWallet(wallet);
   }, [postResponse]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     (async () => {
       const data = ['samko1311@gmail.com', walletId];
       const response = await axios.get(
@@ -130,7 +153,7 @@ export default function Expenses() {
       );
       setPostResponse2(response.data);
     })();
-  }, []);
+  }, []);*/
 
   useEffect(() => {
     console.log('sortType', sortType);

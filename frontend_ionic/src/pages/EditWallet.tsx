@@ -223,7 +223,7 @@ export default function EditWallet() {
               counter={true}
               maxlength={50}
               value={title}
-              onChange={(e) => setTitle(e.currentTarget.value as string)}
+              onIonChange={(e) => setTitle(e.detail.value as string)}
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -233,7 +233,7 @@ export default function EditWallet() {
               counter={true}
               maxlength={500}
               value={decription}
-              onChange={(e) => setDecription(e.currentTarget.value as string)}
+              onIonChange={(e) => setDecription(e.detail.value as string)}
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -241,7 +241,7 @@ export default function EditWallet() {
               label="Currency"
               placeholder="eur"
               value={currency as string}
-              onChange={(e) => setCurrency(e.currentTarget.value as string)}
+              onIonChange={(e) => setCurrency(e.detail.value as string)}
             >
               <IonSelectOption value="eur">Eur</IonSelectOption>
               <IonSelectOption value="usd">Usd</IonSelectOption>
@@ -258,37 +258,37 @@ export default function EditWallet() {
             <p>Category</p>
             <div>
               <CategoryButton
-                clicked={category == 'trip'}
+                data-clicked-state={category == 'trip'}
                 onClick={() => setCategory('trip')}
               >
                 Trip
               </CategoryButton>
               <CategoryButton
-                clicked={category == 'sharedHouse'}
+                data-clicked-state={category == 'sharedHouse'}
                 onClick={() => setCategory('sharedHouse')}
               >
                 Shared house
               </CategoryButton>
               <CategoryButton
-                clicked={category == 'couple'}
+                data-clicked-state={category == 'couple'}
                 onClick={() => setCategory('couple')}
               >
                 Couple
               </CategoryButton>
               <CategoryButton
-                clicked={category == 'event'}
+                data-clicked-state={category == 'event'}
                 onClick={() => setCategory('event')}
               >
                 Event
               </CategoryButton>
               <CategoryButton
-                clicked={category == 'project'}
+                data-clicked-state={category == 'project'}
                 onClick={() => setCategory('project')}
               >
                 Project
               </CategoryButton>
               <CategoryButton
-                clicked={category == 'other'}
+                data-clicked-state={category == 'other'}
                 onClick={() => setCategory('other')}
               >
                 Other
