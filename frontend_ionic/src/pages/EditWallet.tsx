@@ -16,7 +16,7 @@ import { Input, Select, Label } from '../styles/Input.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { useHistory, useParams } from 'react-router-dom';
-import axios from 'axios';
+// import axios from 'axios';
 import {
   IonBackButton,
   IonButton,
@@ -34,6 +34,7 @@ import {
   IonToolbar,
 } from '@ionic/react';
 import { checkmarkOutline } from 'ionicons/icons';
+import useBrowserBackend from '../hooks/useBrowserBackend';
 
 const UserListSchema = z.array(
   z.object({
@@ -60,10 +61,21 @@ export default function EditWallet() {
   const [participants, setParticipants] = useState<
     z.infer<typeof UserListSchema>
   >([]);
-  const [postResponse, setPostResponse] = useState<any>(null);
+  // const [postResponse, setPostResponse] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
+  const { getWalletById, editWallet } = useBrowserBackend();
 
   useEffect(() => {
+    (async () => {
+      const wallet = await getWalletById(walletId);
+
+      if (wallet == undefined) return;
+
+      setWallet(wallet);
+    })();
+  }, []);
+
+  /* useEffect(() => {
     (async () => {
       const id = walletId;
       const response = await axios.get(`/api/wallets/getWalletById/${id}`);
@@ -75,7 +87,7 @@ export default function EditWallet() {
   useEffect(() => {
     const { wallet } = postResponse || {};
     setWallet(wallet);
-  }, [postResponse]);
+  }, [postResponse]);*/
 
   useEffect(() => {
     console.log('wallet', wallet);
@@ -140,7 +152,8 @@ export default function EditWallet() {
       userList: participants,
     };
 
-    axios.put(`/api/wallets/editWallet/${walletId}`, output);
+    // axios.put(`/api/wallets/editWallet/${walletId}`, output);
+    editWallet(walletId, output);
 
     history.push('/');
   }

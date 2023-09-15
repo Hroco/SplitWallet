@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import React, { useEffect, useState } from 'react';
 import {
   WalletAddButton,
@@ -36,22 +37,43 @@ import {
   useIonViewWillLeave,
 } from '@ionic/react';
 import { add, settingsOutline } from 'ionicons/icons';
+import useSQLiteDB from '../hooks/useSQLiteDB';
+import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+import useBrowserBackend from '../hooks/useBrowserBackend';
 
 export default function HomePage() {
   const history = useHistory();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletsList, setWalletsList] = useState<any>(null);
+  const { getWalletsWithEmail, createTable, listOfTables } =
+    useBrowserBackend();
 
   useIonViewWillEnter(() => {
+    // createTable();
+    listOfTables();
     // console.log('ionViewWillEnter event fired');
-    (async () => {
+    /* (async () => {
       const email = 'samko1311@gmail.com';
       const response = await axios.get(
         `/api/wallets/getWalletsWithEmail/${email}`
       );
       setPostResponse(response.data);
+    })();*/
+    (async () => {
+      const wallets = await getWalletsWithEmail('samko1311@gmail.com');
+
+      if (wallets == undefined) return;
+
+      wallets.sort((a: any, b: any) => {
+        return a.date > b.date ? 1 : -1;
+      });
+      setWalletsList(wallets);
     })();
   });
+
+  /**
+   * do a select of the database
+   */
 
   /* useIonViewDidEnter(() => {
     console.log('ionViewDidEnter event fired');
@@ -77,7 +99,7 @@ export default function HomePage() {
     })();
   }, []);*/
 
-  useEffect(() => {
+  /* useEffect(() => {
     const { wallets } = postResponse || {};
 
     if (wallets == undefined) return;
@@ -86,7 +108,7 @@ export default function HomePage() {
       return a.date > b.date ? 1 : -1;
     });
     setWalletsList(wallets);
-  }, [postResponse]);
+  }, [postResponse]);*/
 
   return (
     <IonPage>

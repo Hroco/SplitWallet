@@ -19,7 +19,7 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
 import { useHistory, useParams } from 'react-router-dom';
-import axios from 'axios';
+// import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import {
   IonBackButton,
@@ -38,6 +38,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import useBrowserBackend from '../hooks/useBrowserBackend';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -103,11 +104,26 @@ export default function Edit() {
 
   const { walletId, walletItemId } = useParams<RouteParams>();
   const history = useHistory();
+  const { getWalletById, getWalletItemByWalletItemId, editWalletItem } =
+    useBrowserBackend();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
 
   useEffect(() => {
+    (async () => {
+      const wallet = await getWalletById(walletId);
+      const walletItem = await getWalletItemByWalletItemId(walletItemId);
+
+      if (wallet == undefined) return;
+      if (walletItem == undefined) return;
+
+      setWallet(wallet);
+      setWalletItem(walletItem);
+    })();
+  }, []);
+
+  /* useEffect(() => {
     (async () => {
       const id = walletId;
       const response = await axios.get(`/api/wallets/getWalletById/${id}`);
@@ -119,9 +135,9 @@ export default function Edit() {
   useEffect(() => {
     const { wallet } = postResponse || {};
     setWallet(wallet);
-  }, [postResponse]);
+  }, [postResponse]);*/
 
-  useEffect(() => {
+  /* useEffect(() => {
     (async () => {
       const id = walletItemId;
       const response = await axios.get(
@@ -137,7 +153,7 @@ export default function Edit() {
     console.log('walletItem in Edit', walletItem);
     console.log('walletItem in Edit', walletItem);
     setWalletItem(walletItem);
-  }, [postResponse2]);
+  }, [postResponse2]);*/
 
   useEffect(() => {
     console.log('walletItem in Edit', walletItem);
@@ -329,7 +345,8 @@ export default function Edit() {
       type: type,
     };
 
-    axios.put(`/api/wallets/editWalletItem/${walletItemId}`, newWalletItem);
+    // axios.put(`/api/wallets/editWalletItem/${walletItemId}`, newWalletItem);
+    editWalletItem(walletItemId, newWalletItem);
 
     history.push(`/${walletId}/expenses`);
   }

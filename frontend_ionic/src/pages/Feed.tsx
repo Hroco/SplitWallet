@@ -11,7 +11,7 @@ import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
-import axios from 'axios';
+// import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import {
   IonBackButton,
@@ -24,6 +24,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import useBrowserBackend from '../hooks/useBrowserBackend';
 
 interface RouteParams {
   walletId: string;
@@ -35,11 +36,22 @@ export default function Feed() {
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletItems, setWalletItems] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
+  const { getWalletItemsByWalletId } = useBrowserBackend();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
 
   useEffect(() => {
+    (async () => {
+      const wallet = await getWalletItemsByWalletId(walletId);
+
+      if (wallet == undefined) return;
+
+      setWallet(wallet);
+    })();
+  }, []);
+
+  /* useEffect(() => {
     (async () => {
       const id = walletId;
       const response = await axios.get(
@@ -54,7 +66,7 @@ export default function Feed() {
     console.log('wallet', wallet);
     setWalletItems(walletItems);
     setWallet(wallet);
-  }, [postResponse]);
+  }, [postResponse]);*/
 
   if (wallet == undefined) return <LoadingScreen />;
 

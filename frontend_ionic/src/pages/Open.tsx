@@ -13,7 +13,7 @@ import {
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
 import { useLocation, useParams, useHistory } from 'react-router-dom';
-import axios from 'axios';
+// import axios from 'axios';
 import MainItem from '../components/MainItem';
 import LoadingScreen from '../components/LoadingScreen';
 import {
@@ -35,6 +35,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import useBrowserBackend from '../hooks/useBrowserBackend';
 
 function formatDate(date: Date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -53,7 +54,7 @@ export default function Open() {
   const { walletId, walletItemId } = useParams<RouteParams>();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const sortType = searchParams.get('sort');
+  const sortType = searchParams.get('sort') || 'DateDesc';
   // console.log('sortType', sortType);
   const history = useHistory();
   const [postResponse, setPostResponse] = useState<any>(null);
@@ -63,8 +64,40 @@ export default function Open() {
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
   const [prevWalletItem, setPrevWalletItem] = useState<any>(null);
   const [nextWalletItem, setNextWalletItem] = useState<any>(null);
+  const {
+    getWalletItemByWalletItemId,
+    getWalletUserByEmailAndWalletId,
+    getPrevAndNextWalletItemByWalletItemIdAndSortType,
+    deleteWalletItemById,
+  } = useBrowserBackend();
 
   useEffect(() => {
+    (async () => {
+      const walletItem = await getWalletItemByWalletItemId(walletItemId);
+      const walletUser = await getWalletUserByEmailAndWalletId(
+        'samko1311@gmail.com',
+        walletId
+      );
+
+      const { walletItemPrev, walletItemNext } =
+        await getPrevAndNextWalletItemByWalletItemIdAndSortType(
+          walletItemId,
+          sortType
+        );
+
+      if (walletItem == undefined) return;
+      if (walletUser == undefined) return;
+      if (walletItemPrev == undefined) return;
+      if (walletItemNext == undefined) return;
+
+      setWalletItem(walletItem);
+      setCurrentWalletUser(walletUser);
+      setPrevWalletItem(walletItemPrev);
+      setNextWalletItem(walletItemNext);
+    })();
+  }, [walletItemId]);
+
+  /* useEffect(() => {
     (async () => {
       const id = walletItemId;
       const response = await axios.get(
@@ -110,7 +143,7 @@ export default function Open() {
     const { walletItemPrev, walletItemNext } = postResponse3 || {};
     setPrevWalletItem(walletItemPrev);
     setNextWalletItem(walletItemNext);
-  }, [postResponse3]);
+  }, [postResponse3]);*/
 
   if (walletItem == undefined) return <LoadingScreen />;
   if (currentWalletUser == undefined) return <LoadingScreen />;
@@ -122,7 +155,8 @@ export default function Open() {
   // console.log('isCurrentUserOneOfRecievers', isCurrentUserOneOfRecievers);
 
   function deleteWalletItem() {
-    axios.delete(`/api/wallets/deleteWalletItemById/${walletItemId}`);
+    // axios.delete(`/api/wallets/deleteWalletItemById/${walletItemId}`);
+    deleteWalletItemById(walletItemId);
     history.push(`/${walletId}/expenses`);
   }
 

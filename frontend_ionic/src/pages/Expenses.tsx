@@ -20,7 +20,7 @@ import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
 import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
 import EditIcon from '-!svg-react-loader!../assets/icons/edit.svg';
 import BurgerMenu from '../components/DropDownMenu';
-import axios from 'axios';
+// import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import { Button } from '../styles/DropDownMenu.styled';
 import { ArrowDown, ArrowUp } from '../styles/utills.styled';
@@ -45,6 +45,7 @@ import {
   useIonViewWillEnter,
   useIonViewWillLeave,
 } from '@ionic/react';
+import useBrowserBackend from '../hooks/useBrowserBackend';
 
 enum SortType {
   DateAsc = 'DateAsc',
@@ -68,8 +69,8 @@ export default function Expenses() {
   const history = useHistory();
   // line bellow neads to be handled properly in the future
   const [sortType, setSortType] = useState<SortType>(SortType.DateDesc);
-  const [postResponse, setPostResponse] = useState<any>(null);
-  const [postResponse2, setPostResponse2] = useState<any>(null);
+  // const [postResponse, setPostResponse] = useState<any>(null);
+  // const [postResponse2, setPostResponse2] = useState<any>(null);
   const [walletItems, setWalletItems] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
@@ -80,8 +81,57 @@ export default function Expenses() {
     useState(false);
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
+  const {
+    getWalletItemsByWalletId,
+    getWalletUserByEmailAndWalletId,
+    deleteWalletById,
+  } = useBrowserBackend();
 
   useIonViewWillEnter(() => {
+    (async () => {
+      const { wallet, walletItems } = await getWalletItemsByWalletId(walletId);
+      const { walletUser } = await getWalletUserByEmailAndWalletId(
+        'samko1311@gmail.com',
+        walletId
+      );
+
+      if (wallet == undefined) return;
+
+      if (walletItems == undefined) return;
+      (walletItems as any[]).sort((a: any, b: any) => {
+        switch (sortType) {
+          case SortType.DateAsc:
+            return a.date > b.date ? 1 : -1;
+          case SortType.DateDesc:
+            return a.date < b.date ? 1 : -1;
+          case SortType.AmountAsc:
+            return a.amount > b.amount ? 1 : -1;
+          case SortType.AmountDesc:
+            return a.amount < b.amount ? 1 : -1;
+          case SortType.TitleAsc:
+            return a.name > b.name ? 1 : -1;
+          case SortType.TitleDesc:
+            return a.name < b.name ? 1 : -1;
+          case SortType.PayerAsc:
+            return a.payer.name > b.payer.name ? 1 : -1;
+          case SortType.PayerDesc:
+            return a.payer.name < b.payer.name ? 1 : -1;
+          case SortType.CategoryAsc:
+            return a.type > b.type ? 1 : -1;
+          case SortType.CategoryDesc:
+            return a.type < b.type ? 1 : -1;
+          default:
+            return 0;
+        }
+      });
+
+      setWalletItems(walletItems);
+      setWallet(wallet);
+      setCurrentWalletUser(walletUser);
+    })();
+  });
+
+  /* useIonViewWillEnter(() => {
     console.log('ionViewWillEnter event fired');
     (async () => {
       const id = walletId;
@@ -98,7 +148,7 @@ export default function Expenses() {
       );
       setPostResponse2(response.data);
     })();
-  });
+  });*/
 
   /* useEffect(() => {
     (async () => {
@@ -110,7 +160,7 @@ export default function Expenses() {
     })();
   }, []);*/
 
-  useEffect(() => {
+  /* useEffect(() => {
     const { wallet, walletItems } = postResponse || {};
     // console.log('wallet', wallet);
     if (walletItems == undefined) return;
@@ -143,7 +193,7 @@ export default function Expenses() {
     console.log('walletItems', walletItems);
     setWalletItems(walletItems);
     setWallet(wallet);
-  }, [postResponse]);
+  }, [postResponse]);*/
 
   /* useEffect(() => {
     (async () => {
@@ -188,17 +238,18 @@ export default function Expenses() {
     setWalletItems([...walletItems]);
   }, [sortType]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     const { walletUser } = postResponse2 || {};
     // console.log('walletUser', walletUser);
     setCurrentWalletUser(walletUser);
-  }, [postResponse2]);
+  }, [postResponse2]);*/
 
   // console.log('walletItems', walletItems);
   // console.log('currentWalletUser', currentWalletUser);
 
   function deleteWallet() {
-    axios.delete(`/api/wallets/deleteWalletById/${walletId}`);
+    // axios.delete(`/api/wallets/deleteWalletById/${walletId}`);
+    deleteWalletById(walletId);
     history.push('/');
   }
 

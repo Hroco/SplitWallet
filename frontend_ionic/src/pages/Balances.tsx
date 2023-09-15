@@ -11,7 +11,7 @@ import { BurgerButton, ExpenseButton } from '../styles/buttons.styled';
 import BalanceItem from '../components/BalanceItem';
 import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import axios from 'axios';
+// import axios from 'axios';
 import ReimbursementItem from '../components/ReimbursementItem';
 import {
   IonBackButton,
@@ -23,6 +23,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import useBrowserBackend from '../hooks/useBrowserBackend';
 
 function findLowestBalanceObject(data: any[]) {
   let lowestBalanceObject = null;
@@ -89,8 +90,19 @@ export default function Balances() {
   const [bilanceBarNegativeRatio, setBilanceBarNegativeRatio] =
     useState<number>(0);
   const [reimbursements, setReimbursements] = useState<any[]>([]);
+  const { getWalletUsersByWalletId } = useBrowserBackend();
 
   useEffect(() => {
+    (async () => {
+      const walletUsers = await getWalletUsersByWalletId(walletId);
+
+      if (walletUsers == undefined) return;
+
+      setWalletUsers(walletUsers);
+    })();
+  }, []);
+
+  /* useEffect(() => {
     (async () => {
       const id = walletId;
       const response = await axios.get(
@@ -104,7 +116,7 @@ export default function Balances() {
     const { walletUsers } = postResponse || {};
     if (walletUsers == undefined) return;
     setWalletUsers(walletUsers);
-  }, [postResponse]);
+  }, [postResponse]);*/
 
   useEffect(() => {
     if (walletUsers == undefined) return;

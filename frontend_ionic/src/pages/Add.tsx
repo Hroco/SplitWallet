@@ -19,7 +19,7 @@ import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
 import { useHistory, useParams } from 'react-router-dom';
-import axios from 'axios';
+// import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import {
   IonBackButton,
@@ -39,6 +39,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import useBrowserBackend from '../hooks/useBrowserBackend';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -97,21 +98,37 @@ export default function Add() {
   const [participants, setParticipants] = useState<
     z.infer<typeof ParticipantsSchema>
   >([]);
-  const [postResponse, setPostResponse] = useState<any>(null);
+  // const [postResponse, setPostResponse] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
 
   const { walletId } = useParams<RouteParams>();
   const history = useHistory();
+  const { getWalletById, addWalletItem } = useBrowserBackend();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
 
-  useEffect(() => {
+  /* useEffect(() => {
     (async () => {
       const id = walletId;
       const response = await axios.get(`/api/wallets/getWalletById/${id}`);
       console.log('response', response);
       setPostResponse(response.data);
+    })();
+  }, []);
+
+  useEffect(() => {
+    const { wallet } = postResponse || {};
+    setWallet(wallet);
+  }, [postResponse]);*/
+
+  useEffect(() => {
+    (async () => {
+      const wallet = await getWalletById(walletId);
+
+      if (wallet == undefined) return;
+
+      setWallet(wallet);
     })();
   }, []);
 
@@ -188,11 +205,6 @@ export default function Add() {
   }, [participants]);
 
   useEffect(() => {
-    const { wallet } = postResponse || {};
-    setWallet(wallet);
-  }, [postResponse]);
-
-  useEffect(() => {
     if (wallet == undefined) return;
     const walletUsers = wallet.walletUsers;
 
@@ -219,7 +231,7 @@ export default function Add() {
     if (currentWalletUser == undefined) throw new Error('User is undefined.');
 
     if (payerId == '') setPayerId(currentWalletUser.id);
-  }, [postResponse]);
+  }, [wallet]);
 
   // if (wallet == undefined) return <LoadingScreen />;
 
@@ -258,7 +270,8 @@ export default function Add() {
       type: type,
     };
 
-    axios.post('/api/wallets/addWalletItem/', newWalletItem);
+    // axios.post('/api/wallets/addWalletItem/', newWalletItem);
+    addWalletItem(newWalletItem);
 
     history.push(`/${walletId}/expenses`);
   }
