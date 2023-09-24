@@ -39,14 +39,21 @@ import {
 import { add, settingsOutline } from 'ionicons/icons';
 import useSQLiteDB from '../hooks/useSQLiteDB';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 export default function HomePage() {
   const history = useHistory();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletsList, setWalletsList] = useState<any>(null);
-  const { getWalletsWithEmail, createTable, listOfTables } =
-    useBrowserBackend();
+  const {
+    getWalletsWithEmail,
+    createTable,
+    listOfTables,
+    testB1,
+    testB2,
+    testB3,
+    testB4,
+  } = useDBFunctions();
 
   useIonViewWillEnter(() => {
     // createTable();
@@ -110,6 +117,26 @@ export default function HomePage() {
     setWalletsList(wallets);
   }, [postResponse]);*/
 
+  function test() {
+    console.log('test');
+    testB1();
+  }
+
+  function test2() {
+    console.log('test2');
+    testB2();
+  }
+
+  function test3() {
+    console.log('test3');
+    testB3();
+  }
+
+  function test4() {
+    console.log('test4');
+    testB4();
+  }
+
   return (
     <IonPage>
       <IonHeader>
@@ -135,6 +162,12 @@ export default function HomePage() {
         </IonToolbar>
       </IonHeader>
       <IonContent>
+        {/*
+        <IonButton onClick={test}>Create</IonButton>
+        <IonButton onClick={test2}>Display</IonButton>
+        <IonButton onClick={test3}>Insert</IonButton>
+        <IonButton onClick={test4}>Delete</IonButton>
+         */}
         {walletsList &&
           walletsList.map((item: any, index: number) => (
             <MainItem

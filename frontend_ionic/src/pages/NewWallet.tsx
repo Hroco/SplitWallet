@@ -35,7 +35,7 @@ import {
   IonToolbar,
 } from '@ionic/react';
 import { checkmarkOutline } from 'ionicons/icons';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 const UserListSchema = z.array(
   z.object({ name: z.string(), emailList: z.string().optional() })
@@ -53,9 +53,9 @@ export default function NewWallet() {
   const [participants, setParticipants] = useState<
     z.infer<typeof ParticipantsSchema>
   >([]);
-  const { addWallet } = useBrowserBackend();
+  const { addWallet } = useDBFunctions();
 
-  function handleAddWallet() {
+  async function handleAddWallet() {
     const userList: z.infer<typeof UserListSchema> = participants.map(
       (name, index) => {
         if (index == 0) {
@@ -91,10 +91,10 @@ export default function NewWallet() {
 
     console.log('output', outputTemp);*/
 
-    addWallet(output);
+    await addWallet(output);
     // axios.post('/api/wallets/addWallet/', output);
 
-    // history.push('/');
+    history.push('/');
   }
 
   useEffect(() => {

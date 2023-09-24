@@ -35,7 +35,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 function formatDate(date: Date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -69,7 +69,7 @@ export default function Open() {
     getWalletUserByEmailAndWalletId,
     getPrevAndNextWalletItemByWalletItemIdAndSortType,
     deleteWalletItemById,
-  } = useBrowserBackend();
+  } = useDBFunctions();
 
   useEffect(() => {
     (async () => {
@@ -145,8 +145,14 @@ export default function Open() {
     setNextWalletItem(walletItemNext);
   }, [postResponse3]);*/
 
-  if (walletItem == undefined) return <LoadingScreen />;
-  if (currentWalletUser == undefined) return <LoadingScreen />;
+  if (walletItem == undefined) {
+    console.log('LoadingScreen because walletItem', walletItem);
+    return <LoadingScreen />;
+  }
+  if (currentWalletUser == undefined) {
+    console.log('LoadingScreen because currentWalletUser', currentWalletUser);
+    return <LoadingScreen />;
+  }
 
   const isCurrentUserOneOfRecievers = walletItem.recievers.some(
     (reciever: any) => reciever.reciever.id == currentWalletUser.id

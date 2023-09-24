@@ -24,7 +24,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 interface RouteParams {
   walletId: string;
@@ -36,7 +36,7 @@ export default function Feed() {
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletItems, setWalletItems] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
-  const { getWalletItemsByWalletId } = useBrowserBackend();
+  const { getWalletItemsByWalletId } = useDBFunctions();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');

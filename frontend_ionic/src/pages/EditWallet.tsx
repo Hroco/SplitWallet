@@ -34,7 +34,7 @@ import {
   IonToolbar,
 } from '@ionic/react';
 import { checkmarkOutline } from 'ionicons/icons';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 const UserListSchema = z.array(
   z.object({
@@ -63,11 +63,11 @@ export default function EditWallet() {
   >([]);
   // const [postResponse, setPostResponse] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
-  const { getWalletById, editWallet } = useBrowserBackend();
+  const { getWalletById, editWallet } = useDBFunctions();
 
   useEffect(() => {
     (async () => {
-      const wallet = await getWalletById(walletId);
+      const { wallet } = await getWalletById(walletId);
 
       if (wallet == undefined) return;
 
@@ -105,9 +105,13 @@ export default function EditWallet() {
       for (let i = 0; i < walletUsers.length; i++) {
         const walletUser = walletUsers[i];
         if (walletUser == undefined) throw new Error('User is undefined.');
+        console.log('walletUser', walletUser);
         const user = walletUser.users;
         const walletItems = walletUser.WalletItem;
         const recieverData = walletUser.RecieverData;
+        console.log('user', user);
+        console.log('walletItems', walletItems);
+        console.log('recieverData', recieverData);
 
         const canBeDeleted =
           walletItems.length == 0 && recieverData.length == 0;
@@ -134,7 +138,7 @@ export default function EditWallet() {
     }
   }, [wallet]);
 
-  function handleAddWallet() {
+  async function handleAddWallet() {
     /* const userList: z.infer<typeof UserListSchema> = participants.map(
       (item, index) => {
         if (index == 0) {
@@ -153,7 +157,7 @@ export default function EditWallet() {
     };
 
     // axios.put(`/api/wallets/editWallet/${walletId}`, output);
-    editWallet(walletId, output);
+    await editWallet(walletId, output);
 
     history.push('/');
   }

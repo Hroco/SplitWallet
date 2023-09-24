@@ -23,7 +23,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 function findLowestBalanceObject(data: any[]) {
   let lowestBalanceObject = null;
@@ -90,7 +90,7 @@ export default function Balances() {
   const [bilanceBarNegativeRatio, setBilanceBarNegativeRatio] =
     useState<number>(0);
   const [reimbursements, setReimbursements] = useState<any[]>([]);
-  const { getWalletUsersByWalletId } = useBrowserBackend();
+  const { getWalletUsersByWalletId } = useDBFunctions();
 
   useEffect(() => {
     (async () => {

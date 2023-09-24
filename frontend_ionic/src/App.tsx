@@ -33,78 +33,52 @@ import '@ionic/react/css/text-alignment.css';
 import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
-
-interface JsonListenerInterface {
-  jsonListeners: boolean;
-  setJsonListeners: React.Dispatch<React.SetStateAction<boolean>>;
-}
-interface existingConnInterface {
-  existConn: boolean;
-  setExistConn: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-// Singleton SQLite Hook
-export let sqlite: SQLiteHook;
-// Existing Connections Store
-export let existingConn: existingConnInterface;
-// Is Json Listeners used
-export let isJsonListeners: JsonListenerInterface;
+import { FrontendDBProvider } from './lib/FrontendDBContext';
 
 setupIonicReact();
 
 function App() {
-  const [existConn, setExistConn] = useState(false);
-  existingConn = { existConn: existConn, setExistConn: setExistConn };
-
-  // !!!!! if you do not want to use the progress events !!!!!
-  // since react-sqlite-hook 2.1.0
-  // sqlite = useSQLite()
-  // before
-  // sqlite = useSQLite({})
-  // !!!!!                                               !!!!!
-
-  sqlite = useSQLite();
-  console.log(`$$$ in App sqlite.isAvailable  ${sqlite.isAvailable} $$$`);
-
   return (
     <IonApp>
-      <IonReactRouter>
-        <IonRouterOutlet>
-          <Route exact path="/">
-            <HomePage />
-          </Route>
-          <Route exact path="/">
-            <HomePage />
-          </Route>
-          <Route exact path="/:walletId/add">
-            <Add />
-          </Route>
-          <Route exact path="/:walletId/edit">
-            <EditWallet />
-          </Route>
-          <Route exact path="/:walletId/:walletItemId/edit">
-            <Edit />
-          </Route>
-          <Route exact path="/:walletId/balances">
-            <Balances />
-          </Route>
-          <Route exact path="/:walletId/expenses">
-            <Expenses />
-          </Route>
-          <Route exact path="/:walletId/feed">
-            <Feed />
-          </Route>
-          <Route exact path="/:walletId/:walletItemId/open">
-            <Open />
-          </Route>
-          <Route exact path="/newWallet">
-            <NewWallet />
-          </Route>
-          <Route exact path="/mysettings">
-            <MySettings />
-          </Route>
-        </IonRouterOutlet>
-      </IonReactRouter>
+      <FrontendDBProvider>
+        <IonReactRouter>
+          <IonRouterOutlet>
+            <Route exact path="/">
+              <HomePage />
+            </Route>
+            <Route exact path="/">
+              <HomePage />
+            </Route>
+            <Route exact path="/:walletId/add">
+              <Add />
+            </Route>
+            <Route exact path="/:walletId/edit">
+              <EditWallet />
+            </Route>
+            <Route exact path="/:walletId/:walletItemId/edit">
+              <Edit />
+            </Route>
+            <Route exact path="/:walletId/balances">
+              <Balances />
+            </Route>
+            <Route exact path="/:walletId/expenses">
+              <Expenses />
+            </Route>
+            <Route exact path="/:walletId/feed">
+              <Feed />
+            </Route>
+            <Route exact path="/:walletId/:walletItemId/open">
+              <Open />
+            </Route>
+            <Route exact path="/newWallet">
+              <NewWallet />
+            </Route>
+            <Route exact path="/mysettings">
+              <MySettings />
+            </Route>
+          </IonRouterOutlet>
+        </IonReactRouter>
+      </FrontendDBProvider>
     </IonApp>
   );
 }

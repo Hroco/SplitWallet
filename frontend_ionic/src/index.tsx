@@ -16,8 +16,10 @@ import {
   SQLiteConnection,
   SQLiteDBConnection,
 } from '@capacitor-community/sqlite';
+import { SQLiteHook, useSQLite } from 'react-sqlite-hook';
+import { JeepSqlite } from 'jeep-sqlite/dist/components/jeep-sqlite';
 
-type StencilToReact<T> = {
+/* type StencilToReact<T> = {
   [P in keyof T]?: T[P] &
     Omit<HTMLAttributes<Element>, 'className'> & {
       class?: string;
@@ -29,49 +31,26 @@ declare global {
     interface IntrinsicElements
       extends StencilToReact<LocalJSX.IntrinsicElements> {}
   }
-}
+}*/
 
-applyPolyfills().then(() => {
-  jeepSqlite(window);
-});
 window.addEventListener('DOMContentLoaded', async () => {
-  console.log('$$$ in index $$$');
-  const platform = Capacitor.getPlatform();
-  const sqlite: SQLiteConnection = new SQLiteConnection(CapacitorSQLite);
   try {
+    const platform = Capacitor.getPlatform();
+
+    // WEB SPECIFIC FUNCTIONALITY
     if (platform === 'web') {
-      const jeepEl = document.createElement('jeep-sqlite');
-      document.body.appendChild(jeepEl);
+      const sqlite = new SQLiteConnection(CapacitorSQLite);
+      // Create the 'jeep-sqlite' Stencil component
+      customElements.define('jeep-sqlite', JeepSqlite);
+      const jeepSqliteEl = document.createElement('jeep-sqlite');
+      document.body.appendChild(jeepSqliteEl);
       await customElements.whenDefined('jeep-sqlite');
+      console.log(`after customElements.whenDefined`);
+
+      // Initialize the Web store
       await sqlite.initWebStore();
+      console.log(`after initWebStore`);
     }
-    const ret = await sqlite.checkConnectionsConsistency();
-    const isConn = (await sqlite.isConnection('db_issue9', false)).result;
-    let db: SQLiteDBConnection;
-    if (ret.result && isConn) {
-      db = await sqlite.retrieveConnection('db_issue9', false);
-    } else {
-      db = await sqlite.createConnection(
-        'db_issue9',
-        false,
-        'no-encryption',
-        1,
-        false
-      );
-    }
-
-    await db.open();
-    const query = `
-    CREATE TABLE IF NOT EXISTS test (
-      id INTEGER PRIMARY KEY NOT NULL,
-      name TEXT NOT NULL
-    );
-    `;
-
-    const res: any = await db.execute(query);
-    console.log(`res: ${JSON.stringify(res)}`);
-    await db.close();
-    await sqlite.closeConnection('db_issue9', false);
 
     const root = ReactDOM.createRoot(
       document.getElementById('root') as HTMLElement

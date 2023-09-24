@@ -38,7 +38,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -105,7 +105,7 @@ export default function Edit() {
   const { walletId, walletItemId } = useParams<RouteParams>();
   const history = useHistory();
   const { getWalletById, getWalletItemByWalletItemId, editWalletItem } =
-    useBrowserBackend();
+    useDBFunctions();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
@@ -310,7 +310,7 @@ export default function Edit() {
 
   // if (wallet == undefined) return <LoadingScreen />;
 
-  function handleEditWalletItem() {
+  async function handleEditWalletItem() {
     const numberOfCheckedUsers = participants.filter(
       (participant) => participant.checked === true
     ).length;
@@ -346,7 +346,7 @@ export default function Edit() {
     };
 
     // axios.put(`/api/wallets/editWalletItem/${walletItemId}`, newWalletItem);
-    editWalletItem(walletItemId, newWalletItem);
+    await editWalletItem(walletItemId, newWalletItem);
 
     history.push(`/${walletId}/expenses`);
   }

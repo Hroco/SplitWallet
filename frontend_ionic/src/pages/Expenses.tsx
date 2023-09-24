@@ -45,7 +45,7 @@ import {
   useIonViewWillEnter,
   useIonViewWillLeave,
 } from '@ionic/react';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 enum SortType {
   DateAsc = 'DateAsc',
@@ -71,34 +71,38 @@ export default function Expenses() {
   const [sortType, setSortType] = useState<SortType>(SortType.DateDesc);
   // const [postResponse, setPostResponse] = useState<any>(null);
   // const [postResponse2, setPostResponse2] = useState<any>(null);
-  const [walletItems, setWalletItems] = useState<any>(null);
+  const [walletItems, setWalletItems] = useState<any[] | null>(null);
   const [wallet, setWallet] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
   const [presentAlert] = useIonAlert();
-  const [shouldShowBurgerMenu, setShouldShowBurgerMenu] = useState(false);
-  const [shouldShowSortingMenu, setShouldShowSortingMenu] = useState(false);
-  const [shouldShowPersonalModeMenu, setShouldShowPersonalModeMenu] =
-    useState(false);
+  // const [shouldShowBurgerMenu, setShouldShowBurgerMenu] = useState(false);
+  // const [shouldShowSortingMenu, setShouldShowSortingMenu] = useState(false);
+  // const [shouldShowPersonalModeMenu, setShouldShowPersonalModeMenu] =
+  //   useState(false);
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
   const {
     getWalletItemsByWalletId,
     getWalletUserByEmailAndWalletId,
     deleteWalletById,
-  } = useBrowserBackend();
+    listOfTables,
+  } = useDBFunctions();
 
   useIonViewWillEnter(() => {
     (async () => {
       const { wallet, walletItems } = await getWalletItemsByWalletId(walletId);
-      const { walletUser } = await getWalletUserByEmailAndWalletId(
+      const walletUser = await getWalletUserByEmailAndWalletId(
         'samko1311@gmail.com',
         walletId
       );
 
-      if (wallet == undefined) return;
+      await listOfTables();
 
+      if (wallet == undefined) return;
       if (walletItems == undefined) return;
-      (walletItems as any[]).sort((a: any, b: any) => {
+      if (walletUser == undefined) return;
+
+      /* (walletItems as any[]).sort((a: any, b: any) => {
         switch (sortType) {
           case SortType.DateAsc:
             return a.date > b.date ? 1 : -1;
@@ -123,9 +127,15 @@ export default function Expenses() {
           default:
             return 0;
         }
-      });
+      });*/
 
-      setWalletItems(walletItems);
+      // console.log('------------------------------------------');
+      // console.log('walletItems', walletItems);
+      // console.log('wallet', wallet);
+      // console.log('walletUser', walletUser);
+      // console.log('------------------------------------------');
+
+      setWalletItems(walletItems as any[]);
       setWallet(wallet);
       setCurrentWalletUser(walletUser);
     })();
@@ -234,7 +244,7 @@ export default function Expenses() {
           return 0;
       }
     });
-    setShouldShowBurgerMenu(false);
+    // setShouldShowBurgerMenu(false);
     setWalletItems([...walletItems]);
   }, [sortType]);
 
@@ -247,9 +257,9 @@ export default function Expenses() {
   // console.log('walletItems', walletItems);
   // console.log('currentWalletUser', currentWalletUser);
 
-  function deleteWallet() {
+  async function deleteWallet() {
     // axios.delete(`/api/wallets/deleteWalletById/${walletId}`);
-    deleteWalletById(walletId);
+    await deleteWalletById(walletId);
     history.push('/');
   }
 

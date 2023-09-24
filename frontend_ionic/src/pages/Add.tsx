@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BurgerButton } from '../styles/buttons.styled';
 import { ParticipantInputDiv } from '../styles/newWalletItem.styled';
+import { Capacitor } from '@capacitor/core';
 import {
   TopPannel,
   MainContent,
@@ -38,8 +39,9 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
+  useIonViewWillEnter,
 } from '@ionic/react';
-import useBrowserBackend from '../hooks/useBrowserBackend';
+import { useDBFunctions } from '../lib/FrontendDBContext';
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -103,7 +105,7 @@ export default function Add() {
 
   const { walletId } = useParams<RouteParams>();
   const history = useHistory();
-  const { getWalletById, addWalletItem } = useBrowserBackend();
+  const { getWalletById, addWalletItem } = useDBFunctions();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
@@ -122,15 +124,18 @@ export default function Add() {
     setWallet(wallet);
   }, [postResponse]);*/
 
-  useEffect(() => {
+  useIonViewWillEnter(() => {
+    // console.log('ionViewWillEnter Add event fired');
+    // useEffect(() => {
     (async () => {
-      const wallet = await getWalletById(walletId);
+      const { wallet } = await getWalletById(walletId);
 
       if (wallet == undefined) return;
 
       setWallet(wallet);
     })();
-  }, []);
+    // }, []);
+  });
 
   useEffect(() => {
     const numberOfCheckedUsers = participants.filter(
@@ -225,12 +230,14 @@ export default function Add() {
     }
 
     // line below is for testing and it should be replaced with user id from seesion
-    const currentWalletUser = walletUsers.find(
+    /* const currentWalletUser = walletUsers.find(
       (walletUser: any) => walletUser.userId === 'clls52cn30000d7vgfv1jx5el'
     );
-    if (currentWalletUser == undefined) throw new Error('User is undefined.');
+    if (currentWalletUser == undefined) throw new Error('User is undefined.');*/
 
-    if (payerId == '') setPayerId(currentWalletUser.id);
+    // if (payerId == '') setPayerId(currentWalletUser.id);
+
+    if (payerId == '') setPayerId(walletUsers[0].id);
   }, [wallet]);
 
   // if (wallet == undefined) return <LoadingScreen />;
@@ -270,10 +277,31 @@ export default function Add() {
       type: type,
     };
 
+    /* const testObject = {
+      walletId: 'd1dd35a7-0ca8-4963-b045-442b822f1622',
+      name: 'Jedlo',
+      amount: 50,
+      date: new Date(),
+      payer: '71e412b0-86ef-45bb-9cc5-f3b6c525beb9',
+      tags: 'Beer',
+      recieversData: [
+        {
+          id: '71e412b0-86ef-45bb-9cc5-f3b6c525beb9',
+          cutFromAmount: 25,
+        },
+        {
+          id: 'dd493733-79ad-4f34-97d2-fa1f14db1e3a',
+          cutFromAmount: 25,
+        },
+      ],
+      type: 'expense',
+    };*/
+
     // axios.post('/api/wallets/addWalletItem/', newWalletItem);
+    console.log('newWalletItem', newWalletItem);
     addWalletItem(newWalletItem);
 
-    history.push(`/${walletId}/expenses`);
+    // history.push(`/${walletId}/expenses`);
   }
 
   function getCutFromAmount(i: number): string {
