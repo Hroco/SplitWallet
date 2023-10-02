@@ -826,8 +826,10 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
       SET total = '${newTotal}'
       WHERE id = '${input.walletId}';`);
 
+      console.log('input.recieversData', input.recieversData);
       // Update bliance of recievers
-      input.recieversData.map(async (receiver: any) => {
+      for (const receiver of input.recieversData) {
+        console.log('receiver', receiver);
         let walletUser: any = await runQuerry(`SELECT *
         FROM WalletUser
         WHERE id = '${receiver.id}';`);
@@ -856,7 +858,7 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
         await runQuerry(`UPDATE WalletUser
         SET bilance = '${newBilance}', total = '${newTotal}'
         WHERE id = '${receiver.id}';`);
-      });
+      }
     } catch (error) {
       console.error('error', error);
     }
@@ -870,17 +872,201 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     input: z.infer<typeof WalletItemSchema>
   ) => {
     console.log('editWalletItem TBD');
+    try {
+      const validationResult = WalletItemSchema.safeParse(input);
+
+      if (!validationResult.success) {
+        throw new Error('validationResult error');
+      }
+
+      const results = (await runQuerry(
+        `SELECT * FROM WalletItem WHERE id = '${id}';`
+      )) as any[] | undefined;
+
+      if (!results) {
+        throw new Error('WalletItem not found');
+      }
+
+      const walletItemWithoutPayer = results[0];
+
+      console.log('walletItemWithoutPayer', walletItemWithoutPayer);
+
+      if (!walletItemWithoutPayer) {
+        throw new Error('walletItem not found');
+      }
+
+      const results2 = await runQuerry(
+        `SELECT WalletUser.*
+          FROM WalletUser
+          WHERE WalletUser.id = '${walletItemWithoutPayer.userId}';`
+      );
+
+      if (!results2) {
+        throw new Error('payer not found');
+      }
+
+      const payer: any = results2[0];
+
+      const recieversWithoutIncludedWalletUsers = (await runQuerry(
+        `SELECT RecieverData.*
+          FROM RecieverData
+          WHERE RecieverData.walletItemId = '${walletItemWithoutPayer.id}';`
+      )) as any[] | undefined;
+
+      if (!recieversWithoutIncludedWalletUsers) {
+        throw new Error('recievers not found');
+      }
+
+      const recievers = [];
+
+      for (const reciever of recieversWithoutIncludedWalletUsers) {
+        const results = await runQuerry(
+          `SELECT WalletUser.*
+          FROM WalletUser
+          WHERE WalletUser.id = '${reciever.userId}';`
+        );
+
+        if (!results) {
+          throw new Error('walletUser not found');
+        }
+
+        const walletUser: any = results[0];
+
+        recievers.push({ ...reciever, reciever: walletUser });
+      }
+
+      console.log('recievers', recievers);
+
+      if (!recievers) {
+        throw new Error('recievers not found');
+      }
+
+      const oldWalletItem = { ...walletItemWithoutPayer, payer, recievers };
+
+      console.log('oldWalletItem', oldWalletItem);
+
+      let query = `DELETE FROM RecieverData WHERE walletItemId = '${id}'`;
+      await runQuerry(query);
+
+      query = `UPDATE WalletItem SET 
+        name = '${input.name}',
+        amount = '${input.amount}',
+        date = '${input.date}',
+        tags = '${input.tags}',
+        type = '${input.type}',
+        userId = '${input.payer}'
+        WHERE id = '${id}'`;
+      await runQuerry(query);
+
+      for (const receiver of input.recieversData) {
+        const receiverId = uuidv4();
+        const query = `INSERT INTO RecieverData 
+        (id, userId, amount, createdAt, updatedAt, walletItemId) 
+        VALUES ('${receiverId}', '${receiver.id}', '${receiver.cutFromAmount}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '${id}')`;
+        await runQuerry(query);
+      }
+
+      const oldWalletUsers = (await runQuerry(
+        `SELECT * FROM WalletUser WHERE id = '${oldWalletItem.payer.id}';`
+      )) as any[] | undefined;
+
+      if (!oldWalletUsers) {
+        throw new Error('walletUsers not found');
+      }
+
+      const oldWalletUser = oldWalletUsers[0];
+
+      let oldBilance = oldWalletUser.bilance;
+      if (
+        oldWalletItem.type === 'expense' ||
+        oldWalletItem.type === 'moneyTransfer'
+      ) {
+        oldBilance -= oldWalletItem.amount;
+      }
+      if (oldWalletItem.type === 'income') {
+        oldBilance += oldWalletItem.amount;
+      }
+
+      query = `UPDATE WalletUser
+               SET bilance = '${oldBilance}'
+               WHERE id = '${oldWalletItem.payer.id}';`;
+      await runQuerry(query);
+
+      // Remove Wallet Total of payer
+      const wallets = (await runQuerry(
+        `SELECT * FROM Wallets WHERE id = '${oldWalletItem.walletsId}';`
+      )) as any[] | undefined;
+
+      if (!wallets) {
+        throw new Error('wallets not found');
+      }
+
+      const wallet = wallets[0];
+
+      // Remove old total and apply new total
+      let newTotal = wallet.total;
+      if (oldWalletItem.type === 'expense') {
+        newTotal -= oldWalletItem.amount;
+      }
+      if (oldWalletItem.type === 'income') {
+        newTotal += oldWalletItem.amount;
+      }
+      // Monney transfer doesnt affect total
+
+      query = `UPDATE Wallets
+               SET total = '${newTotal}'
+               WHERE id = '${oldWalletItem.walletsId}';`;
+      await runQuerry(query);
+
+      // Remove old bliance from old recievers
+      for (const receiver of oldWalletItem.recievers) {
+        const walletUsers = (await runQuerry(
+          `SELECT * FROM WalletUser WHERE id = '${receiver.reciever.id}';`
+        )) as any[] | undefined;
+
+        if (!walletUsers) {
+          throw new Error('walletUsers not found');
+        }
+
+        const walletUser = walletUsers[0];
+
+        let oldBilance = walletUser.bilance;
+        let oldTotal = walletUser.total;
+        if (oldWalletItem.type === 'expense') {
+          oldBilance += receiver.amount;
+          oldTotal -= receiver.amount;
+        }
+        if (oldWalletItem.type === 'income') {
+          oldBilance -= receiver.amount;
+          oldTotal += receiver.amount;
+        }
+        if (oldWalletItem.type === 'moneyTransfer') {
+          oldBilance += receiver.amount;
+        }
+
+        query = `UPDATE WalletUser
+               SET bilance = '${oldBilance}',
+               total = '${oldTotal}'
+               WHERE id = '${receiver.reciever.id}';`;
+        await runQuerry(query);
+      }
+
+      /* query = `DELETE FROM WalletItem WHERE id = '${id}'`;
+      await runQuerry(query);*/
+    } catch (error) {
+      console.error('error', error);
+    }
+
+    return true;
   };
 
-  // SHR Todo
+  // SHR Done
   const editWallet = async (
     id: string,
     input: any // z.infer<typeof WalletSchema>
   ) => {
-    console.log('editWallet TBD');
+    console.log('editWallet');
     try {
-      console.log('editWallet TBD1');
-
       const validationResult = WalletSchema.safeParse(input);
 
       if (!validationResult.success) {
@@ -899,8 +1085,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
       FROM Wallets
       LEFT JOIN WalletUser ON Wallets.id = WalletUser.walletsId
       WHERE Wallets.id = '${id}';`);
-
-      console.log('editWallet TBD2');
 
       if (!walletUsers) {
         throw new Error('walletUsers not found');
@@ -977,8 +1161,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
           const values = [walletUserId, operation.name, operation.walletId];
 
-          console.log('creating ', query, values);
-
           await runQuerry(query, values);
         }
       }
@@ -990,8 +1172,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
                              SET name = '${operation.name}'
                              WHERE id = '${operation.id}';`;
 
-          console.log('updating ', query);
-
           await runQuerry(query);
         }
       }
@@ -1001,8 +1181,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
         for (const operation of deleteOperations) {
           const query = `DELETE FROM WalletUser
             WHERE id = '${operation}';`;
-
-          console.log('deleting ', query);
 
           await runQuerry(query);
         }

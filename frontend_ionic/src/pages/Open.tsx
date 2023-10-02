@@ -85,15 +85,17 @@ export default function Open() {
           sortType
         );
 
-      if (walletItem == undefined) return;
-      if (walletUser == undefined) return;
-      if (walletItemPrev == undefined) return;
-      if (walletItemNext == undefined) return;
+      console.log('open useEffect', {
+        walletItem,
+        walletUser,
+        walletItemPrev,
+        walletItemNext,
+      });
 
-      setWalletItem(walletItem);
-      setCurrentWalletUser(walletUser);
-      setPrevWalletItem(walletItemPrev);
-      setNextWalletItem(walletItemNext);
+      walletItem != undefined && setWalletItem(walletItem);
+      walletUser != undefined && setCurrentWalletUser(walletUser);
+      walletItemPrev != undefined && setPrevWalletItem(walletItemPrev);
+      walletItemNext != undefined && setNextWalletItem(walletItemNext);
     })();
   }, [walletItemId]);
 
@@ -149,6 +151,7 @@ export default function Open() {
     console.log('LoadingScreen because walletItem', walletItem);
     return <LoadingScreen />;
   }
+
   if (currentWalletUser == undefined) {
     console.log('LoadingScreen because currentWalletUser', currentWalletUser);
     return <LoadingScreen />;

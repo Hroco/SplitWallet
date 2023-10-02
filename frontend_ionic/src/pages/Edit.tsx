@@ -112,7 +112,7 @@ export default function Edit() {
 
   useEffect(() => {
     (async () => {
-      const wallet = await getWalletById(walletId);
+      const { wallet } = await getWalletById(walletId);
       const walletItem = await getWalletItemByWalletItemId(walletItemId);
 
       if (wallet == undefined) return;
@@ -390,7 +390,7 @@ export default function Edit() {
 
   const walletUsers = wallet.walletUsers;
 
-  // console.log('participants', participants);
+  console.log('walletUsers---------------------', { walletUsers, wallet });
 
   const participantElements = [];
   for (let i = 0; i < walletUsers.length; i++) {
