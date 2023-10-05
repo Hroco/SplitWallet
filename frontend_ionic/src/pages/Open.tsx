@@ -10,8 +10,9 @@ import {
   OpenFooter,
   OpenMainContent,
 } from '../styles/mainContainers.styled';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
+import EditIcon from '-!svg-react-loader!../assets/icons/edit.svg';
+import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import { useLocation, useParams, useHistory } from 'react-router-dom';
 // import axios from 'axios';
 import MainItem from '../components/MainItem';
@@ -30,10 +31,14 @@ import {
   IonContent,
   IonFooter,
   IonHeader,
+  IonItem,
+  IonList,
   IonMenuButton,
   IonPage,
+  IonPopover,
   IonTitle,
   IonToolbar,
+  useIonAlert,
 } from '@ionic/react';
 import { useDBFunctions } from '../lib/FrontendDBContext';
 
@@ -59,6 +64,7 @@ export default function Open() {
   const history = useHistory();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletItem, setWalletItem] = useState<any>(null);
+  const [presentAlert] = useIonAlert();
   const [postResponse2, setPostResponse2] = useState<any>(null);
   const [postResponse3, setPostResponse3] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
@@ -163,9 +169,9 @@ export default function Open() {
 
   // console.log('isCurrentUserOneOfRecievers', isCurrentUserOneOfRecievers);
 
-  function deleteWalletItem() {
+  async function deleteWalletItem() {
     // axios.delete(`/api/wallets/deleteWalletItemById/${walletItemId}`);
-    deleteWalletItemById(walletItemId);
+    await deleteWalletItemById(walletItemId);
     history.push(`/${walletId}/expenses`);
   }
 
@@ -182,11 +188,51 @@ export default function Open() {
             ></IonBackButton>
           </IonButtons>
           <IonButtons slot="end">
-            <IonButton
-              onClick={() => history.push(`/${walletId}/${walletItemId}/edit`)}
-            >
-              Edit
-            </IonButton>
+            <IonMenuButton autoHide={false} id="open-popover"></IonMenuButton>
+            <IonPopover trigger="open-popover" dismissOnSelect={true}>
+              <IonContent>
+                <IonList>
+                  <IonItem
+                    button={true}
+                    detail={false}
+                    onClick={() =>
+                      history.push(`/${walletId}/${walletItemId}/edit`)
+                    }
+                  >
+                    <EditIcon />
+                    <IonTitle>Edit</IonTitle>
+                  </IonItem>
+                  <IonItem
+                    button={true}
+                    detail={false}
+                    onClick={() =>
+                      presentAlert({
+                        header: 'Confirm delete?',
+                        buttons: [
+                          {
+                            text: 'CANCEL',
+                            role: 'cancel',
+                            handler: () => {
+                              console.log('Alert canceled');
+                            },
+                          },
+                          {
+                            text: 'DELETE',
+                            role: 'delete',
+                            handler: () => {
+                              deleteWalletItem();
+                            },
+                          },
+                        ],
+                      })
+                    }
+                  >
+                    <TrashIcon />
+                    <IonTitle>Delete</IonTitle>
+                  </IonItem>
+                </IonList>
+              </IonContent>
+            </IonPopover>
           </IonButtons>
         </IonToolbar>
       </IonHeader>

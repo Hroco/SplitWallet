@@ -22,6 +22,7 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
+  useIonViewWillEnter,
 } from '@ionic/react';
 import { useDBFunctions } from '../lib/FrontendDBContext';
 
@@ -92,31 +93,13 @@ export default function Balances() {
   const [reimbursements, setReimbursements] = useState<any[]>([]);
   const { getWalletUsersByWalletId } = useDBFunctions();
 
-  useEffect(() => {
+  useIonViewWillEnter(() => {
     (async () => {
       const walletUsers = await getWalletUsersByWalletId(walletId);
-
       if (walletUsers == undefined) return;
-
       setWalletUsers(walletUsers);
     })();
-  }, []);
-
-  /* useEffect(() => {
-    (async () => {
-      const id = walletId;
-      const response = await axios.get(
-        `/api/wallets/getWalletUsersByWalletId/${id}`
-      );
-      setPostResponse(response.data);
-    })();
-  }, []);
-
-  useEffect(() => {
-    const { walletUsers } = postResponse || {};
-    if (walletUsers == undefined) return;
-    setWalletUsers(walletUsers);
-  }, [postResponse]);*/
+  });
 
   useEffect(() => {
     if (walletUsers == undefined) return;
@@ -193,8 +176,6 @@ export default function Balances() {
     }
     setReimbursements(transactions);
   }
-
-  console.log('walletUsers', walletUsers);
 
   return (
     <IonPage>

@@ -216,7 +216,6 @@ export default function Expenses() {
   }, []);*/
 
   useEffect(() => {
-    console.log('sortType', sortType);
     if (walletItems == undefined) return;
     walletItems.sort((a: any, b: any) => {
       switch (sortType) {
@@ -375,7 +374,6 @@ export default function Expenses() {
   }
 
   function toggleSortType(asc: SortType, desc: SortType) {
-    console.log('toggleSortType');
     if (sortType == asc) {
       setSortType(desc);
     } else {

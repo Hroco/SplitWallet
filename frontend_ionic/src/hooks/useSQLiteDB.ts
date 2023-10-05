@@ -180,7 +180,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "VerificationToken_identifier_token_key" ON "V
 
       `;
       const respCT = await db?.execute(queryCreateTable);
-      console.log(`res: ${JSON.stringify(respCT)}`);
+      // console.log(`res: ${JSON.stringify(respCT)}`);
     });
   };
 

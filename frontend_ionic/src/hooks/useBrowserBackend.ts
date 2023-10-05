@@ -41,23 +41,28 @@ const useBrowserBackend = () => {
   }, [initialized]);*/
 
   const runQuerry = async (query: string, values?: any[]) => {
-    // console.log('runQuerry-1', query, values);
-    let output;
+    return new Promise<any[] | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          const respSelect = await db?.query(query, values);
+          resolve(respSelect?.values);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+    /* let output;
 
     await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-      // console.log('runQuerry-2', query, values);
-
       const respSelect = await db?.query(query, values);
-
       output = respSelect?.values;
     });
-    // console.log('runQuerry-3', query, values);
-    return output;
+    return output;*/
   };
 
-  const runExecute = async (query: string) => {
+  const runExecute = async (query: string, transaction?: boolean) => {
     await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-      await db?.run(query);
+      await db?.execute(query, transaction);
     });
   };
 
@@ -450,7 +455,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     const wallet = {};
     const walletItems = {};
 
-    console.log('getWalletItemsByWalletId TBD', id);
     try {
       const walletItemsWithoutPayer = (await runQuerry(
         `SELECT * FROM WalletItem WHERE walletsId = '${id}';`
@@ -670,12 +674,14 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
   // SHR Done
   const getWalletUsersByWalletId = async (id: string) => {
-    console.log('getWalletUsersByWalletId');
+    console.log('getWalletUsersByWalletId', id);
     const walletUsers: any[] | undefined = [];
     try {
       const walletUsers = (await runQuerry(
         `SELECT * FROM WalletUser WHERE walletsId = '${id}';`
       )) as any[] | undefined;
+
+      console.log('walletUsers', walletUsers);
 
       if (!walletUsers) {
         throw new Error('walletUsers not found');
@@ -691,179 +697,162 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
   // SHR Done
   const addWallet = async (input: z.infer<typeof WalletSchema>) => {
-    console.log('addWallet');
+    return new Promise<boolean | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          console.log('addWallet');
 
-    const validationResult = WalletSchema.safeParse(input);
+          const validationResult = WalletSchema.safeParse(input);
 
-    if (!validationResult.success) {
-      throw new Error('validationResult error');
-    }
+          if (!validationResult.success) {
+            throw new Error('validationResult error');
+          }
 
-    try {
-      const walletId = uuidv4();
-      const query = `
-        INSERT INTO Wallets
-        (id, name, description, currency, category, createdAt, updatedAt) 
-        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      `;
+          const transactionQueries = [];
 
-      const values = [
-        walletId,
-        input.name,
-        input.description,
-        input.currency,
-        input.category,
-      ];
+          const walletId = uuidv4();
 
-      await runQuerry(query, values);
+          transactionQueries.push({
+            statement: `INSERT INTO Wallets (id, name, description, currency, category, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            values: [
+              walletId,
+              input.name,
+              input.description,
+              input.currency,
+              input.category,
+            ],
+          });
 
-      for (const user of input.userList) {
-        const walletUserId = uuidv4();
+          for (const user of input.userList) {
+            const walletUserId = uuidv4();
 
-        const query = `
-          INSERT INTO WalletUser
-          (id, name, bilance, total, createdAt, updatedAt, walletsId)
-          VALUES (?, ?, '0', '0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
-        `;
+            transactionQueries.push({
+              statement: `INSERT INTO WalletUser (id, name, bilance, total, createdAt, updatedAt, walletsId) VALUES (?, ?, '0', '0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
+              values: [walletUserId, user.name, walletId],
+            });
+          }
 
-        const values = [walletUserId, user.name, walletId];
+          console.log('transactionQueries', transactionQueries);
 
-        await runQuerry(query, values);
-      }
-    } catch (error) {
-      console.error('error', error);
-    }
+          await db?.executeTransaction(transactionQueries, false);
 
-    return true;
+          resolve(true);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
+        }
+      });
+    });
   };
 
   // SHR Done
   const addWalletItem = async (input: z.infer<typeof WalletItemSchema>) => {
-    console.log('addWalletItem');
-    try {
-      const validationResult = WalletItemSchema.safeParse(input);
+    return new Promise<boolean | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          console.log('addWalletItem');
+          const validationResult = WalletItemSchema.safeParse(input);
 
-      if (!validationResult.success) {
-        throw new Error('validationResult error');
-      }
+          if (!validationResult.success) {
+            throw new Error('validationResult error');
+          }
 
-      const walletItemId = uuidv4();
-      const date = new Date(input.date)
-        .toISOString()
-        .slice(0, 19)
-        .replace('T', ' ');
+          const transactionQueries = [];
 
-      const query = `
-        INSERT INTO WalletItem
-        (id, name, tags, amount, type, date, createdAt, updatedAt, walletsId, userId) 
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?)
-      `;
+          const walletItemId = uuidv4();
+          const date = new Date(input.date)
+            .toISOString()
+            .slice(0, 19)
+            .replace('T', ' ');
 
-      const values = [
-        walletItemId,
-        input.name,
-        input.tags,
-        input.amount,
-        input.type,
-        date,
-        input.walletId,
-        input.payer,
-      ];
+          transactionQueries.push({
+            statement: `INSERT INTO WalletItem (id, name, tags, amount, type, date, createdAt, updatedAt, walletsId, userId) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?) `,
+            values: [
+              walletItemId,
+              input.name,
+              input.tags,
+              input.amount,
+              input.type,
+              date,
+              input.walletId,
+              input.payer,
+            ],
+          });
 
-      await runQuerry(query, values);
+          for (const receiver of input.recieversData) {
+            const receiverId = uuidv4();
+            transactionQueries.push({
+              statement: `INSERT INTO RecieverData (id, userId, amount, createdAt, updatedAt, walletItemId) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?) `,
+              values: [
+                receiverId,
+                receiver.id,
+                receiver.cutFromAmount,
+                walletItemId,
+              ],
+            });
+          }
+          // Update bliance of payer
+          let newBilance = 0;
+          if (input.type === 'expense' || input.type === 'moneyTransfer') {
+            newBilance += input.amount;
+          }
+          if (input.type === 'income') {
+            newBilance -= input.amount;
+          }
 
-      for (const receiver of input.recieversData) {
-        const receiverId = uuidv4();
-        const query = `INSERT INTO RecieverData 
-        (id, userId, amount, createdAt, updatedAt, walletItemId) 
-        VALUES ('${receiverId}', '${receiver.id}', '${receiver.cutFromAmount}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '${walletItemId}')`;
-        await runQuerry(query);
-      }
-      // Update bliance of payer
-      let walletUser: any = await runQuerry(`SELECT *
-      FROM WalletUser
-      WHERE id = '${input.payer}';`);
+          transactionQueries.push({
+            statement: `UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?`,
+            values: [newBilance, input.payer],
+          });
 
-      walletUser = walletUser[0];
+          let newTotal = 0;
+          if (input.type === 'expense') {
+            newTotal += input.amount;
+          }
+          if (input.type === 'income') {
+            newTotal -= input.amount;
+          }
+          // Monney transfer doesnt affect total
 
-      if (!walletUser) {
-        throw new Error('walletUser not found');
-      }
+          transactionQueries.push({
+            statement: `UPDATE Wallets SET total = total + ? WHERE id = ?`,
+            values: [newTotal, input.walletId],
+          });
 
-      let newBilance = walletUser.bilance;
-      if (input.type === 'expense' || input.type === 'moneyTransfer') {
-        newBilance += input.amount;
-      }
-      if (input.type === 'income') {
-        newBilance -= input.amount;
-      }
+          // Update bliance of recievers
+          for (const receiver of input.recieversData) {
+            let newBilance = 0;
+            let newTotal = 0;
 
-      await runQuerry(`UPDATE WalletUser
-      SET bilance = '${newBilance}'
-      WHERE id = '${input.payer}';`);
+            if (input.type === 'expense') {
+              newBilance -= receiver.cutFromAmount;
+              newTotal += receiver.cutFromAmount;
+            }
+            if (input.type === 'income') {
+              newBilance += receiver.cutFromAmount;
+              newTotal -= receiver.cutFromAmount;
+            }
+            if (input.type === 'moneyTransfer') {
+              newBilance -= receiver.cutFromAmount;
+            }
 
-      // Update Wallet Total of payer
-      let wallet: any = await runQuerry(`SELECT *
-      FROM Wallets
-      WHERE id = '${input.walletId}';`);
+            transactionQueries.push({
+              statement: `UPDATE WalletUser SET bilance = bilance + ?, total = total + ? WHERE id = ?`,
+              values: [newBilance, newTotal, receiver.id],
+            });
+          }
 
-      wallet = wallet[0];
+          console.log('transactionQueries', transactionQueries);
 
-      if (!wallet) {
-        throw new Error('wallet not found');
-      }
+          await db?.executeTransaction(transactionQueries, false);
 
-      let newTotal = wallet.total;
-      if (input.type === 'expense') {
-        newTotal += input.amount;
-      }
-      if (input.type === 'income') {
-        newTotal -= input.amount;
-      }
-      // Monney transfer doesnt affect total
-
-      await runQuerry(`UPDATE Wallets
-      SET total = '${newTotal}'
-      WHERE id = '${input.walletId}';`);
-
-      console.log('input.recieversData', input.recieversData);
-      // Update bliance of recievers
-      for (const receiver of input.recieversData) {
-        console.log('receiver', receiver);
-        let walletUser: any = await runQuerry(`SELECT *
-        FROM WalletUser
-        WHERE id = '${receiver.id}';`);
-
-        if (!walletUser) {
-          throw new Error('walletUser not found');
+          resolve(true);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
         }
-
-        walletUser = walletUser[0];
-
-        let newBilance = walletUser.bilance;
-        let newTotal = walletUser.total;
-
-        if (input.type === 'expense') {
-          newBilance -= receiver.cutFromAmount;
-          newTotal += receiver.cutFromAmount;
-        }
-        if (input.type === 'income') {
-          newBilance += receiver.cutFromAmount;
-          newTotal -= receiver.cutFromAmount;
-        }
-        if (input.type === 'moneyTransfer') {
-          newBilance -= receiver.cutFromAmount;
-        }
-
-        await runQuerry(`UPDATE WalletUser
-        SET bilance = '${newBilance}', total = '${newTotal}'
-        WHERE id = '${receiver.id}';`);
-      }
-    } catch (error) {
-      console.error('error', error);
-    }
-
-    return true;
+      });
+    });
   };
 
   // SHR Todo
@@ -871,193 +860,237 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     id: string,
     input: z.infer<typeof WalletItemSchema>
   ) => {
-    console.log('editWalletItem TBD');
-    try {
-      const validationResult = WalletItemSchema.safeParse(input);
+    return new Promise<boolean | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          console.log('editWalletItem TBD');
+          // Validate input
+          const validationResult = WalletItemSchema.safeParse(input);
 
-      if (!validationResult.success) {
-        throw new Error('validationResult error');
-      }
+          if (!validationResult.success) {
+            throw new Error('validationResult error');
+          }
 
-      const results = (await runQuerry(
-        `SELECT * FROM WalletItem WHERE id = '${id}';`
-      )) as any[] | undefined;
+          const transactionQueries = [];
 
-      if (!results) {
-        throw new Error('WalletItem not found');
-      }
+          const results = await db?.query(
+            'SELECT * FROM WalletItem WHERE id = ?',
+            [id]
+          );
 
-      const walletItemWithoutPayer = results[0];
+          if (!results || !results.values || results.values.length === 0) {
+            throw new Error('WalletItem not found');
+          }
 
-      console.log('walletItemWithoutPayer', walletItemWithoutPayer);
+          const walletItemWithoutPayer = results.values[0];
 
-      if (!walletItemWithoutPayer) {
-        throw new Error('walletItem not found');
-      }
+          console.log('walletItemWithoutPayer', walletItemWithoutPayer);
 
-      const results2 = await runQuerry(
-        `SELECT WalletUser.*
-          FROM WalletUser
-          WHERE WalletUser.id = '${walletItemWithoutPayer.userId}';`
-      );
+          if (!walletItemWithoutPayer) {
+            throw new Error('walletItem not found');
+          }
 
-      if (!results2) {
-        throw new Error('payer not found');
-      }
+          // Query the payer
+          const results2 = await db?.query(
+            'SELECT WalletUser.* FROM WalletUser WHERE WalletUser.id = ?',
+            [walletItemWithoutPayer.userId]
+          );
 
-      const payer: any = results2[0];
+          if (!results2 || !results2.values || results2.values.length === 0) {
+            throw new Error('payer not found');
+          }
 
-      const recieversWithoutIncludedWalletUsers = (await runQuerry(
-        `SELECT RecieverData.*
-          FROM RecieverData
-          WHERE RecieverData.walletItemId = '${walletItemWithoutPayer.id}';`
-      )) as any[] | undefined;
+          const payer: any = results2.values[0];
 
-      if (!recieversWithoutIncludedWalletUsers) {
-        throw new Error('recievers not found');
-      }
+          const recieversWithoutIncludedWalletUsers = await db?.query(
+            'SELECT RecieverData.* FROM RecieverData WHERE RecieverData.walletItemId = ?',
+            [walletItemWithoutPayer.id]
+          );
 
-      const recievers = [];
+          if (
+            !recieversWithoutIncludedWalletUsers ||
+            !recieversWithoutIncludedWalletUsers.values
+          ) {
+            throw new Error('recievers not found');
+          }
 
-      for (const reciever of recieversWithoutIncludedWalletUsers) {
-        const results = await runQuerry(
-          `SELECT WalletUser.*
-          FROM WalletUser
-          WHERE WalletUser.id = '${reciever.userId}';`
-        );
+          const recievers = [];
 
-        if (!results) {
-          throw new Error('walletUser not found');
+          for (const reciever of recieversWithoutIncludedWalletUsers.values) {
+            const results = await db?.query(
+              'SELECT WalletUser.* FROM WalletUser WHERE WalletUser.id = ?',
+              [reciever.userId]
+            );
+
+            if (!results || !results.values || results.values.length === 0) {
+              throw new Error('walletUser not found');
+            }
+
+            const walletUser: any = results.values[0];
+
+            recievers.push({ ...reciever, reciever: walletUser });
+          }
+
+          console.log('recievers', recievers);
+
+          if (!recievers) {
+            throw new Error('recievers not found');
+          }
+
+          const oldWalletItem = { ...walletItemWithoutPayer, payer, recievers };
+
+          transactionQueries.push({
+            statement: 'DELETE FROM RecieverData WHERE walletItemId = ?',
+            values: [id],
+          });
+
+          const date = new Date(input.date)
+            .toISOString()
+            .slice(0, 19)
+            .replace('T', ' ');
+
+          transactionQueries.push({
+            statement:
+              'UPDATE WalletItem SET name = ?, amount = ?, date = ?, tags = ?, type = ?, userId = ? WHERE id = ?',
+            values: [
+              input.name,
+              input.amount,
+              date,
+              input.tags,
+              input.type,
+              input.payer,
+              id,
+            ],
+          });
+
+          for (const receiver of input.recieversData) {
+            const receiverId = uuidv4();
+            transactionQueries.push({
+              statement:
+                'INSERT INTO RecieverData (id, userId, amount, createdAt, updatedAt, walletItemId) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)',
+              values: [receiverId, receiver.id, receiver.cutFromAmount, id],
+            });
+          }
+
+          // Remove bilance from old payer
+          let oldBalance = 0;
+          if (
+            oldWalletItem.type === 'expense' ||
+            oldWalletItem.type === 'moneyTransfer'
+          ) {
+            oldBalance -= oldWalletItem.amount;
+          }
+          if (oldWalletItem.type === 'income') {
+            oldBalance += oldWalletItem.amount;
+          }
+
+          console.log(`removing ${oldWalletItem.amount} from ${payer.name}`);
+
+          transactionQueries.push({
+            statement:
+              'UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?',
+            values: [oldBalance, payer.id],
+          });
+
+          // Update bliance of new payer
+          let newBalance = 0;
+          if (input.type === 'expense' || input.type === 'moneyTransfer') {
+            newBalance += input.amount;
+          }
+          if (input.type === 'income') {
+            newBalance -= input.amount;
+          }
+
+          console.log(`adding ${input.amount} to payer ${input.payer}`);
+
+          transactionQueries.push({
+            statement:
+              'UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?',
+            values: [newBalance, input.payer],
+          });
+
+          // Update Wallet Total of payer
+          // Remove old total
+          let oldTotal = 0;
+          if (oldWalletItem.type === 'expense') {
+            oldTotal -= oldWalletItem.amount;
+          }
+          if (oldWalletItem.type === 'income') {
+            oldTotal += oldWalletItem.amount;
+          }
+
+          // Add New total
+          let newTotal = 0;
+          if (input.type === 'expense') {
+            newTotal += input.amount;
+          }
+          if (input.type === 'income') {
+            newTotal -= input.amount;
+          }
+          // Monney transfer doesnt affect total
+
+          transactionQueries.push({
+            statement: 'UPDATE Wallets SET total = total + ? + ? WHERE id = ?',
+            values: [oldTotal, newTotal, oldWalletItem.walletsId],
+          });
+
+          // Remove old bilance from old receivers
+          for (const receiver of oldWalletItem.recievers) {
+            let oldBalance = 0;
+            let oldTotal = 0;
+            if (oldWalletItem.type === 'expense') {
+              oldBalance += receiver.amount;
+              oldTotal -= receiver.amount;
+            }
+            if (oldWalletItem.type === 'income') {
+              oldBalance -= receiver.amount;
+              oldTotal += receiver.amount;
+            }
+            if (oldWalletItem.type === 'moneyTransfer') {
+              oldBalance += receiver.amount;
+            }
+
+            transactionQueries.push({
+              statement:
+                'UPDATE WalletUser SET bilance = bilance + ?, total = total + ? WHERE id = ?',
+              values: [oldBalance, oldTotal, receiver.reciever.id],
+            });
+          }
+
+          // Update bliance of recievers
+          for (const receiver of input.recieversData) {
+            let newBilance = 0;
+            let newTotal = 0;
+
+            if (input.type === 'expense') {
+              newBilance -= receiver.cutFromAmount;
+              newTotal += receiver.cutFromAmount;
+            }
+            if (input.type === 'income') {
+              newBilance += receiver.cutFromAmount;
+              newTotal -= receiver.cutFromAmount;
+            }
+            if (input.type === 'moneyTransfer') {
+              newBilance -= receiver.cutFromAmount;
+            }
+
+            transactionQueries.push({
+              statement: `UPDATE WalletUser SET bilance = bilance + ?, total = total + ? WHERE id = ?`,
+              values: [newBilance, newTotal, receiver.id],
+            });
+          }
+
+          console.log('transactionQueries', transactionQueries);
+
+          await db?.executeTransaction(transactionQueries, false);
+
+          resolve(true);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
         }
-
-        const walletUser: any = results[0];
-
-        recievers.push({ ...reciever, reciever: walletUser });
-      }
-
-      console.log('recievers', recievers);
-
-      if (!recievers) {
-        throw new Error('recievers not found');
-      }
-
-      const oldWalletItem = { ...walletItemWithoutPayer, payer, recievers };
-
-      console.log('oldWalletItem', oldWalletItem);
-
-      let query = `DELETE FROM RecieverData WHERE walletItemId = '${id}'`;
-      await runQuerry(query);
-
-      query = `UPDATE WalletItem SET 
-        name = '${input.name}',
-        amount = '${input.amount}',
-        date = '${input.date}',
-        tags = '${input.tags}',
-        type = '${input.type}',
-        userId = '${input.payer}'
-        WHERE id = '${id}'`;
-      await runQuerry(query);
-
-      for (const receiver of input.recieversData) {
-        const receiverId = uuidv4();
-        const query = `INSERT INTO RecieverData 
-        (id, userId, amount, createdAt, updatedAt, walletItemId) 
-        VALUES ('${receiverId}', '${receiver.id}', '${receiver.cutFromAmount}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '${id}')`;
-        await runQuerry(query);
-      }
-
-      const oldWalletUsers = (await runQuerry(
-        `SELECT * FROM WalletUser WHERE id = '${oldWalletItem.payer.id}';`
-      )) as any[] | undefined;
-
-      if (!oldWalletUsers) {
-        throw new Error('walletUsers not found');
-      }
-
-      const oldWalletUser = oldWalletUsers[0];
-
-      let oldBilance = oldWalletUser.bilance;
-      if (
-        oldWalletItem.type === 'expense' ||
-        oldWalletItem.type === 'moneyTransfer'
-      ) {
-        oldBilance -= oldWalletItem.amount;
-      }
-      if (oldWalletItem.type === 'income') {
-        oldBilance += oldWalletItem.amount;
-      }
-
-      query = `UPDATE WalletUser
-               SET bilance = '${oldBilance}'
-               WHERE id = '${oldWalletItem.payer.id}';`;
-      await runQuerry(query);
-
-      // Remove Wallet Total of payer
-      const wallets = (await runQuerry(
-        `SELECT * FROM Wallets WHERE id = '${oldWalletItem.walletsId}';`
-      )) as any[] | undefined;
-
-      if (!wallets) {
-        throw new Error('wallets not found');
-      }
-
-      const wallet = wallets[0];
-
-      // Remove old total and apply new total
-      let newTotal = wallet.total;
-      if (oldWalletItem.type === 'expense') {
-        newTotal -= oldWalletItem.amount;
-      }
-      if (oldWalletItem.type === 'income') {
-        newTotal += oldWalletItem.amount;
-      }
-      // Monney transfer doesnt affect total
-
-      query = `UPDATE Wallets
-               SET total = '${newTotal}'
-               WHERE id = '${oldWalletItem.walletsId}';`;
-      await runQuerry(query);
-
-      // Remove old bliance from old recievers
-      for (const receiver of oldWalletItem.recievers) {
-        const walletUsers = (await runQuerry(
-          `SELECT * FROM WalletUser WHERE id = '${receiver.reciever.id}';`
-        )) as any[] | undefined;
-
-        if (!walletUsers) {
-          throw new Error('walletUsers not found');
-        }
-
-        const walletUser = walletUsers[0];
-
-        let oldBilance = walletUser.bilance;
-        let oldTotal = walletUser.total;
-        if (oldWalletItem.type === 'expense') {
-          oldBilance += receiver.amount;
-          oldTotal -= receiver.amount;
-        }
-        if (oldWalletItem.type === 'income') {
-          oldBilance -= receiver.amount;
-          oldTotal += receiver.amount;
-        }
-        if (oldWalletItem.type === 'moneyTransfer') {
-          oldBilance += receiver.amount;
-        }
-
-        query = `UPDATE WalletUser
-               SET bilance = '${oldBilance}',
-               total = '${oldTotal}'
-               WHERE id = '${receiver.reciever.id}';`;
-        await runQuerry(query);
-      }
-
-      /* query = `DELETE FROM WalletItem WHERE id = '${id}'`;
-      await runQuerry(query);*/
-    } catch (error) {
-      console.error('error', error);
-    }
-
-    return true;
+      });
+    });
   };
 
   // SHR Done
@@ -1065,136 +1098,301 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     id: string,
     input: any // z.infer<typeof WalletSchema>
   ) => {
-    console.log('editWallet');
-    try {
-      const validationResult = WalletSchema.safeParse(input);
+    return new Promise<boolean | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          console.log('editWallet');
+          const validationResult = WalletSchema.safeParse(input);
 
-      if (!validationResult.success) {
-        throw new Error('validationResult error');
-      }
-
-      const results = await runQuerry(`SELECT *
-      FROM Wallets
-      WHERE id = '${id}';`);
-
-      if (!results) {
-        throw new Error('wallet not found');
-      }
-
-      const walletUsers = await runQuerry(`SELECT Wallets.*, WalletUser.*
-      FROM Wallets
-      LEFT JOIN WalletUser ON Wallets.id = WalletUser.walletsId
-      WHERE Wallets.id = '${id}';`);
-
-      if (!walletUsers) {
-        throw new Error('walletUsers not found');
-      }
-
-      const walletWithoutUsers: any = results[0];
-
-      const oldWallet = {
-        ...walletWithoutUsers,
-        walletUsers,
-      };
-
-      if (!oldWallet) {
-        throw new Error('wallet not found');
-      }
-
-      const createOperations: any[] = [];
-
-      for (const user of input.userList) {
-        if (user.id == null) {
-          createOperations.push({
-            name: user.name,
-            walletId: id,
-          });
-        }
-      }
-
-      let updateOperations: any[] = [];
-
-      for (const user of input.userList) {
-        if (user.id != null) {
-          const existingItem = oldWallet.walletUsers.find(
-            (dbItem: any) => dbItem.id === user.id
-          );
-
-          if (existingItem) {
-            updateOperations.push({
-              id: user.id,
-              name: user.name,
-            });
+          if (!validationResult.success) {
+            throw new Error('validationResult error');
           }
+
+          const transactionQueries = [];
+
+          const results = await db?.query(`SELECT *
+            FROM Wallets
+            WHERE id = '${id}';`);
+
+          if (!results || !results.values) {
+            throw new Error('wallet not found');
+          }
+
+          const walletUsers = await db?.query(`SELECT Wallets.*, WalletUser.*
+            FROM Wallets
+            LEFT JOIN WalletUser ON Wallets.id = WalletUser.walletsId
+            WHERE Wallets.id = '${id}';`);
+
+          if (!walletUsers || !walletUsers.values) {
+            throw new Error('walletUsers not found');
+          }
+
+          const walletWithoutUsers: any = results.values[0];
+
+          const oldWallet = {
+            ...walletWithoutUsers,
+            walletUsers: walletUsers.values,
+          };
+
+          if (!oldWallet) {
+            throw new Error('wallet not found');
+          }
+
+          const createOperations: any[] = [];
+
+          for (const user of input.userList) {
+            if (user.id == null) {
+              createOperations.push({
+                name: user.name,
+                walletId: id,
+              });
+            }
+          }
+
+          let updateOperations: any[] = [];
+
+          for (const user of input.userList) {
+            if (user.id != null) {
+              const existingItem = oldWallet.walletUsers.find(
+                (dbItem: any) => dbItem.id === user.id
+              );
+
+              if (existingItem) {
+                updateOperations.push({
+                  id: user.id,
+                  name: user.name,
+                });
+              }
+            }
+          }
+
+          if (updateOperations) {
+            updateOperations = updateOperations.filter((op: any) => !op.delete);
+          }
+
+          const deleteOperations: any[] = [];
+
+          // Determine items to delete
+          for (const dbUser of walletUsers.values) {
+            if (
+              !input.userList.some((newUser: any) => newUser.id === dbUser.id)
+            ) {
+              deleteOperations.push(dbUser.id);
+            }
+          }
+          // Update wallet
+          transactionQueries.push({
+            statement: `UPDATE Wallets SET name = ?, description = ?, currency = ?, category = ? WHERE id = ?`,
+            values: [
+              input.name,
+              input.description,
+              input.currency,
+              input.category,
+              id,
+            ],
+          });
+
+          // Insert new wallet users
+          if (createOperations.length > 0) {
+            for (const operation of createOperations) {
+              const walletUserId = uuidv4();
+
+              transactionQueries.push({
+                statement: `INSERT INTO WalletUser (id, name, bilance, total, createdAt, updatedAt, walletsId) VALUES (?, ?, '0', '0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
+                values: [walletUserId, operation.name, operation.walletId],
+              });
+            }
+          }
+
+          // Update existing wallet users
+          if (updateOperations.length > 0) {
+            for (const operation of updateOperations) {
+              transactionQueries.push({
+                statement: `UPDATE WalletUser SET name = ? WHERE id = ?`,
+                values: [operation.name, operation.id],
+              });
+            }
+          }
+
+          // Delete wallet users
+          if (deleteOperations.length > 0) {
+            for (const operation of deleteOperations) {
+              transactionQueries.push({
+                statement: `DELETE FROM WalletUser WHERE id = ?`,
+                values: [operation],
+              });
+            }
+          }
+
+          console.log('transactionQueries', transactionQueries);
+
+          await db?.executeTransaction(transactionQueries, false);
+
+          resolve(true);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
         }
-      }
-
-      if (updateOperations) {
-        updateOperations = updateOperations.filter((op: any) => !op.delete);
-      }
-
-      const deleteOperations: any[] = [];
-
-      // Determine items to delete
-      for (const dbUser of walletUsers) {
-        if (!input.userList.some((newUser: any) => newUser.id === dbUser.id)) {
-          deleteOperations.push(dbUser.id);
-        }
-      }
-      // Update wallet
-      await runQuerry(`UPDATE Wallets
-          SET name = '${input.name}',
-          description = '${input.description}',
-          currency = '${input.currency}',
-          category = '${input.category}'
-          WHERE id = '${id}';`);
-
-      // Insert new wallet users
-      if (createOperations.length > 0) {
-        for (const operation of createOperations) {
-          const walletUserId = uuidv4();
-          const query = `
-              INSERT INTO WalletUser
-              (id, name, bilance, total, createdAt, updatedAt, walletsId)
-              VALUES (?, ?, '0', '0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
-            `;
-
-          const values = [walletUserId, operation.name, operation.walletId];
-
-          await runQuerry(query, values);
-        }
-      }
-
-      // Update existing wallet users
-      if (updateOperations.length > 0) {
-        for (const operation of updateOperations) {
-          const query = `UPDATE WalletUser
-                             SET name = '${operation.name}'
-                             WHERE id = '${operation.id}';`;
-
-          await runQuerry(query);
-        }
-      }
-
-      // Delete wallet users
-      if (deleteOperations.length > 0) {
-        for (const operation of deleteOperations) {
-          const query = `DELETE FROM WalletUser
-            WHERE id = '${operation}';`;
-
-          await runQuerry(query);
-        }
-      }
-    } catch (error) {
-      console.error('error', error);
-    }
-
-    return true;
+      });
+    });
   };
+
+  async function delay(ms: number) {
+    return new Promise<void>((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
 
   // SHR Todo
   const deleteWalletItemById = async (id: string) => {
-    console.log('deleteWalletItemById TBD');
+    return new Promise<boolean | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          console.log('deleteWalletItemById TBD');
+
+          const transactionQueries = [];
+
+          const results = await db?.query(
+            'SELECT * FROM WalletItem WHERE id = ?',
+            [id]
+          );
+
+          if (!results || !results.values || results.values.length === 0) {
+            throw new Error('WalletItem not found');
+          }
+
+          const walletItemWithoutPayer = results.values[0];
+
+          console.log('walletItemWithoutPayer', walletItemWithoutPayer);
+
+          if (!walletItemWithoutPayer) {
+            throw new Error('walletItem not found');
+          }
+
+          // Query the payer
+          const results2 = await db?.query(
+            'SELECT WalletUser.* FROM WalletUser WHERE WalletUser.id = ?',
+            [walletItemWithoutPayer.userId]
+          );
+
+          if (!results2 || !results2.values || results2.values.length === 0) {
+            throw new Error('payer not found');
+          }
+
+          const payer: any = results2.values[0];
+
+          const recieversWithoutIncludedWalletUsers = await db?.query(
+            'SELECT RecieverData.* FROM RecieverData WHERE RecieverData.walletItemId = ?',
+            [walletItemWithoutPayer.id]
+          );
+
+          if (
+            !recieversWithoutIncludedWalletUsers ||
+            !recieversWithoutIncludedWalletUsers.values
+          ) {
+            throw new Error('recievers not found');
+          }
+
+          const recievers = [];
+
+          for (const reciever of recieversWithoutIncludedWalletUsers.values) {
+            const results = await db?.query(
+              'SELECT WalletUser.* FROM WalletUser WHERE WalletUser.id = ?',
+              [reciever.userId]
+            );
+
+            if (!results || !results.values || results.values.length === 0) {
+              throw new Error('walletUser not found');
+            }
+
+            const walletUser: any = results.values[0];
+
+            recievers.push({ ...reciever, reciever: walletUser });
+          }
+
+          console.log('recievers', recievers);
+
+          if (!recievers) {
+            throw new Error('recievers not found');
+          }
+
+          const oldWalletItem = { ...walletItemWithoutPayer, payer, recievers };
+
+          // Remove bilance from old payer
+          let oldBalance = 0;
+          if (
+            oldWalletItem.type === 'expense' ||
+            oldWalletItem.type === 'moneyTransfer'
+          ) {
+            oldBalance -= oldWalletItem.amount;
+          }
+          if (oldWalletItem.type === 'income') {
+            oldBalance += oldWalletItem.amount;
+          }
+
+          console.log(`removing ${oldWalletItem.amount} from ${payer.name}`);
+
+          transactionQueries.push({
+            statement:
+              'UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?',
+            values: [oldBalance, payer.id],
+          });
+
+          // Remove Wallet Total of payer
+          // Remove old total and apply new total
+          let newTotal = 0;
+          if (oldWalletItem.type === 'expense') {
+            newTotal -= oldWalletItem.amount;
+          }
+          if (oldWalletItem.type === 'income') {
+            newTotal += oldWalletItem.amount;
+          }
+          // Monney transfer doesnt affect total
+
+          transactionQueries.push({
+            statement: 'UPDATE Wallets SET total = total + ? WHERE id = ?',
+            values: [newTotal, oldWalletItem.walletsId],
+          });
+
+          // Remove old bliance from old recievers
+          for (const receiver of oldWalletItem.recievers) {
+            let oldBilance = 0;
+            let oldTotal = 0;
+            if (oldWalletItem.type === 'expense') {
+              oldBilance += receiver.amount;
+              oldTotal -= receiver.amount;
+            }
+            if (oldWalletItem.type === 'income') {
+              oldBilance -= receiver.amount;
+              oldTotal += receiver.amount;
+            }
+            if (oldWalletItem.type === 'moneyTransfer') {
+              oldBilance += receiver.amount;
+            }
+
+            transactionQueries.push({
+              statement:
+                'UPDATE WalletUser SET bilance = bilance + ?, total = total + ? WHERE id = ?',
+              values: [oldBilance, oldTotal, receiver.reciever.id],
+            });
+          }
+
+          transactionQueries.push({
+            statement: 'DELETE FROM WalletItem WHERE id = ?',
+            values: [id],
+          });
+
+          console.log('transactionQueries', transactionQueries);
+
+          await db?.executeTransaction(transactionQueries, false);
+
+          resolve(true);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
+        }
+      });
+    });
   };
 
   // SHR Done

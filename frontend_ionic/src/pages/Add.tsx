@@ -242,7 +242,7 @@ export default function Add() {
 
   // if (wallet == undefined) return <LoadingScreen />;
 
-  function handleAddWalletItem() {
+  async function handleAddWalletItem() {
     const numberOfCheckedUsers = participants.filter(
       (participant) => participant.checked === true
     ).length;
@@ -299,9 +299,9 @@ export default function Add() {
 
     // axios.post('/api/wallets/addWalletItem/', newWalletItem);
     console.log('newWalletItem', newWalletItem);
-    addWalletItem(newWalletItem);
+    await addWalletItem(newWalletItem);
 
-    // history.push(`/${walletId}/expenses`);
+    history.push(`/${walletId}/expenses`);
   }
 
   function getCutFromAmount(i: number): string {
