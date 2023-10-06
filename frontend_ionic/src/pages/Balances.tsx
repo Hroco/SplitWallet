@@ -163,18 +163,20 @@ export default function Balances() {
       </Navbar>
       <IonContent>
         <BalancesTopPannel>
-          {walletUsers.map((walletUser, index) => (
-            <BalanceItem
-              key={index}
-              name={walletUser.name}
-              value={walletUser.bilance}
-              ratio={
-                walletUser.bilance > 0
-                  ? bilanceBarPositiveRatio
-                  : bilanceBarNegativeRatio
-              }
-            />
-          ))}
+          {walletUsers
+            .sort((a: any, b: any) => a.name.localeCompare(b.name))
+            .map((walletUser, index) => (
+              <BalanceItem
+                key={index}
+                name={walletUser.name}
+                value={walletUser.bilance}
+                ratio={
+                  walletUser.bilance > 0
+                    ? bilanceBarPositiveRatio
+                    : bilanceBarNegativeRatio
+                }
+              />
+            ))}
         </BalancesTopPannel>
         <MiddlePannel>HOW SHOULD I BALANCE</MiddlePannel>
         <BottomContent>

@@ -73,7 +73,7 @@ export default function NewWallet() {
       userList: userList,
     };
 
-    const outputTemp = {
+    /* const outputTemp = {
       name: 'Test 2',
       description: 'Test1 Des',
       currency: 'eur',
@@ -89,10 +89,9 @@ export default function NewWallet() {
       ],
     };
 
-    console.log('output', outputTemp);
+    console.log('output', outputTemp);*/
 
-    await addWallet(outputTemp);
-    // axios.post('/api/wallets/addWallet/', output);
+    await addWallet(output);
 
     history.push('/');
   }
