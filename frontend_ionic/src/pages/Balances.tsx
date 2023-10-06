@@ -7,11 +7,8 @@ import {
   BottomContent,
   BalancesTopPannel,
 } from '../styles/mainContainers.styled';
-import { BurgerButton, ExpenseButton } from '../styles/buttons.styled';
+import { ExpenseButton } from '../styles/buttons.styled';
 import BalanceItem from '../components/BalanceItem';
-import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-// import axios from 'axios';
 import ReimbursementItem from '../components/ReimbursementItem';
 import {
   IonBackButton,
@@ -25,34 +22,6 @@ import {
   useIonViewWillEnter,
 } from '@ionic/react';
 import { useDBFunctions } from '../lib/FrontendDBContext';
-
-function findLowestBalanceObject(data: any[]) {
-  let lowestBalanceObject = null;
-  let lowestBalance = Infinity; // Initialize with a high value
-
-  for (const item of data) {
-    if (item.bilance < lowestBalance) {
-      lowestBalance = item.bilance;
-      lowestBalanceObject = item;
-    }
-  }
-
-  return lowestBalanceObject;
-}
-
-function findHighestBalanceObject(data: any[]) {
-  let highestBalanceObject = null;
-  let highestBalance = Infinity; // Initialize with a high value
-
-  for (const item of data) {
-    if (item.bilance < highestBalance) {
-      highestBalance = item.bilance;
-      highestBalanceObject = item;
-    }
-  }
-
-  return highestBalanceObject;
-}
 
 function deepCopy(obj: any): any {
   if (obj === null || typeof obj !== 'object') {
@@ -84,8 +53,7 @@ interface RouteParams {
 export default function Balances() {
   const { walletId } = useParams<RouteParams>();
   const history = useHistory();
-  const [postResponse, setPostResponse] = useState<any>(null);
-  const [walletUsers, setWalletUsers] = useState<any>(null);
+  const [walletUsers, setWalletUsers] = useState<any[]>([]);
   const [bilanceBarPositiveRatio, setBilanceBarPositiveRatio] =
     useState<number>(0);
   const [bilanceBarNegativeRatio, setBilanceBarNegativeRatio] =
@@ -93,29 +61,24 @@ export default function Balances() {
   const [reimbursements, setReimbursements] = useState<any[]>([]);
   const { getWalletUsersByWalletId } = useDBFunctions();
 
-  useIonViewWillEnter(() => {
-    (async () => {
-      const walletUsers = await getWalletUsersByWalletId(walletId);
-      if (walletUsers == undefined) return;
-      setWalletUsers(walletUsers);
-    })();
+  useIonViewWillEnter(async () => {
+    const users = await getWalletUsersByWalletId(walletId);
+    // console.log('walletUsers', users);
+    if (users) {
+      setWalletUsers(users);
+    }
   });
 
   useEffect(() => {
-    if (walletUsers == undefined) return;
-    const lowestValueObject = findLowestBalanceObject(walletUsers);
-    /* walletUsers.reduce((prev: any, current: any) =>
-      prev.value > current.value ? current : prev
-    );*/
-    console.log('lowestValueObject', lowestValueObject);
-    setBilanceBarPositiveRatio(100 / Math.abs(lowestValueObject.bilance));
+    if (!walletUsers.length) return;
 
-    const highestValueObject = findHighestBalanceObject(walletUsers);
-    /* const highestValueObject = walletUsers.reduce((prev: any, current: any) =>
-      prev.value > current.value ? prev : current
-    );*/
-    console.log('highestValueObject', highestValueObject);
-    setBilanceBarNegativeRatio(100 / Math.abs(highestValueObject.bilance));
+    const sortedUsers = [...walletUsers].sort((a, b) => a.bilance - b.bilance);
+
+    const lowestValueObject = sortedUsers[0];
+    const highestValueObject = sortedUsers[sortedUsers.length - 1];
+
+    setBilanceBarPositiveRatio(100 / Math.abs(highestValueObject.bilance));
+    setBilanceBarNegativeRatio(100 / Math.abs(lowestValueObject.bilance));
 
     calculateReimbursements();
   }, [walletUsers]);
@@ -182,14 +145,11 @@ export default function Balances() {
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/"></IonBackButton>
+            <IonBackButton defaultHref="/" />
           </IonButtons>
           <IonTitle>XXX</IonTitle>
           <IonButtons slot="end">
-            <IonMenuButton
-              autoHide={false}
-              id="balance-popover"
-            ></IonMenuButton>
+            <IonMenuButton autoHide={false} id="balance-popover" />
           </IonButtons>
         </IonToolbar>
       </IonHeader>
@@ -203,33 +163,29 @@ export default function Balances() {
       </Navbar>
       <IonContent>
         <BalancesTopPannel>
-          {walletUsers &&
-            walletUsers
-              .sort((a: any, b: any) => a.name.localeCompare(b.name))
-              .map((walletUser: any, index: number) => (
-                <BalanceItem
-                  key={index}
-                  name={walletUser.name}
-                  value={walletUser.bilance}
-                  ratio={
-                    walletUser.bilance > 0
-                      ? bilanceBarPositiveRatio
-                      : bilanceBarNegativeRatio
-                  }
-                />
-              ))}
+          {walletUsers.map((walletUser, index) => (
+            <BalanceItem
+              key={index}
+              name={walletUser.name}
+              value={walletUser.bilance}
+              ratio={
+                walletUser.bilance > 0
+                  ? bilanceBarPositiveRatio
+                  : bilanceBarNegativeRatio
+              }
+            />
+          ))}
         </BalancesTopPannel>
         <MiddlePannel>HOW SHOULD I BALANCE</MiddlePannel>
         <BottomContent>
-          {reimbursements &&
-            reimbursements.map((reimbursement: any, index: number) => (
-              <ReimbursementItem
-                key={index}
-                payer={reimbursement.to}
-                debtor={reimbursement.from}
-                price={reimbursement.amount}
-              />
-            ))}
+          {reimbursements.map((reimbursement, index) => (
+            <ReimbursementItem
+              key={index}
+              payer={reimbursement.to}
+              debtor={reimbursement.from}
+              price={reimbursement.amount}
+            />
+          ))}
         </BottomContent>
       </IonContent>
     </IonPage>

@@ -674,25 +674,25 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
   // SHR Done
   const getWalletUsersByWalletId = async (id: string) => {
-    console.log('getWalletUsersByWalletId', id);
-    const walletUsers: any[] | undefined = [];
-    try {
-      const walletUsers = (await runQuerry(
-        `SELECT * FROM WalletUser WHERE walletsId = '${id}';`
-      )) as any[] | undefined;
+    return new Promise<any[]>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          console.log('getWalletUsersByWalletId', id);
+          const walletUsers = await db?.query(
+            `SELECT * FROM WalletUser WHERE walletsId = '${id}';`
+          );
 
-      console.log('walletUsers', walletUsers);
+          if (!walletUsers || !walletUsers.values) {
+            throw new Error('walletUsers not found');
+          }
 
-      if (!walletUsers) {
-        throw new Error('walletUsers not found');
-      }
-
-      return walletUsers;
-    } catch (error) {
-      console.error('error', error);
-    }
-
-    return walletUsers;
+          resolve(walletUsers.values);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
+        }
+      });
+    });
   };
 
   // SHR Done
