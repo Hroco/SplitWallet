@@ -13,7 +13,7 @@ import {
 import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
 import EditIcon from '-!svg-react-loader!../assets/icons/edit.svg';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import { useLocation, useParams, useHistory } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 // import axios from 'axios';
 import MainItem from '../components/MainItem';
 import LoadingScreen from '../components/LoadingScreen';
@@ -50,10 +50,10 @@ function formatDate(date: Date) {
   return `${day}/${month}/${year}`;
 }
 
-interface RouteParams {
-  walletId: string;
-  walletItemId: string;
-}
+type RouteParams = {
+  walletId?: string;
+  walletItemId?: string;
+};
 
 export default function Open() {
   const { walletId, walletItemId } = useParams<RouteParams>();
@@ -61,12 +61,9 @@ export default function Open() {
   const searchParams = new URLSearchParams(location.search);
   const sortType = searchParams.get('sort') || 'DateDesc';
   // console.log('sortType', sortType);
-  const history = useHistory();
-  const [postResponse, setPostResponse] = useState<any>(null);
+  const navigate = useNavigate();
   const [walletItem, setWalletItem] = useState<any>(null);
   const [presentAlert] = useIonAlert();
-  const [postResponse2, setPostResponse2] = useState<any>(null);
-  const [postResponse3, setPostResponse3] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
   const [prevWalletItem, setPrevWalletItem] = useState<any>(null);
   const [nextWalletItem, setNextWalletItem] = useState<any>(null);
@@ -75,19 +72,21 @@ export default function Open() {
     getWalletUserByEmailAndWalletId,
     getPrevAndNextWalletItemByWalletItemIdAndSortType,
     deleteWalletItemById,
+    initialized,
   } = useDBFunctions();
 
   useEffect(() => {
+    if (!initialized) return;
     (async () => {
-      const walletItem = await getWalletItemByWalletItemId(walletItemId);
+      const walletItem = await getWalletItemByWalletItemId(walletItemId || '');
       const walletUser = await getWalletUserByEmailAndWalletId(
         'samko1311@gmail.com',
-        walletId
+        walletId || ''
       );
 
       const { walletItemPrev, walletItemNext } =
         await getPrevAndNextWalletItemByWalletItemIdAndSortType(
-          walletItemId,
+          walletItemId || '',
           sortType
         );
 
@@ -103,63 +102,15 @@ export default function Open() {
       walletItemPrev != undefined && setPrevWalletItem(walletItemPrev);
       walletItemNext != undefined && setNextWalletItem(walletItemNext);
     })();
-  }, [walletItemId]);
-
-  /* useEffect(() => {
-    (async () => {
-      const id = walletItemId;
-      const response = await axios.get(
-        `/api/wallets/getWalletItemByWalletItemId/${id}`
-      );
-      setPostResponse(response.data);
-    })();
-  }, [walletItemId]);
-
-  useEffect(() => {
-    const { walletItem } = postResponse || {};
-    console.log('walletItem', walletItem);
-    setWalletItem(walletItem);
-  }, [postResponse]);
-
-  useEffect(() => {
-    (async () => {
-      const data = ['samko1311@gmail.com', walletId];
-      const response = await axios.get(
-        `/api/wallets/getWalletUserByEmailAndWalletId/${data}`
-      );
-      setPostResponse2(response.data);
-    })();
-  }, [walletItemId]);
-
-  useEffect(() => {
-    const { walletUser } = postResponse2 || {};
-    // console.log('walletUser', walletUser);
-    setCurrentWalletUser(walletUser);
-  }, [postResponse2]);
-
-  useEffect(() => {
-    (async () => {
-      const data = [walletItemId, sortType];
-      const response = await axios.get(
-        `/api/wallets/getPrevAndNextWalletItemByWalletItemIdAndSortType/${data}`
-      );
-      setPostResponse3(response.data);
-    })();
-  }, [walletItemId]);
-
-  useEffect(() => {
-    const { walletItemPrev, walletItemNext } = postResponse3 || {};
-    setPrevWalletItem(walletItemPrev);
-    setNextWalletItem(walletItemNext);
-  }, [postResponse3]);*/
+  }, [walletItemId, initialized]);
 
   if (walletItem == undefined) {
-    console.log('LoadingScreen because walletItem', walletItem);
+    // console.log('LoadingScreen because walletItem', walletItem);
     return <LoadingScreen />;
   }
 
   if (currentWalletUser == undefined) {
-    console.log('LoadingScreen because currentWalletUser', currentWalletUser);
+    // console.log('LoadingScreen because currentWalletUser', currentWalletUser);
     return <LoadingScreen />;
   }
 
@@ -167,12 +118,10 @@ export default function Open() {
     (reciever: any) => reciever.reciever.id == currentWalletUser.id
   );
 
-  // console.log('isCurrentUserOneOfRecievers', isCurrentUserOneOfRecievers);
-
   async function deleteWalletItem() {
     // axios.delete(`/api/wallets/deleteWalletItemById/${walletItemId}`);
-    await deleteWalletItemById(walletItemId);
-    history.push(`/${walletId}/expenses`);
+    await deleteWalletItemById(walletItemId || '');
+    navigate(`/${walletId}/expenses`);
   }
 
   const dateInput = new Date(walletItem.date);
@@ -196,7 +145,7 @@ export default function Open() {
                     button={true}
                     detail={false}
                     onClick={() =>
-                      history.push(`/${walletId}/${walletItemId}/edit`)
+                      navigate(`/${walletId}/${walletItemId}/edit`)
                     }
                   >
                     <EditIcon />
@@ -271,7 +220,7 @@ export default function Open() {
             <IonButtons slot="start">
               <IonButton
                 onClick={() =>
-                  history.push(
+                  navigate(
                     `/${walletId}/${prevWalletItem.id}/open?sort=${sortType}`
                   )
                 }
@@ -289,7 +238,7 @@ export default function Open() {
             <IonButtons slot="end">
               <IonButton
                 onClick={() =>
-                  history.push(
+                  navigate(
                     `/${walletId}/${nextWalletItem.id}/open?sort=${sortType}`
                   )
                 }

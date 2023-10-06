@@ -183,96 +183,6 @@ CREATE UNIQUE INDEX "VerificationToken_token_key" ON "VerificationToken"("token"
 CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
 
         `);
-        console.log('createTable respSelect?.values', respSelect?.values);
-      });
-    } catch (error) {
-      console.error('error', error);
-    }
-  };
-
-  const loadData = async () => {
-    try {
-      // query db
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const respSelect = await db?.query(`SELECT * FROM Wallets`);
-        console.log('respSelect?.values', respSelect?.values);
-      });
-    } catch (error) {
-      console.error('error', error);
-    }
-  };
-
-  const setData = async () => {
-    console.log('setData');
-    try {
-      // query db
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const query = `SELECT name FROM sqlite_master WHERE type='table';
-    `;
-
-        const respSelect = await db?.query(query);
-        console.log('respSelect?.values', respSelect?.values);
-      });
-    } catch (error) {
-      console.error('error', error);
-    }
-  };
-
-  const testB1 = async () => {
-    console.log('testB1');
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const queryCreateTable = `
-        CREATE TABLE IF NOT EXISTS "Test" (
-          "id" TEXT NOT NULL PRIMARY KEY,
-          "name" TEXT NOT NULL
-        );
-      `;
-        const respCT = await db?.execute(queryCreateTable);
-        console.log(`res: ${JSON.stringify(respCT)}`);
-      });
-    } catch (error) {
-      console.error('error', error);
-    }
-  };
-
-  const testB2 = async () => {
-    console.log('testB2');
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const respSelect = await db?.query(`SELECT * FROM Test`);
-        console.log('respSelect?.values', respSelect?.values);
-      });
-    } catch (error) {
-      console.error('error', error);
-    }
-  };
-
-  const testB3 = async () => {
-    console.log('testB3');
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const id = uuidv4();
-        const name = 'Ivan';
-        const query = `INSERT INTO Test 
-        (id, name) 
-        VALUES ('${id}', '${name}')`;
-        const respSelect = await db?.query(query);
-        console.log('respSelect?.values', respSelect?.values);
-      });
-    } catch (error) {
-      console.error('error', error);
-    }
-  };
-
-  const testB4 = async () => {
-    console.log('testB4');
-    try {
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const id = '681f0760-9d7d-4b97-ad88-e6cd1e5dc694';
-        const respSelect = await db?.query(`DELETE FROM Wallets
-        WHERE id = '${id}'`);
-        console.log('respSelect?.values', respSelect?.values);
       });
     } catch (error) {
       console.error('error', error);
@@ -280,7 +190,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
   };
 
   const listOfTables = async () => {
-    // console.log('setData');
     try {
       const listOfTables = await runQuerry(
         `SELECT name FROM sqlite_master WHERE type='table';`
@@ -304,121 +213,108 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
   // SHR Partially Done
   const getWalletsWithEmail = async (email: string) => {
-    console.log('getWalletsWithEmail begin TBD');
-    try {
-      const wallets = await runQuerry(`SELECT * FROM Wallets;`);
+    return new Promise<any | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          console.log('getWalletsWithEmail TBD', db);
+          const wallets = await db?.query(`SELECT * FROM Wallets;`);
 
-      if (!wallets) {
-        return;
-      }
+          // console.log('getWalletsWithEmail TBD', wallets);
 
-      // console.log('backend wallets-------', wallets);
+          if (!wallets || !wallets.values) {
+            return;
+          }
 
-      return wallets as any[];
-    } catch (error) {
-      console.error('error', error);
-    }
+          resolve(wallets.values as any[]);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
+        }
+      });
+    });
   };
 
   // SHR Done
   const getWalletById = async (id: string) => {
-    console.log('getWalletById', id);
-    const wallet = {};
+    return new Promise<any | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          const results = await db?.query(`SELECT *
+          FROM Wallets
+          WHERE id = '${id}';`);
 
-    try {
-      const results = await runQuerry(`SELECT *
-      FROM Wallets
-      WHERE id = '${id}';`);
+          if (!results || !results.values) {
+            throw new Error('wallet not found');
+          }
 
-      if (!results) {
-        throw new Error('wallet not found');
-      }
+          const walletUsers = await db?.query(`SELECT Wallets.*, WalletUser.*
+            FROM Wallets
+            LEFT JOIN WalletUser ON Wallets.id = WalletUser.walletsId
+            WHERE Wallets.id = '${id}';`);
 
-      const walletUsers = (await runQuerry(`SELECT Wallets.*, WalletUser.*
-      FROM Wallets
-      LEFT JOIN WalletUser ON Wallets.id = WalletUser.walletsId
-      WHERE Wallets.id = '${id}';`)) as any[] | undefined;
+          if (!walletUsers || !walletUsers.values) {
+            throw new Error('walletUsers not found');
+          }
 
-      if (!walletUsers) {
-        throw new Error('walletUsers not found');
-      }
+          const walletUsersWithAllData = [];
 
-      const walletUsersWithAllData = [];
+          for (const walletUser of walletUsers.values) {
+            const walletItems = await db?.query(
+              `SELECT WalletItem.*
+              FROM WalletItem
+              WHERE WalletItem.userId = '${walletUser.id}';`
+            );
 
-      for (const walletUser of walletUsers) {
-        const walletItems = await runQuerry(
-          `SELECT WalletItem.*
-          FROM WalletItem
-          WHERE WalletItem.userId = '${walletUser.id}';`
-        );
+            if (!walletItems || !walletItems.values) {
+              throw new Error('walletItems not found');
+            }
 
-        if (!walletItems) {
-          throw new Error('walletItems not found');
+            const recieverData = await db?.query(
+              `SELECT RecieverData.*
+              FROM RecieverData
+              WHERE RecieverData.userId = '${walletUser.id}';`
+            );
+
+            if (!recieverData || !recieverData.values) {
+              throw new Error('recieverData not found');
+            }
+
+            const users = await db?.query(
+              `SELECT User.*
+              FROM User
+              WHERE User.id = '${walletUser.userId}';`
+            );
+
+            if (!users || !users.values) {
+              throw new Error('users not found');
+            }
+
+            walletUsersWithAllData.push({
+              ...walletUser,
+              WalletItem: walletItems.values,
+              RecieverData: recieverData.values,
+              users: users.values,
+            });
+          }
+
+          const walletWithoutUsers: any = results.values[0];
+
+          const wallet = {
+            ...walletWithoutUsers,
+            walletUsers: walletUsersWithAllData,
+          };
+
+          if (!wallet) {
+            throw new Error('wallet not found');
+          }
+
+          resolve({ wallet });
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
         }
-
-        const recieverData = await runQuerry(
-          `SELECT RecieverData.*
-          FROM RecieverData
-          WHERE RecieverData.userId = '${walletUser.id}';`
-        );
-
-        if (!recieverData) {
-          throw new Error('recieverData not found');
-        }
-
-        const users = await runQuerry(
-          `SELECT User.*
-          FROM User
-          WHERE User.id = '${walletUser.userId}';`
-        );
-
-        if (!users) {
-          throw new Error('users not found');
-        }
-
-        walletUsersWithAllData.push({
-          ...walletUser,
-          WalletItem: walletItems,
-          RecieverData: recieverData,
-          users: users,
-        });
-      }
-
-      /* const walletItems = await runQuerry(`SELECT Wallets.*, WalletItem.*
-      FROM Wallets
-      LEFT JOIN WalletItem ON Wallets.id = WalletItem.walletsId
-      WHERE Wallets.id = '${id}';`);
-
-      if (!walletItems) {
-        throw new Error('walletItems not found');
-      }
-
-      const recieverData = await runQuerry(`SELECT Wallets.*, RecieverData.*
-      FROM Wallets
-      LEFT JOIN RecieverData ON Wallets.id = RecieverData.walletsId
-      WHERE Wallets.id = '${id}';`);
-
-      if (!recieverData) {
-        throw new Error('recieverData not found');
-      }*/
-
-      const walletWithoutUsers: any = results[0];
-
-      const wallet = {
-        ...walletWithoutUsers,
-        walletUsers: walletUsersWithAllData,
-      };
-
-      if (!wallet) {
-        throw new Error('wallet not found');
-      }
-
-      return { wallet };
-    } catch (error) {
-      console.error('error', error);
-    }
-
-    return { wallet };
+      });
+    });
   };
 
   // SHR Partially Done
@@ -452,139 +348,132 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
   // SHR Done
   const getWalletItemsByWalletId = async (id: string) => {
-    const wallet = {};
-    const walletItems = {};
+    return new Promise<any | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          const results2 = await db?.query(`SELECT *
+            FROM Wallets
+            WHERE id = '${id}';`);
 
-    try {
-      const walletItemsWithoutPayer = (await runQuerry(
-        `SELECT * FROM WalletItem WHERE walletsId = '${id}';`
-      )) as any[] | undefined;
+          if (!results2 || !results2.values) {
+            throw new Error('wallet not found');
+          }
 
-      if (!walletItemsWithoutPayer) {
-        throw new Error('walletItems not found');
-      }
+          const wallet = results2.values[0];
 
-      const walletItems = [];
+          if (!wallet) {
+            throw new Error('wallet not found');
+          }
 
-      for (const walletItem of walletItemsWithoutPayer) {
-        const results = await runQuerry(
-          `SELECT WalletUser.*
-          FROM WalletUser
-          WHERE WalletUser.id = '${walletItem.userId}';`
-        );
+          const walletItemsWithoutPayer = await db?.query(
+            `SELECT * FROM WalletItem WHERE walletsId = '${id}';`
+          );
 
-        if (!results) {
-          throw new Error('walletUser not found');
+          if (!walletItemsWithoutPayer || !walletItemsWithoutPayer.values) {
+            resolve({ wallet, walletItems: [] });
+            return;
+          }
+
+          const walletItems = [];
+
+          for (const walletItem of walletItemsWithoutPayer.values) {
+            const results = await db?.query(
+              `SELECT WalletUser.*
+              FROM WalletUser
+              WHERE WalletUser.id = '${walletItem.userId}';`
+            );
+
+            if (!results || !results.values) {
+              throw new Error('walletUser not found');
+            }
+
+            const payer: any = results.values[0];
+
+            walletItems.push({ ...walletItem, payer });
+          }
+
+          resolve({ wallet, walletItems });
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
         }
-
-        const payer: any = results[0];
-
-        walletItems.push({ ...walletItem, payer });
-      }
-
-      const results2 = await runQuerry(`SELECT *
-      FROM Wallets
-      WHERE id = '${id}';`);
-
-      if (!results2) {
-        throw new Error('wallet not found');
-      }
-
-      const wallet = results2[0];
-
-      if (!wallet) {
-        throw new Error('wallet not found');
-      }
-
-      return { wallet, walletItems };
-    } catch (error) {
-      console.error('error', error);
-    }
-
-    return { wallet, walletItems };
+      });
+    });
   };
 
   // SHR Done
   const getWalletItemByWalletItemId = async (id: string) => {
-    console.log(
-      'getWalletItemByWalletItemId TBD-----------------------------',
-      id
-    );
+    return new Promise<any | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          const results = await db?.query(
+            `SELECT * FROM WalletItem WHERE id = '${id}';`
+          );
 
-    let walletItem = {};
-    try {
-      const results = (await runQuerry(
-        `SELECT * FROM WalletItem WHERE id = '${id}';`
-      )) as any[] | undefined;
+          if (!results || !results.values) {
+            throw new Error('WalletItem not found');
+          }
 
-      if (!results) {
-        throw new Error('WalletItem not found');
-      }
+          const walletItemWithoutPayer = results.values[0];
 
-      const walletItemWithoutPayer = results[0];
+          if (!walletItemWithoutPayer) {
+            throw new Error('walletItem not found');
+          }
 
-      console.log('walletItemWithoutPayer', walletItemWithoutPayer);
-
-      if (!walletItemWithoutPayer) {
-        throw new Error('walletItem not found');
-      }
-
-      const results2 = await runQuerry(
-        `SELECT WalletUser.*
+          const results2 = await db?.query(
+            `SELECT WalletUser.*
           FROM WalletUser
           WHERE WalletUser.id = '${walletItemWithoutPayer.userId}';`
-      );
+          );
 
-      if (!results2) {
-        throw new Error('payer not found');
-      }
+          if (!results2 || !results2.values) {
+            throw new Error('payer not found');
+          }
 
-      const payer: any = results2[0];
+          const payer: any = results2.values[0];
 
-      const recieversWithoutIncludedWalletUsers = (await runQuerry(
-        `SELECT RecieverData.*
+          const recieversWithoutIncludedWalletUsers = await db?.query(
+            `SELECT RecieverData.*
           FROM RecieverData
           WHERE RecieverData.walletItemId = '${walletItemWithoutPayer.id}';`
-      )) as any[] | undefined;
+          );
 
-      if (!recieversWithoutIncludedWalletUsers) {
-        throw new Error('recievers not found');
-      }
+          if (
+            !recieversWithoutIncludedWalletUsers ||
+            !recieversWithoutIncludedWalletUsers.values
+          ) {
+            throw new Error('recievers not found');
+          }
 
-      const recievers = [];
+          const recievers = [];
 
-      for (const reciever of recieversWithoutIncludedWalletUsers) {
-        const results = await runQuerry(
-          `SELECT WalletUser.*
+          for (const reciever of recieversWithoutIncludedWalletUsers.values) {
+            const results = await db?.query(
+              `SELECT WalletUser.*
           FROM WalletUser
           WHERE WalletUser.id = '${reciever.userId}';`
-        );
+            );
 
-        if (!results) {
-          throw new Error('walletUser not found');
+            if (!results || !results.values) {
+              throw new Error('walletUser not found');
+            }
+
+            const walletUser: any = results.values[0];
+
+            recievers.push({ ...reciever, reciever: walletUser });
+          }
+
+          if (!recievers) {
+            throw new Error('recievers not found');
+          }
+
+          resolve({ ...walletItemWithoutPayer, payer, recievers });
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
         }
-
-        const walletUser: any = results[0];
-
-        recievers.push({ ...reciever, reciever: walletUser });
-      }
-
-      console.log('recievers', recievers);
-
-      if (!recievers) {
-        throw new Error('recievers not found');
-      }
-
-      walletItem = { ...walletItemWithoutPayer, payer, recievers };
-
-      console.log('walletItem', walletItem);
-
-      return walletItem;
-    } catch (error) {
-      console.error('error', error);
-    }
-
-    return walletItem;
+      });
+    });
   };
 
   // SHR Done
@@ -592,7 +481,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     walletItemId: string,
     sortType: string
   ) => {
-    console.log('getPrevAndNextWalletItemByWalletItemIdAndSortType');
     const walletItemPrev = {};
     const walletItemNext = {};
 
@@ -677,7 +565,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     return new Promise<any[]>(async (resolve, reject) => {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         try {
-          console.log('getWalletUsersByWalletId', id);
           const walletUsers = await db?.query(
             `SELECT * FROM WalletUser WHERE walletsId = '${id}';`
           );
@@ -700,8 +587,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     return new Promise<boolean | undefined>(async (resolve, reject) => {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         try {
-          console.log('addWallet');
-
           const validationResult = WalletSchema.safeParse(input);
 
           if (!validationResult.success) {
@@ -732,7 +617,7 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
             });
           }
 
-          console.log('transactionQueries', transactionQueries);
+          // console.log('transactionQueries', transactionQueries);
 
           await db?.executeTransaction(transactionQueries, false);
 
@@ -750,7 +635,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     return new Promise<boolean | undefined>(async (resolve, reject) => {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         try {
-          console.log('addWalletItem');
           const validationResult = WalletItemSchema.safeParse(input);
 
           if (!validationResult.success) {
@@ -842,7 +726,7 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
             });
           }
 
-          console.log('transactionQueries', transactionQueries);
+          // console.log('transactionQueries', transactionQueries);
 
           await db?.executeTransaction(transactionQueries, false);
 
@@ -863,7 +747,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     return new Promise<boolean | undefined>(async (resolve, reject) => {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         try {
-          console.log('editWalletItem TBD');
           // Validate input
           const validationResult = WalletItemSchema.safeParse(input);
 
@@ -883,8 +766,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
           }
 
           const walletItemWithoutPayer = results.values[0];
-
-          console.log('walletItemWithoutPayer', walletItemWithoutPayer);
 
           if (!walletItemWithoutPayer) {
             throw new Error('walletItem not found');
@@ -930,8 +811,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
             recievers.push({ ...reciever, reciever: walletUser });
           }
-
-          console.log('recievers', recievers);
 
           if (!recievers) {
             throw new Error('recievers not found');
@@ -984,8 +863,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
             oldBalance += oldWalletItem.amount;
           }
 
-          console.log(`removing ${oldWalletItem.amount} from ${payer.name}`);
-
           transactionQueries.push({
             statement:
               'UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?',
@@ -1000,8 +877,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
           if (input.type === 'income') {
             newBalance -= input.amount;
           }
-
-          console.log(`adding ${input.amount} to payer ${input.payer}`);
 
           transactionQueries.push({
             statement:
@@ -1080,7 +955,7 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
             });
           }
 
-          console.log('transactionQueries', transactionQueries);
+          // console.log('transactionQueries', transactionQueries);
 
           await db?.executeTransaction(transactionQueries, false);
 
@@ -1101,7 +976,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     return new Promise<boolean | undefined>(async (resolve, reject) => {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         try {
-          console.log('editWallet');
           const validationResult = WalletSchema.safeParse(input);
 
           if (!validationResult.success) {
@@ -1224,7 +1098,7 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
             }
           }
 
-          console.log('transactionQueries', transactionQueries);
+          // console.log('transactionQueries', transactionQueries);
 
           await db?.executeTransaction(transactionQueries, false);
 
@@ -1248,8 +1122,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     return new Promise<boolean | undefined>(async (resolve, reject) => {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         try {
-          console.log('deleteWalletItemById TBD');
-
           const transactionQueries = [];
 
           const results = await db?.query(
@@ -1262,8 +1134,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
           }
 
           const walletItemWithoutPayer = results.values[0];
-
-          console.log('walletItemWithoutPayer', walletItemWithoutPayer);
 
           if (!walletItemWithoutPayer) {
             throw new Error('walletItem not found');
@@ -1310,8 +1180,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
             recievers.push({ ...reciever, reciever: walletUser });
           }
 
-          console.log('recievers', recievers);
-
           if (!recievers) {
             throw new Error('recievers not found');
           }
@@ -1329,8 +1197,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
           if (oldWalletItem.type === 'income') {
             oldBalance += oldWalletItem.amount;
           }
-
-          console.log(`removing ${oldWalletItem.amount} from ${payer.name}`);
 
           transactionQueries.push({
             statement:
@@ -1382,7 +1248,7 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
             values: [id],
           });
 
-          console.log('transactionQueries', transactionQueries);
+          // console.log('transactionQueries', transactionQueries);
 
           await db?.executeTransaction(transactionQueries, false);
 
@@ -1397,7 +1263,6 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
   // SHR Done
   const deleteWalletById = async (id: string) => {
-    console.log('deleteWalletById', id);
     try {
       const query = `DELETE FROM Wallets WHERE id = '${id}'`;
       await runQuerry(query);
@@ -1422,10 +1287,7 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
     editWallet,
     deleteWalletItemById,
     deleteWalletById,
-    testB1,
-    testB2,
-    testB3,
-    testB4,
+    initialized,
   };
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Redirect, Route } from 'react-router-dom';
+// import { Redirect, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import NewWallet from './pages/NewWallet';
 import Add from './pages/Add';
@@ -13,8 +13,7 @@ import MySettings from './pages/MySettings';
 import './styles/global.css';
 
 import { IonApp, IonRouterOutlet, IonTabs } from '@ionic/react';
-import { IonReactRouter } from '@ionic/react-router';
-
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { setupIonicReact } from '@ionic/react';
 import { SQLiteHook, useSQLite } from 'react-sqlite-hook';
 
@@ -41,43 +40,20 @@ function App() {
   return (
     <IonApp>
       <FrontendDBProvider>
-        <IonReactRouter>
-          <IonRouterOutlet>
-            <Route exact path="/">
-              <HomePage />
-            </Route>
-            <Route exact path="/">
-              <HomePage />
-            </Route>
-            <Route exact path="/:walletId/add">
-              <Add />
-            </Route>
-            <Route exact path="/:walletId/edit">
-              <EditWallet />
-            </Route>
-            <Route exact path="/:walletId/:walletItemId/edit">
-              <Edit />
-            </Route>
-            <Route exact path="/:walletId/balances">
-              <Balances />
-            </Route>
-            <Route exact path="/:walletId/expenses">
-              <Expenses />
-            </Route>
-            <Route exact path="/:walletId/feed">
-              <Feed />
-            </Route>
-            <Route exact path="/:walletId/:walletItemId/open">
-              <Open />
-            </Route>
-            <Route exact path="/newWallet">
-              <NewWallet />
-            </Route>
-            <Route exact path="/mysettings">
-              <MySettings />
-            </Route>
-          </IonRouterOutlet>
-        </IonReactRouter>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/:walletId/add" element={<Add />} />
+            <Route path="/:walletId/edit" element={<EditWallet />} />
+            <Route path="/:walletId/:walletItemId/edit" element={<Edit />} />
+            <Route path="/:walletId/balances" element={<Balances />} />
+            <Route path="/:walletId/expenses" element={<Expenses />} />
+            <Route path="/:walletId/feed" element={<Feed />} />
+            <Route path="/:walletId/:walletItemId/open" element={<Open />} />
+            <Route path="/newWallet" element={<NewWallet />} />
+            <Route path="/mysettings" element={<MySettings />} />
+          </Routes>
+        </BrowserRouter>
       </FrontendDBProvider>
     </IonApp>
   );

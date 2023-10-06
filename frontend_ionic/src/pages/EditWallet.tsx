@@ -4,10 +4,8 @@ import {
   ParticipantInputDiv,
   MainContentItem,
 } from '../styles/newWallet.styled';
-import { BurgerButton, CategoryButton } from '../styles/buttons.styled';
+import { CategoryButton } from '../styles/buttons.styled';
 import {
-  TopPannel,
-  MainContent,
   MiddlePannel,
   BottomContent,
   Navbar,
@@ -15,7 +13,7 @@ import {
 import { Input, Select, Label } from '../styles/Input.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 // import axios from 'axios';
 import {
   IonBackButton,
@@ -45,15 +43,11 @@ const UserListSchema = z.array(
   })
 );
 
-interface RouteParams {
-  walletId: string;
-}
-
 // const ParticipantsSchema = z.array(z.string());
 
 export default function EditWallet() {
-  const history = useHistory();
-  const { walletId } = useParams<RouteParams>();
+  const navigate = useNavigate();
+  const { walletId } = useParams();
   const [title, setTitle] = useState<string>('');
   const [decription, setDecription] = useState<string>('');
   const [currency, setCurrency] = useState<string>('');
@@ -63,17 +57,18 @@ export default function EditWallet() {
   >([]);
   // const [postResponse, setPostResponse] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
-  const { getWalletById, editWallet } = useDBFunctions();
+  const { getWalletById, editWallet, initialized } = useDBFunctions();
 
   useEffect(() => {
+    if (!initialized) return;
     (async () => {
-      const { wallet } = await getWalletById(walletId);
+      const { wallet } = await getWalletById(walletId || '');
 
       if (wallet == undefined) return;
 
       setWallet(wallet);
     })();
-  }, []);
+  }, [initialized]);
 
   /* useEffect(() => {
     (async () => {
@@ -156,10 +151,9 @@ export default function EditWallet() {
       userList: participants,
     };
 
-    // axios.put(`/api/wallets/editWallet/${walletId}`, output);
-    await editWallet(walletId, output);
+    await editWallet(walletId || '', output);
 
-    history.push('/');
+    navigate('/');
   }
 
   function getName(i: number): string {

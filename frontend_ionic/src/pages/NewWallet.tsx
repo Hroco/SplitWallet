@@ -15,7 +15,7 @@ import {
 import { Input, Select, Label } from '../styles/Input.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   IonBackButton,
@@ -44,7 +44,7 @@ const UserListSchema = z.array(
 const ParticipantsSchema = z.array(z.string());
 
 export default function NewWallet() {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const [title, setTitle] = useState<string>('');
   const [decription, setDecription] = useState<string>('');
@@ -93,16 +93,16 @@ export default function NewWallet() {
 
     await addWallet(output);
 
-    history.push('/');
+    navigate('/');
   }
 
-  useEffect(() => {
+  /* useEffect(() => {
     console.log(
       'Component mounted or route changed',
       history.location.pathname
     );
     // Fetch and update data here
-  }, [history.location.pathname]);
+  }, [history.location.pathname]);*/
 
   function getName(i: number): string {
     if (participants == undefined) return '';

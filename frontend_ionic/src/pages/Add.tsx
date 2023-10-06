@@ -19,7 +19,7 @@ import {
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 // import axios from 'axios';
 import LoadingScreen from '../components/LoadingScreen';
 import {
@@ -39,7 +39,6 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-  useIonViewWillEnter,
 } from '@ionic/react';
 import { useDBFunctions } from '../lib/FrontendDBContext';
 
@@ -103,9 +102,9 @@ export default function Add() {
   // const [postResponse, setPostResponse] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
 
-  const { walletId } = useParams<RouteParams>();
-  const history = useHistory();
-  const { getWalletById, addWalletItem } = useDBFunctions();
+  const { walletId } = useParams();
+  const navigate = useNavigate();
+  const { getWalletById, addWalletItem, initialized } = useDBFunctions();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
@@ -124,9 +123,8 @@ export default function Add() {
     setWallet(wallet);
   }, [postResponse]);*/
 
-  useIonViewWillEnter(() => {
-    // console.log('ionViewWillEnter Add event fired');
-    // useEffect(() => {
+  useEffect(() => {
+    if (!initialized) return;
     (async () => {
       const { wallet } = await getWalletById(walletId);
 
@@ -134,8 +132,7 @@ export default function Add() {
 
       setWallet(wallet);
     })();
-    // }, []);
-  });
+  }, [initialized]);
 
   useEffect(() => {
     const numberOfCheckedUsers = participants.filter(
@@ -301,7 +298,7 @@ export default function Add() {
     console.log('newWalletItem', newWalletItem);
     await addWalletItem(newWalletItem);
 
-    history.push(`/${walletId}/expenses`);
+    navigate(`/${walletId}/expenses`);
   }
 
   function getCutFromAmount(i: number): string {

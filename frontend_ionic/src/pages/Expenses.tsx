@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import contentData from '../assets/testContentData';
 import ExpenseItem from '../components/ExpenseItem';
 import { TotalExpenseDiv, MenuHeading } from '../styles/MainItemPage.styled';
@@ -24,7 +24,6 @@ import BurgerMenu from '../components/DropDownMenu';
 import LoadingScreen from '../components/LoadingScreen';
 import { Button } from '../styles/DropDownMenu.styled';
 import { ArrowDown, ArrowUp } from '../styles/utills.styled';
-import { createOutline, trashOutline } from 'ionicons/icons';
 import {
   IonBackButton,
   IonButton,
@@ -40,10 +39,6 @@ import {
   IonTitle,
   IonToolbar,
   useIonAlert,
-  useIonViewDidEnter,
-  useIonViewDidLeave,
-  useIonViewWillEnter,
-  useIonViewWillLeave,
 } from '@ionic/react';
 import { useDBFunctions } from '../lib/FrontendDBContext';
 
@@ -60,25 +55,15 @@ enum SortType {
   CategoryDesc = 'CategoryDesc',
 }
 
-interface RouteParams {
-  walletId: string;
-}
-
 export default function Expenses() {
-  const { walletId } = useParams<RouteParams>();
-  const history = useHistory();
+  const { walletId } = useParams();
+  const navigate = useNavigate();
   // line bellow neads to be handled properly in the future
   const [sortType, setSortType] = useState<SortType>(SortType.DateDesc);
-  // const [postResponse, setPostResponse] = useState<any>(null);
-  // const [postResponse2, setPostResponse2] = useState<any>(null);
   const [walletItems, setWalletItems] = useState<any[] | null>(null);
   const [wallet, setWallet] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
   const [presentAlert] = useIonAlert();
-  // const [shouldShowBurgerMenu, setShouldShowBurgerMenu] = useState(false);
-  // const [shouldShowSortingMenu, setShouldShowSortingMenu] = useState(false);
-  // const [shouldShowPersonalModeMenu, setShouldShowPersonalModeMenu] =
-  //   useState(false);
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
   const {
@@ -86,9 +71,12 @@ export default function Expenses() {
     getWalletUserByEmailAndWalletId,
     deleteWalletById,
     listOfTables,
+    initialized,
   } = useDBFunctions();
 
-  useIonViewWillEnter(() => {
+  useEffect(() => {
+    if (!initialized) return;
+
     (async () => {
       const { wallet, walletItems } = await getWalletItemsByWalletId(walletId);
       const walletUser = await getWalletUserByEmailAndWalletId(
@@ -129,17 +117,11 @@ export default function Expenses() {
         }
       });*/
 
-      // console.log('------------------------------------------');
-      // console.log('walletItems', walletItems);
-      // console.log('wallet', wallet);
-      // console.log('walletUser', walletUser);
-      // console.log('------------------------------------------');
-
       setWalletItems(walletItems as any[]);
       setWallet(wallet);
       setCurrentWalletUser(walletUser);
     })();
-  });
+  }, [initialized]);
 
   /* useIonViewWillEnter(() => {
     console.log('ionViewWillEnter event fired');
@@ -258,8 +240,8 @@ export default function Expenses() {
 
   async function deleteWallet() {
     // axios.delete(`/api/wallets/deleteWalletById/${walletId}`);
-    await deleteWalletById(walletId);
-    history.push('/');
+    await deleteWalletById(walletId || '');
+    navigate('/');
   }
 
   function getIcon(buttonType: string, sortType: SortType) {
@@ -403,7 +385,7 @@ export default function Expenses() {
                   <IonItem
                     button={true}
                     detail={false}
-                    onClick={() => history.push(`/${walletId}/edit`)}
+                    onClick={() => navigate(`/${walletId}/edit`)}
                   >
                     <EditIcon />
                     <IonTitle>Edit</IonTitle>
@@ -514,7 +496,7 @@ export default function Expenses() {
                   <IonItem
                     button={true}
                     detail={false}
-                    onClick={() => history.push(`/${walletId}/feed`)}
+                    onClick={() => navigate(`/${walletId}/feed`)}
                   >
                     <HistoryIcon />
                     <IonTitle>History</IonTitle>
@@ -526,10 +508,10 @@ export default function Expenses() {
         </IonToolbar>
       </IonHeader>
       <Navbar>
-        <ExpenseButton onClick={() => history.push(`/${walletId}/expenses`)}>
+        <ExpenseButton onClick={() => navigate(`/${walletId}/expenses`)}>
           <h1>MY EXPENSES</h1>
         </ExpenseButton>
-        <ExpenseButton onClick={() => history.push(`/${walletId}/balances`)}>
+        <ExpenseButton onClick={() => navigate(`/${walletId}/balances`)}>
           <h1>BALANCES</h1>
         </ExpenseButton>
       </Navbar>
@@ -539,7 +521,7 @@ export default function Expenses() {
             walletItems.map((walletItem: any, index: number) => (
               <ExpenseItem
                 onClick={() =>
-                  history.push(
+                  navigate(
                     `/${walletId}/${walletItem.id}/open?sort=${sortType}`
                   )
                 }
@@ -558,7 +540,7 @@ export default function Expenses() {
           <p>MY TOTAL</p>
           <h2>€ {currentWalletUser.total.toFixed(2)}</h2>
         </div>
-        <WalletItemAddButton onClick={() => history.push(`/${walletId}/add`)}>
+        <WalletItemAddButton onClick={() => navigate(`/${walletId}/add`)}>
           <AddIcon />
         </WalletItemAddButton>
         <TotalExpenseDiv>

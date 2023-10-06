@@ -7,7 +7,7 @@ import {
   Navbar,
 } from '../styles/mainContainers.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 // import axios from 'axios';
 import { Button } from '../styles/DropDownMenu.styled';
 import {
@@ -21,7 +21,7 @@ import {
 } from '@ionic/react';
 
 export default function MySettings() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState<string>('');
   const [nick, setNick] = useState<string>('');
 

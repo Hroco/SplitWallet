@@ -1,27 +1,12 @@
 /* eslint-disable max-len */
 import React, { useEffect, useState } from 'react';
-import {
-  WalletAddButton,
-  BurgerButton,
-  IonFabButtonOrange,
-} from '../styles/buttons.styled';
-import { MainContent, Navbar } from '../styles/mainContainers.styled';
-import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
-import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import content from '../assets/testContent';
+import { IonFabButtonOrange } from '../styles/buttons.styled';
 import MainItem from '../components/MainItem';
-import { useHistory } from 'react-router-dom';
-import BurgerMenu from '../components/DropDownMenu';
-import axios from 'axios';
-import LoadingScreen from '../components/LoadingScreen';
-import { Button } from '../styles/DropDownMenu.styled';
+import { useNavigate } from 'react-router-dom';
 import {
-  IonButton,
   IonButtons,
   IonContent,
   IonFab,
-  IonFabButton,
   IonHeader,
   IonIcon,
   IonItem,
@@ -31,34 +16,19 @@ import {
   IonPopover,
   IonTitle,
   IonToolbar,
-  useIonViewDidEnter,
-  useIonViewDidLeave,
-  useIonViewWillEnter,
-  useIonViewWillLeave,
 } from '@ionic/react';
 import { add, settingsOutline } from 'ionicons/icons';
-import useSQLiteDB from '../hooks/useSQLiteDB';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { useDBFunctions } from '../lib/FrontendDBContext';
 
 export default function HomePage() {
-  const history = useHistory();
-  const [postResponse, setPostResponse] = useState<any>(null);
+  const navigate = useNavigate();
   const [walletsList, setWalletsList] = useState<any>(null);
-  const {
-    getWalletsWithEmail,
-    createTable,
-    listOfTables,
-    testB1,
-    testB2,
-    testB3,
-    testB4,
-  } = useDBFunctions();
+  const { getWalletsWithEmail, listOfTables, initialized } = useDBFunctions();
 
-  useIonViewWillEnter(() => {
-    // createTable();
+  useEffect(() => {
+    if (!initialized) return;
     listOfTables();
-    // console.log('ionViewWillEnter event fired');
+
     /* (async () => {
       const email = 'samko1311@gmail.com';
       const response = await axios.get(
@@ -76,66 +46,7 @@ export default function HomePage() {
       });
       setWalletsList(wallets);
     })();
-  });
-
-  /**
-   * do a select of the database
-   */
-
-  /* useIonViewDidEnter(() => {
-    console.log('ionViewDidEnter event fired');
-  });
-
-  useIonViewDidLeave(() => {
-    console.log('ionViewDidLeave event fired');
-  });
-
-  useIonViewWillLeave(() => {
-    console.log('ionViewWillLeave event fired');
-  });*/
-
-  /* useEffect(() => {
-    console.log('getting data from server');
-    (async () => {
-      const email = 'samko1311@gmail.com';
-      const response = await axios.get(
-        `/api/wallets/getWalletsWithEmail/${email}`
-      );
-      console.log('response', response);
-      setPostResponse(response.data);
-    })();
-  }, []);*/
-
-  /* useEffect(() => {
-    const { wallets } = postResponse || {};
-
-    if (wallets == undefined) return;
-
-    wallets.sort((a: any, b: any) => {
-      return a.date > b.date ? 1 : -1;
-    });
-    setWalletsList(wallets);
-  }, [postResponse]);*/
-
-  function test() {
-    console.log('test');
-    testB1();
-  }
-
-  function test2() {
-    console.log('test2');
-    testB2();
-  }
-
-  function test3() {
-    console.log('test3');
-    testB3();
-  }
-
-  function test4() {
-    console.log('test4');
-    testB4();
-  }
+  }, [initialized]);
 
   return (
     <IonPage>
@@ -150,7 +61,7 @@ export default function HomePage() {
                   <IonItem
                     button={true}
                     detail={false}
-                    onClick={() => history.push(`/mysettings`)}
+                    onClick={() => navigate(`/mysettings`)}
                   >
                     <IonIcon slot="start" icon={settingsOutline}></IonIcon>
                     <IonTitle>My Settings</IonTitle>
@@ -162,23 +73,17 @@ export default function HomePage() {
         </IonToolbar>
       </IonHeader>
       <IonContent>
-        {/*
-        <IonButton onClick={test}>Create</IonButton>
-        <IonButton onClick={test2}>Display</IonButton>
-        <IonButton onClick={test3}>Insert</IonButton>
-        <IonButton onClick={test4}>Delete</IonButton>
-         */}
         {walletsList &&
           walletsList.map((item: any, index: number) => (
             <MainItem
-              onClick={() => history.push(`/${item.id}/expenses`)}
+              onClick={() => navigate(`/${item.id}/expenses`)}
               key={index}
               name={item.name}
               description={item.description}
             />
           ))}
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButtonOrange onClick={() => history.push('/newWallet')}>
+          <IonFabButtonOrange onClick={() => navigate('/newWallet')}>
             <IonIcon icon={add}></IonIcon>
           </IonFabButtonOrange>
         </IonFab>

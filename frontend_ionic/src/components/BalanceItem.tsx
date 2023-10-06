@@ -15,10 +15,11 @@ type BalanceItemProps = {
 };
 
 export default function BalanceItem({ name, value, ratio }: BalanceItemProps) {
-  // console.log('BalanceItem', name, value, ratio);
+  value = Math.abs(value) < 0.00001 ? 0 : value;
+
   const percentage = ratio * value;
   const width = Math.abs(percentage / 2);
-  const absValue = Math.abs(value);
+  const absValue = Math.abs(value).toFixed(2);
   return (
     <>
       <BalanceItemDiv>

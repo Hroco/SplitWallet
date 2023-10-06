@@ -1,31 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import {
-  MainContent,
-  TopPannel,
-  MiddlePannel,
-  BottomContent,
-  Navbar,
-} from '../styles/mainContainers.styled';
-import { MainContentItem } from '../styles/newWallet.styled';
-import {
-  Input,
-  Select,
-  Label,
-  IonCheckboxOrange,
-} from '../styles/Input.styled';
+import { MiddlePannel, BottomContent } from '../styles/mainContainers.styled';
+import { Input, IonCheckboxOrange } from '../styles/Input.styled';
 import { ParticipantInputDiv } from '../styles/newWalletItem.styled';
-import { BurgerButton } from '../styles/buttons.styled';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
 import { z } from 'zod';
-import { useHistory, useParams } from 'react-router-dom';
-// import axios from 'axios';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
 import {
   IonBackButton,
   IonButton,
   IonButtons,
-  IonCheckbox,
   IonContent,
   IonHeader,
   IonInput,
@@ -37,6 +21,7 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
+  useIonViewDidEnter,
 } from '@ionic/react';
 import { useDBFunctions } from '../lib/FrontendDBContext';
 
@@ -82,11 +67,6 @@ function arraysAreEqual(arr1: any, arr2: any) {
   return true;
 }
 
-interface RouteParams {
-  walletId: string;
-  walletItemId: string;
-}
-
 export default function Edit() {
   const [title, setTitle] = useState<string>('');
   const [amount, setAmount] = useState<number>(0);
@@ -97,23 +77,27 @@ export default function Edit() {
   const [participants, setParticipants] = useState<
     z.infer<typeof ParticipantsSchema>
   >([]);
-  const [postResponse, setPostResponse] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
-  const [postResponse2, setPostResponse2] = useState<any>(null);
   const [walletItem, setWalletItem] = useState<any>(null);
 
-  const { walletId, walletItemId } = useParams<RouteParams>();
-  const history = useHistory();
-  const { getWalletById, getWalletItemByWalletItemId, editWalletItem } =
-    useDBFunctions();
+  const { walletId, walletItemId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const {
+    getWalletById,
+    getWalletItemByWalletItemId,
+    editWalletItem,
+    initialized,
+  } = useDBFunctions();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
 
   useEffect(() => {
+    if (!initialized) return;
     (async () => {
       const { wallet } = await getWalletById(walletId);
-      const walletItem = await getWalletItemByWalletItemId(walletItemId);
+      const walletItem = await getWalletItemByWalletItemId(walletItemId || '');
 
       if (wallet == undefined) return;
       if (walletItem == undefined) return;
@@ -121,49 +105,18 @@ export default function Edit() {
       setWallet(wallet);
       setWalletItem(walletItem);
     })();
-  }, []);
-
-  /* useEffect(() => {
-    (async () => {
-      const id = walletId;
-      const response = await axios.get(`/api/wallets/getWalletById/${id}`);
-      console.log('response', response);
-      setPostResponse(response.data);
-    })();
-  }, []);
+  }, [initialized]);
 
   useEffect(() => {
-    const { wallet } = postResponse || {};
-    setWallet(wallet);
-  }, [postResponse]);*/
-
-  /* useEffect(() => {
-    (async () => {
-      const id = walletItemId;
-      const response = await axios.get(
-        `/api/wallets/getWalletItemByWalletItemId/${id}`
-      );
-      console.log('walletItem in response Edit', response.data);
-      setPostResponse2(response.data);
-    })();
-  }, []);
-
-  useEffect(() => {
-    const { walletItem } = postResponse2 || {};
-    console.log('walletItem in Edit', walletItem);
-    console.log('walletItem in Edit', walletItem);
-    setWalletItem(walletItem);
-  }, [postResponse2]);*/
-
-  useEffect(() => {
-    console.log('walletItem in Edit', walletItem);
+    /* console.log('walletItem in Edit', walletItem);
+    console.log('walletItemId in Edit', walletItemId);
+    console.log('location in Edit', location);*/
     if (walletItem == undefined) return;
     setTitle(walletItem.name);
     setAmount(walletItem.amount);
     setDate(new Date(walletItem.date));
     setPayerId(walletItem.payer.id);
     setType(walletItem.type);
-    console.log('participants', participants);
 
     if (wallet == undefined) return;
     const walletUsers = wallet.walletUsers;
@@ -204,7 +157,7 @@ export default function Edit() {
       };
     });
 
-    console.log('newParticipants', newParticipants);
+    // console.log('newParticipants', newParticipants);
     // setParticipants()
   }, [walletItem]);
 
@@ -279,37 +232,6 @@ export default function Edit() {
     else setMainCheckBoxMode('crossed');
   }, [participants]);
 
-  /* useEffect(() => {
-    if (wallet == undefined) return;
-    const walletUsers = wallet.walletUsers;
-
-    if (participants.length == 0) {
-      const newParticipants = [...participants];
-      for (let i = 0; i < walletUsers.length; i++) {
-        const walletUser = walletUsers[i];
-        if (walletUser == undefined) throw new Error('User is undefined.');
-
-        const newItem = {
-          id: walletUser.id,
-          cutFromAmount: 0,
-          checked: true,
-        };
-        newParticipants[i] = newItem;
-      }
-      setParticipants(newParticipants);
-    }
-
-    // line below is for testing and it should be replaced with user id from seesion
-    const currentWalletUser = walletUsers.find(
-      (walletUser: any) => walletUser.userId === 'clls52cn30000d7vgfv1jx5el'
-    );
-    if (currentWalletUser == undefined) throw new Error('User is undefined.');
-
-    // if (payerId == '') setPayerId(currentWalletUser.id);
-  }, [postResponse]);*/
-
-  // if (wallet == undefined) return <LoadingScreen />;
-
   async function handleEditWalletItem() {
     const numberOfCheckedUsers = participants.filter(
       (participant) => participant.checked === true
@@ -345,10 +267,9 @@ export default function Edit() {
       type: type,
     };
 
-    // axios.put(`/api/wallets/editWalletItem/${walletItemId}`, newWalletItem);
-    await editWalletItem(walletItemId, newWalletItem);
+    await editWalletItem(walletItemId || '', newWalletItem);
 
-    history.push(`/${walletId}/expenses`);
+    navigate(`/${walletId}/expenses`);
   }
 
   function getCutFromAmount(i: number): string {
@@ -389,8 +310,6 @@ export default function Edit() {
   if (participants == undefined) return <LoadingScreen />;
 
   const walletUsers = wallet.walletUsers;
-
-  console.log('walletUsers---------------------', { walletUsers, wallet });
 
   const participantElements = [];
   for (let i = 0; i < walletUsers.length; i++) {
@@ -438,9 +357,7 @@ export default function Edit() {
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton
-              defaultHref={`/${walletId}/expenses`}
-            ></IonBackButton>
+            <IonBackButton defaultHref={`/`}></IonBackButton>
           </IonButtons>
           <IonTitle>{setHeading()}</IonTitle>
           <IonButtons slot="end">

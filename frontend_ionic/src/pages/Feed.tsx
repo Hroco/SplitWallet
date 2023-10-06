@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import MainItem from '../components/MainItem';
 import { BurgerButton } from '../styles/buttons.styled';
 import {
@@ -26,22 +26,19 @@ import {
 } from '@ionic/react';
 import { useDBFunctions } from '../lib/FrontendDBContext';
 
-interface RouteParams {
-  walletId: string;
-}
-
 export default function Feed() {
-  const { walletId } = useParams<RouteParams>();
-  const history = useHistory();
+  const { walletId } = useParams();
+  const navigate = useNavigate();
   const [postResponse, setPostResponse] = useState<any>(null);
   const [walletItems, setWalletItems] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
-  const { getWalletItemsByWalletId } = useDBFunctions();
+  const { getWalletItemsByWalletId, initialized } = useDBFunctions();
 
   if (walletId == undefined) throw new Error('WalletId is undefined.');
   if (typeof walletId != 'string') throw new Error('WalletId is not string.');
 
   useEffect(() => {
+    if (!initialized) return;
     (async () => {
       const wallet = await getWalletItemsByWalletId(walletId);
 
@@ -49,7 +46,7 @@ export default function Feed() {
 
       setWallet(wallet);
     })();
-  }, []);
+  }, [initialized]);
 
   /* useEffect(() => {
     (async () => {
