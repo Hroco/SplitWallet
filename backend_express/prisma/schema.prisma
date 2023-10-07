@@ -101,7 +101,11 @@ model User {
   name          String?
   email         String       @unique
   emailVerified DateTime?
+  isVerified    Boolean?
   image         String?
+  googleId      String?
+  locale        String?
+  picture       String?
   accounts      Account[]
   sessions      Session[]
   WalletUser    WalletUser[]

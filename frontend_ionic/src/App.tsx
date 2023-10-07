@@ -33,6 +33,7 @@ import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
 import { FrontendDBProvider } from './lib/FrontendDBContext';
+import { UserProvider } from './lib/UserContext';
 
 setupIonicReact();
 
@@ -40,20 +41,22 @@ function App() {
   return (
     <IonApp>
       <FrontendDBProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/:walletId/add" element={<Add />} />
-            <Route path="/:walletId/edit" element={<EditWallet />} />
-            <Route path="/:walletId/:walletItemId/edit" element={<Edit />} />
-            <Route path="/:walletId/balances" element={<Balances />} />
-            <Route path="/:walletId/expenses" element={<Expenses />} />
-            <Route path="/:walletId/feed" element={<Feed />} />
-            <Route path="/:walletId/:walletItemId/open" element={<Open />} />
-            <Route path="/newWallet" element={<NewWallet />} />
-            <Route path="/mysettings" element={<MySettings />} />
-          </Routes>
-        </BrowserRouter>
+        <UserProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/:walletId/add" element={<Add />} />
+              <Route path="/:walletId/edit" element={<EditWallet />} />
+              <Route path="/:walletId/:walletItemId/edit" element={<Edit />} />
+              <Route path="/:walletId/balances" element={<Balances />} />
+              <Route path="/:walletId/expenses" element={<Expenses />} />
+              <Route path="/:walletId/feed" element={<Feed />} />
+              <Route path="/:walletId/:walletItemId/open" element={<Open />} />
+              <Route path="/newWallet" element={<NewWallet />} />
+              <Route path="/mysettings" element={<MySettings />} />
+            </Routes>
+          </BrowserRouter>
+        </UserProvider>
       </FrontendDBProvider>
     </IonApp>
   );

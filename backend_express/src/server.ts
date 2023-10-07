@@ -5,6 +5,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 
 import walletsRouter from "./routes/wallets";
+import authRouter from "./routes/auth";
 
 const prisma = new PrismaClient();
 
@@ -27,6 +28,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 app.use("/api/wallets", walletsRouter);
+app.use("/auth", authRouter);
 
 /*app.get(/^(?!\/api).+/, (req: Request, res: Response) => {
   res.sendFile("../build/index.html");

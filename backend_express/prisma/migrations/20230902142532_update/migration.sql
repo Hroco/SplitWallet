@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "WalletUser" ADD COLUMN     "bilance" DOUBLE PRECISION NOT NULL DEFAULT 0;

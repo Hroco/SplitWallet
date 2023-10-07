@@ -50,6 +50,9 @@ export const OpenMainContent = styled(MainContent)`
 `;
 
 export const TopPannel = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 20px 20px;
 `;
 
@@ -66,6 +69,14 @@ export const MiddlePannel = styled.div`
     font-size: 1.5em;
     margin-left: 15px;
   }
+`;
+
+export const MiddleSettingsPannel = styled.div`
+  display: flex;
+  justify-content: space-between;
+  background-color: #181818;
+  padding: 20px 20px;
+  flex-direction: column;
 `;
 
 export const BottomContent = styled.div`

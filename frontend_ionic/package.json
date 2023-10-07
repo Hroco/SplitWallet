@@ -2,6 +2,7 @@
   "name": "split-wallet-frontend",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:8000/",
   "dependencies": {
     "@babel/preset-react": "^7.22.15",
     "@capacitor-community/sqlite": "^5.2.3",
