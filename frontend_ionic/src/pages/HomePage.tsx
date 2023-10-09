@@ -23,20 +23,23 @@ import { useDBFunctions } from '../lib/FrontendDBContext';
 export default function HomePage() {
   const navigate = useNavigate();
   const [walletsList, setWalletsList] = useState<any>(null);
-  const { getWalletsWithEmail, listOfTables, initialized } = useDBFunctions();
+  const { getLocalUser, getWalletsWithEmail, listOfTables, initialized } =
+    useDBFunctions();
 
   useEffect(() => {
     if (!initialized) return;
-    listOfTables();
 
     /* (async () => {
       const email = 'samko1311@gmail.com';
       const response = await axios.get(
         `/api/wallets/getWalletsWithEmail/${email}`
-      );
-      setPostResponse(response.data);
-    })();*/
+        );
+        setPostResponse(response.data);
+      })();*/
     (async () => {
+      const user = await getLocalUser();
+      console.log('user', user);
+      await listOfTables();
       const wallets = await getWalletsWithEmail('samko1311@gmail.com');
 
       if (wallets == undefined) return;

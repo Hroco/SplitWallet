@@ -2,13 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BurgerButton } from '../styles/buttons.styled';
 import { ParticipantInputDiv } from '../styles/newWalletItem.styled';
 import { Capacitor } from '@capacitor/core';
-import {
-  TopPannel,
-  MainContent,
-  MiddlePannel,
-  BottomContent,
-  Navbar,
-} from '../styles/mainContainers.styled';
+import { MiddlePannel, BottomContent } from '../styles/mainContainers.styled';
 import { MainContentItem } from '../styles/newWallet.styled';
 import {
   Input,

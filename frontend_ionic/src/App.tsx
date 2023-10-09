@@ -32,7 +32,7 @@ import '@ionic/react/css/text-alignment.css';
 import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
-import { FrontendDBProvider } from './lib/FrontendDBContext';
+import { DBProvider } from './lib/FrontendDBContext';
 import { UserProvider } from './lib/UserContext';
 
 setupIonicReact();
@@ -40,7 +40,7 @@ setupIonicReact();
 function App() {
   return (
     <IonApp>
-      <FrontendDBProvider>
+      <DBProvider>
         <UserProvider>
           <BrowserRouter>
             <Routes>
@@ -57,7 +57,7 @@ function App() {
             </Routes>
           </BrowserRouter>
         </UserProvider>
-      </FrontendDBProvider>
+      </DBProvider>
     </IonApp>
   );
 }

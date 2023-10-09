@@ -149,11 +149,12 @@ CREATE TABLE IF NOT EXISTS "Session" (
 
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "User" (
-  "id" TEXT NOT NULL PRIMARY KEY,
-  "name" TEXT,
-  "email" TEXT NOT NULL,
-  "emailVerified" DATETIME,
-  "image" TEXT
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT,
+    "localId" TEXT NOT NULL,
+    "email" TEXT,
+    "emailVerified" BOLLEAN,
+    "image" TEXT
 );
 
 -- CreateTable

@@ -1,27 +1,21 @@
 import React, { createContext, useContext } from 'react';
-import useBrowserBackend, {
-  BrowserBackendFunctions,
-} from '../hooks/useBrowserBackend';
+import useDBHandler, { BackendFunctions } from '../hooks/useDBHandler';
 
-const FrontendDBContext = createContext<BrowserBackendFunctions>(
-  {} as BrowserBackendFunctions
-);
+const DBContext = createContext<BackendFunctions>({} as BackendFunctions);
 
 export function useDBFunctions() {
-  const backendFunctions = useContext(FrontendDBContext);
+  const backendFunctions = useContext(DBContext);
   return backendFunctions;
 }
 
-type FrontendDBProviderProps = {
+type DBProviderProps = {
   children: JSX.Element | JSX.Element[];
 };
 
-export function FrontendDBProvider({ children }: FrontendDBProviderProps) {
-  const backendFunctions = useBrowserBackend();
+export function DBProvider({ children }: DBProviderProps) {
+  const backendFunctions = useDBHandler();
 
   return (
-    <FrontendDBContext.Provider value={backendFunctions}>
-      {children}
-    </FrontendDBContext.Provider>
+    <DBContext.Provider value={backendFunctions}>{children}</DBContext.Provider>
   );
 }

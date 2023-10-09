@@ -126,61 +126,17 @@ CREATE TABLE IF NOT EXISTS "RecieverData" (
 );
 
 -- CreateTable
-CREATE TABLE IF NOT EXISTS "Account" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "userId" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "provider" TEXT NOT NULL,
-    "providerAccountId" TEXT NOT NULL,
-    "refresh_token" TEXT,
-    "access_token" TEXT,
-    "expires_at" INTEGER,
-    "token_type" TEXT,
-    "scope" TEXT,
-    "id_token" TEXT,
-    "session_state" TEXT,
-    CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
-CREATE TABLE IF NOT EXISTS "Session" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "sessionToken" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "expires" DATETIME NOT NULL,
-    CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
 CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT,
-    "email" TEXT NOT NULL,
-    "emailVerified" DATETIME,
+    "localId" TEXT NOT NULL,
+    "email" TEXT,
+    "emailVerified" BOLLEAN,
     "image" TEXT
 );
 
--- CreateTable
-CREATE TABLE IF NOT EXISTS "VerificationToken" (
-    "identifier" TEXT NOT NULL,
-    "token" TEXT NOT NULL,
-    "expires" DATETIME NOT NULL
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
-
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "VerificationToken_token_key" ON "VerificationToken"("token");
-
--- CreateIndex
-CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
 
         `);
       });
@@ -190,25 +146,92 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
   };
 
   const listOfTables = async () => {
-    try {
-      const listOfTables = await runQuerry(
-        `SELECT name FROM sqlite_master WHERE type='table';`
-      );
-      const listOfWallets = await runQuerry(`SELECT * FROM Wallets;`);
-      const listOfWalletUsers = await runQuerry(`SELECT * FROM WalletUser;`);
-      const listOfWalletItems = await runQuerry(`SELECT * FROM WalletItem;`);
-      const listOfRecieverData = await runQuerry(`SELECT * FROM RecieverData;`);
+    return new Promise<any | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          const listOfTables = await runQuerry(
+            `SELECT name FROM sqlite_master WHERE type='table';`
+          );
+          const listOfWallets = await runQuerry(`SELECT * FROM Wallets;`);
+          const listOfWalletUsers = await runQuerry(
+            `SELECT * FROM WalletUser;`
+          );
+          const listOfWalletItems = await runQuerry(
+            `SELECT * FROM WalletItem;`
+          );
+          const listOfRecieverData = await runQuerry(
+            `SELECT * FROM RecieverData;`
+          );
+          const users = await runQuerry(`SELECT * FROM User;`);
 
-      console.log('DB Debug Output ------------', {
-        listOfTables,
-        listOfWallets,
-        listOfWalletUsers,
-        listOfWalletItems,
-        listOfRecieverData,
+          console.log('DB Debug Output ------------', {
+            listOfTables,
+            listOfWallets,
+            listOfWalletUsers,
+            listOfWalletItems,
+            listOfRecieverData,
+            users,
+          });
+          resolve({
+            listOfTables,
+            listOfWallets,
+            listOfWalletUsers,
+            listOfWalletItems,
+            listOfRecieverData,
+            users,
+          });
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
+        }
       });
-    } catch (error) {
-      console.error('error', error);
-    }
+    });
+  };
+
+  const getLocalUser = async () => {
+    return new Promise<any | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          if (!db) {
+            throw new Error('db is undefined');
+          }
+
+          const usersData = await db.query(`SELECT * FROM User;`);
+
+          console.log('getLocalUser TBD', usersData);
+
+          if (!usersData || !usersData.values) {
+            throw new Error('error in getting local user');
+          }
+
+          if (usersData.values.length === 0) {
+            console.log('inserting new user TBD', usersData);
+            const id = uuidv4();
+            const localId = uuidv4();
+            db.query(`INSERT INTO User (id, localId) VALUES (?, ?)`, [
+              id,
+              localId,
+            ]);
+
+            const user = {
+              id: id,
+              name: null,
+              localId: localId,
+              email: null,
+              emailVerified: null,
+              image: null,
+            };
+
+            resolve(user);
+          }
+
+          resolve(usersData.values[0] as any);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
+        }
+      });
+    });
   };
 
   // SHR Partially Done
@@ -1274,6 +1297,7 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
   return {
     createTable,
     listOfTables,
+    getLocalUser,
     getWalletsWithEmail,
     getWalletById,
     getWalletUserByEmailAndWalletId,

@@ -5,13 +5,7 @@ import {
   ParticipantInputDiv,
   MainContentItem,
 } from '../styles/newWallet.styled';
-import {
-  TopPannel,
-  MainContent,
-  MiddlePannel,
-  BottomContent,
-  Navbar,
-} from '../styles/mainContainers.styled';
+import { MiddlePannel, BottomContent } from '../styles/mainContainers.styled';
 import { Input, Select, Label } from '../styles/Input.styled';
 import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
 import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
