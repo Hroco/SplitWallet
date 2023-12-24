@@ -16,6 +16,7 @@ datasource db {
 
 model Wallets {
   id          String       @id @default(cuid())
+  globalId    String       @unique
   name        String
   description String
   currency    String

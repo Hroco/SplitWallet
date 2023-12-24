@@ -30,9 +30,13 @@ import {
 } from '@ionic/react';
 import { checkmarkOutline } from 'ionicons/icons';
 import { useDBFunctions } from '../lib/FrontendDBContext';
+import { v4 as uuidv4 } from 'uuid';
 
 const UserListSchema = z.array(
-  z.object({ name: z.string(), emailList: z.string().optional() })
+  z.object({
+    name: z.string(),
+    id: z.string().optional() /* emailList: z.string().optional()*/,
+  })
 );
 
 const ParticipantsSchema = z.array(z.string());
@@ -47,19 +51,22 @@ export default function NewWallet() {
   const [participants, setParticipants] = useState<
     z.infer<typeof ParticipantsSchema>
   >([]);
-  const { addWallet } = useDBFunctions();
+  const { addWallet, getLocalUser } = useDBFunctions();
 
   async function handleAddWallet() {
+    const localUser = await getLocalUser();
+
     const userList: z.infer<typeof UserListSchema> = participants.map(
       (name, index) => {
         if (index == 0) {
-          return { name: name, email: 'samko1311@gmail.com' };
+          return { name: name, id: localUser.id };
         }
         return { name: name };
       }
     );
 
     const output = {
+      globalId: uuidv4(),
       name: title,
       description: decription,
       currency: currency,
@@ -67,8 +74,11 @@ export default function NewWallet() {
       userList: userList,
     };
 
-    /* const outputTemp = {
-      name: 'Test 2',
+    const currentTime = new Date().toLocaleTimeString();
+
+    const outputTemp = {
+      globalId: uuidv4(),
+      name: `Test ${currentTime}`,
       description: 'Test1 Des',
       currency: 'eur',
       category: 'couple',
@@ -83,9 +93,9 @@ export default function NewWallet() {
       ],
     };
 
-    console.log('output', outputTemp);*/
+    console.log('outputTemp', outputTemp);
 
-    await addWallet(output);
+    await addWallet(outputTemp);
 
     navigate('/');
   }

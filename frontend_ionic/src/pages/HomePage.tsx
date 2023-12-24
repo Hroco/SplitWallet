@@ -23,8 +23,13 @@ import { useDBFunctions } from '../lib/FrontendDBContext';
 export default function HomePage() {
   const navigate = useNavigate();
   const [walletsList, setWalletsList] = useState<any>(null);
-  const { getLocalUser, getWalletsWithEmail, listOfTables, initialized } =
-    useDBFunctions();
+  const {
+    syncWallets,
+    getLocalUser,
+    getWalletsWithEmail,
+    listOfTables,
+    initialized,
+  } = useDBFunctions();
 
   useEffect(() => {
     if (!initialized) return;
@@ -37,9 +42,13 @@ export default function HomePage() {
         setPostResponse(response.data);
       })();*/
     (async () => {
-      const user = await getLocalUser();
+      // We should sync walelts records in global and local dbs here
+      console.log('syncing wallets');
+      await syncWallets();
+      console.log('synced wallets');
+      /* const user = await getLocalUser();
       console.log('user', user);
-      await listOfTables();
+      await listOfTables();*/
       const wallets = await getWalletsWithEmail('samko1311@gmail.com');
 
       if (wallets == undefined) return;

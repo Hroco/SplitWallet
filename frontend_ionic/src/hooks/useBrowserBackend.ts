@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 
 const WalletSchema = z.object({
+  globalId: z.string(),
   name: z.string(),
   description: z.string(),
   currency: z.string(),
@@ -13,6 +14,7 @@ const WalletSchema = z.object({
   userList: z.array(
     z.object({ name: z.string(), email: z.string().optional() })
   ),
+  isSynced: z.boolean(),
 });
 
 const WalletItemSchema = z.object({
@@ -26,6 +28,37 @@ const WalletItemSchema = z.object({
     z.object({ id: z.string(), cutFromAmount: z.number() })
   ),
   type: z.string(),
+});
+
+const WalletUserSchemaSync = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  currency: z.string(),
+  category: z.string(),
+  total: z.number(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  isSynced: z.number(),
+  bilance: z.number(),
+  walletsId: z.string(),
+  userId: z.string().nullable(),
+  WalletItem: z.array(z.unknown()), // Define more specifically if you know the structure of the items
+  RecieverData: z.array(z.unknown()), // Define more specifically if you know the structure of the items
+  users: z.array(z.unknown()), // Define more specifically if you know the structure of the users
+});
+
+const WalletSchemaSync = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  currency: z.string(),
+  category: z.string(),
+  total: z.number(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  isSynced: z.number(),
+  walletUsers: z.array(WalletUserSchemaSync),
 });
 
 export type BrowserBackendFunctions = ReturnType<typeof useBrowserBackend>;
@@ -67,6 +100,7 @@ const useBrowserBackend = () => {
   };
 
   const createTable = async () => {
+    console.log('Creating tables');
     try {
       // query db
       performSQLAction(async (db: SQLiteDBConnection | undefined) => {
@@ -74,13 +108,15 @@ const useBrowserBackend = () => {
         -- CreateTable
 CREATE TABLE IF NOT EXISTS "Wallets" (
     "id" TEXT NOT NULL PRIMARY KEY,
+    "globalId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "currency" TEXT NOT NULL,
     "category" TEXT NOT NULL,
     "total" REAL NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" DATETIME NOT NULL,
+    "isSynced" BOLLEAN
 );
 
 -- CreateTable
@@ -610,6 +646,7 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
     return new Promise<boolean | undefined>(async (resolve, reject) => {
       await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
         try {
+          console.log('addWallet input', input);
           const validationResult = WalletSchema.safeParse(input);
 
           if (!validationResult.success) {
@@ -621,13 +658,15 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
           const walletId = uuidv4();
 
           transactionQueries.push({
-            statement: `INSERT INTO Wallets (id, name, description, currency, category, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            statement: `INSERT INTO Wallets (id, globalId, name, description, currency, category, createdAt, updatedAt, isSynced) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
             values: [
               walletId,
+              input.globalId,
               input.name,
               input.description,
               input.currency,
               input.category,
+              input.isSynced,
             ],
           });
 
@@ -1294,6 +1333,131 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
     }
   };
 
+  // SHR TBD
+  const getUnsyncedWallets = async () => {
+    console.log('getUnsyncedWallets TBD');
+
+    const walletsWithAllData = [];
+
+    try {
+      const walletsWithoutAllData = (await runQuerry(
+        `SELECT * FROM Wallets WHERE isSynced = '0';`
+      )) as any[] | undefined;
+
+      if (!walletsWithoutAllData) {
+        throw new Error('getUnsyncedWallets error');
+      }
+
+      for (const wallets of walletsWithoutAllData) {
+        // console.log('getting full wallet');
+        const fullWallet = await getWalletById(wallets.id);
+
+        // console.log('fullWallet', fullWallet);
+        walletsWithAllData.push(fullWallet.wallet);
+      }
+
+      return walletsWithAllData;
+    } catch (error) {
+      console.error('error', error);
+      throw new Error('getUnsyncedWallets error');
+    }
+
+    return walletsWithAllData;
+  };
+
+  // SHR TBD
+  const markWalletAsSynced = async (input: any) => {
+    console.log('markWalletAsSynced TBD');
+
+    return new Promise<boolean | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          const transactionQueries = [];
+
+          for (const wallet of input) {
+            console.log('wallett', wallet);
+
+            // Update wallet
+            transactionQueries.push({
+              statement: `UPDATE Wallets SET isSynced = ? WHERE id = ?`,
+              values: [1, wallet.id],
+            });
+          }
+
+          await db?.executeTransaction(transactionQueries, false);
+          resolve(true);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
+        }
+      });
+    });
+  };
+
+  const applyUpdateToLocalDB = async (input: any) => {
+    // console.log('applyUpdateToLocalDB TBD');
+    return new Promise<boolean | undefined>(async (resolve, reject) => {
+      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
+        try {
+          const transactionQueries = [];
+
+          for (const wallet of input) {
+            console.log('wallet', wallet);
+            const results = await db?.query(`SELECT *
+              FROM Wallets
+              WHERE globalId = '${wallet.globalId}';`);
+
+            console.log('results', results);
+
+            if (results && results.values?.length === 0) {
+              console.log('wallet not found creating new one');
+              transactionQueries.push({
+                statement: `INSERT INTO Wallets (id, globalId, name, description, currency, category, createdAt, updatedAt, isSynced) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
+                values: [
+                  wallet.id,
+                  wallet.globalId,
+                  wallet.name,
+                  wallet.description,
+                  wallet.currency,
+                  wallet.category,
+                  1,
+                ],
+              });
+
+              for (const user of wallet.walletUsers) {
+                transactionQueries.push({
+                  statement: `INSERT INTO WalletUser (id, name, bilance, total, createdAt, updatedAt, walletsId) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
+                  values: [
+                    user.id,
+                    user.name,
+                    user.bilance,
+                    user.total,
+                    wallet.id,
+                  ],
+                });
+              }
+            } else if (results && results.values?.length === 1) {
+              console.log('wallet found updating');
+            } else {
+              console.log('error');
+              throw new Error('error');
+            }
+          }
+          console.log('transactionQueries', transactionQueries);
+          const response = await db?.executeTransaction(
+            transactionQueries,
+            false
+          );
+          console.log('response', response);
+          resolve(true);
+        } catch (error) {
+          console.error('error', error);
+          reject(error);
+        }
+      });
+    });
+  };
+
   return {
     createTable,
     listOfTables,
@@ -1312,6 +1476,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
     deleteWalletItemById,
     deleteWalletById,
     initialized,
+    getUnsyncedWallets,
+    markWalletAsSynced,
+    applyUpdateToLocalDB,
   };
 };
 

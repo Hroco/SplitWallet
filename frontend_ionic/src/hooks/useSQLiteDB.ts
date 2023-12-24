@@ -47,8 +47,13 @@ const useSQLiteDB = () => {
     cleanup?: () => Promise<void>
   ) => {
     try {
+      // SHR If line below is not there, syncWallets will not work, dont ask ....
+      const test = await db.current?.isDBOpen();
+      // console.log('isDBOpen', test);
       await db.current?.open();
+      console.log('actionStart-----------------------', action);
       await action(db.current);
+      console.log('actionEnd-----------------------', action);
     } catch (error) {
       console.error('error', (error as Error).message);
       alert((error as Error).message);
@@ -65,18 +70,21 @@ const useSQLiteDB = () => {
    * structure
    */
   const initializeTables = async () => {
+    console.log('initializeTables');
     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
       const queryCreateTable = `
       -- CreateTable
 CREATE TABLE IF NOT EXISTS "Wallets" (
   "id" TEXT NOT NULL PRIMARY KEY,
+  "globalId" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "description" TEXT NOT NULL,
   "currency" TEXT NOT NULL,
   "category" TEXT NOT NULL,
   "total" REAL NOT NULL DEFAULT 0,
   "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" DATETIME NOT NULL
+  "updatedAt" DATETIME NOT NULL,
+  "isSynced" BOLLEAN
 );
 
 -- CreateTable
@@ -122,32 +130,6 @@ CREATE TABLE IF NOT EXISTS "RecieverData" (
 );
 
 -- CreateTable
-CREATE TABLE IF NOT EXISTS "Account" (
-  "id" TEXT NOT NULL PRIMARY KEY,
-  "userId" TEXT NOT NULL,
-  "type" TEXT NOT NULL,
-  "provider" TEXT NOT NULL,
-  "providerAccountId" TEXT NOT NULL,
-  "refresh_token" TEXT,
-  "access_token" TEXT,
-  "expires_at" INTEGER,
-  "token_type" TEXT,
-  "scope" TEXT,
-  "id_token" TEXT,
-  "session_state" TEXT,
-  CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
-CREATE TABLE IF NOT EXISTS "Session" (
-  "id" TEXT NOT NULL PRIMARY KEY,
-  "sessionToken" TEXT NOT NULL,
-  "userId" TEXT NOT NULL,
-  "expires" DATETIME NOT NULL,
-  CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
 CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT,
@@ -157,27 +139,8 @@ CREATE TABLE IF NOT EXISTS "User" (
     "image" TEXT
 );
 
--- CreateTable
-CREATE TABLE IF NOT EXISTS "VerificationToken" (
-  "identifier" TEXT NOT NULL,
-  "token" TEXT NOT NULL,
-  "expires" DATETIME NOT NULL
-);
-
 -- CreateIndex
-CREATE UNIQUE INDEX IF NOT EXISTS "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");
-
--- CreateIndex
-CREATE UNIQUE INDEX IF NOT EXISTS "Session_sessionToken_key" ON "Session"("sessionToken");
-
--- CreateIndex
-CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX IF NOT EXISTS "VerificationToken_token_key" ON "VerificationToken"("token");
-
--- CreateIndex
-CREATE UNIQUE INDEX IF NOT EXISTS "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
       `;
       const respCT = await db?.execute(queryCreateTable);
