@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import useBrowserBackend from './useBrowserBackend';
-import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import useBrowserBackend from "./useBrowserBackend";
+import { z } from "zod";
+import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 
 const WalletSchema = z.object({
   globalId: z.string(),
@@ -32,7 +32,6 @@ export type BackendFunctions = ReturnType<typeof useDBHandler>;
 
 export default function useDBHandler() {
   const {
-    createTable,
     listOfTables,
     getLocalUser,
     getWalletsWithEmail,
@@ -53,24 +52,58 @@ export default function useDBHandler() {
     markWalletAsSynced,
     applyUpdateToLocalDB,
   } = useBrowserBackend();
+  const [walletsList, setWalletsList] = useState<any>(null);
+  const [newWallet, setNewWallet] = useState<any>(null);
+  const [deletedWalletId, setDeletedWalletId] = useState<any>(null);
+  const [editedWalletId, setEditedWalletId] = useState<any>(null);
+
+  useEffect(() => {
+    if (!initialized) return;
+
+    /*(async () => {
+      const email = 'samko1311@gmail.com';
+      const response = await axios.get(
+        `/api/wallets/getWalletsWithEmail/${email}`
+        );
+        setPostResponse(response.data);
+      })();*/
+    (async () => {
+      // We should sync walelts records in global and local dbs here
+      // console.log("syncing wallets");
+      // await syncWallets();
+      // console.log("synced wallets");
+      const user = await getLocalUser();
+      // console.log("user", user);
+      await listOfTables();
+      const wallets = await getWalletsWithEmail("samko1311@gmail.com");
+      // console.log("wallets", wallets);
+
+      if (wallets === undefined) return;
+
+      wallets.sort((a: any, b: any) => {
+        return a.date > b.date ? 1 : -1;
+      });
+      setWalletsList(wallets);
+    })();
+  }, [initialized, newWallet, deletedWalletId, editedWalletId]);
 
   const sendAndReturnStatus = async (callback: () => any) => {
-    console.log('sendAndReturnStatus', callback);
+    // console.log("sendAndReturnStatus", callback);
     try {
       const res = await callback();
 
       // console.log('res', res);
       if (res.status === 201 || res.status === 200) {
         // Wallet created successfully on server
-        console.log('Wallet created successfully on server');
+        console.log("Wallet created successfully on server");
         return true;
       }
     } catch (error: any) {
-      if (error.response.data.state === 'online') {
-        console.error('error from online server', error);
+      if (error.response.data.state === "online") {
+        console.error("error from online server", error);
         throw error;
       }
-      console.log('Server is offline');
+      console.log("Server is offline");
 
       return false;
     }
@@ -78,22 +111,22 @@ export default function useDBHandler() {
 
   const syncWallets = async () => {
     // sync wallets here
-    console.log('syncWallets TBD');
+    console.log("syncWallets TBD");
 
     // Upload local changes to the server
     const unsyncedWallets = await getUnsyncedWallets();
 
-    console.log('unsyncedWallets', unsyncedWallets);
+    console.log("unsyncedWallets", unsyncedWallets);
 
     if (unsyncedWallets.length === 0) {
-      console.log('No unsynced wallets');
+      console.log("No unsynced wallets");
     } else {
       const isSynced = await sendAndReturnStatus(() =>
-        axios.put('/api/wallets/update/', unsyncedWallets)
+        axios.put("/api/wallets/update/", unsyncedWallets)
       );
 
       if (isSynced) {
-        console.log('markWalletAsSynced');
+        console.log("markWalletAsSynced");
         await markWalletAsSynced(unsyncedWallets);
       }
       // console.log('isSynced', isSynced);
@@ -104,7 +137,7 @@ export default function useDBHandler() {
     try {
       // const lastSyncTime = await getLastSyncTime(); // Implement this function to get the last sync timestamp
       // const serverUpdates = await axios.get(`/api/wallets/updates?since=${lastSyncTime}`);
-      const email = 'samko1311@gmail.com';
+      const email = "samko1311@gmail.com";
       const serverUpdates = await axios.get(
         `/api/wallets/updatesForEmail/${email}`
       );
@@ -115,7 +148,7 @@ export default function useDBHandler() {
       }
       await setLastSyncTime(new Date()); // Update the last sync timestamp*/
     } catch (error) {
-      console.error('Error fetching updates from server:', error);
+      console.error("Error fetching updates from server:", error);
     }
 
     // console.log('Sync process completed');
@@ -126,20 +159,22 @@ export default function useDBHandler() {
 
     // If user is loged, it should have email in his local account, we should add that email into input then
     // If user is not logged in then jsut create Local wallet probably with unsynced flag ?
-    console.log('addWallet', input);
+    console.log("addWallet", input);
 
     const isOnline = await sendAndReturnStatus(() =>
-      axios.post('/api/wallets/addWallet/', input)
+      axios.post("/api/wallets/addWallet/", input)
     );
 
-    // console.log('isOnline', isOnline);
-
+    console.log("isOnline", isOnline);
+    let newWallet;
     if (isOnline) {
-      await addWalletLocal({ ...input, isSynced: true });
+      newWallet = await addWalletLocal({ ...input, isSynced: true });
     } else {
       // Add Wallet to local db with unsynced flag
-      await addWalletLocal({ ...input, isSynced: false });
+      newWallet = await addWalletLocal({ ...input, isSynced: false });
     }
+    console.log("setting new wallet", newWallet);
+    setNewWallet(newWallet);
   };
 
   const addWalletItem = async (input: z.infer<typeof WalletItemSchema>) => {
@@ -157,7 +192,8 @@ export default function useDBHandler() {
     id: string,
     input: any // z.infer<typeof WalletSchema>
   ) => {
-    await editWalletLocal(id, input);
+    const editedId = await editWalletLocal(id, input);
+    setEditedWalletId(editedId);
   };
 
   const deleteWalletItemById = async (id: string) => {
@@ -165,11 +201,11 @@ export default function useDBHandler() {
   };
 
   const deleteWalletById = async (id: string) => {
-    await deleteWalletByIdLocal(id);
+    const deletedId = await deleteWalletByIdLocal(id);
+    setDeletedWalletId(deletedId);
   };
 
   return {
-    createTable,
     listOfTables,
     getLocalUser,
     getWalletsWithEmail,
@@ -187,5 +223,7 @@ export default function useDBHandler() {
     deleteWalletById,
     initialized,
     syncWallets,
+    walletsList,
+    newWallet,
   };
 }

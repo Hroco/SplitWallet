@@ -1,14 +1,15 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { BurgerButton } from '../styles/buttons.styled';
+/* eslint-disable import/no-webpack-loader-syntax */
+import React, { useContext, useEffect, useState } from "react";
+import { BurgerButton } from "../styles/buttons.styled";
 import {
   TopPannel,
   MiddleSettingsPannel,
   BottomContent,
-} from '../styles/mainContainers.styled';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import { useNavigate } from 'react-router-dom';
+} from "../styles/mainContainers.styled";
+import BackIcon from "-!svg-react-loader!../assets/icons/back.svg";
+import { useHistory } from "react-router-dom";
 // import axios from 'axios';
-import { Button } from '../styles/DropDownMenu.styled';
+import { Button } from "../styles/DropDownMenu.styled";
 import {
   IonAvatar,
   IonBackButton,
@@ -21,32 +22,32 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-} from '@ionic/react';
-import axios from 'axios';
-import { useQueryParams } from '../hooks/useQueryParams';
-import { useUser } from '../lib/UserContext';
+} from "@ionic/react";
+import axios from "axios";
+import { useQueryParams } from "../hooks/useQueryParams";
+import { useUser } from "../lib/UserContext";
 
 export default function MySettings() {
   const { user, setToken } = useUser();
-  const navigate = useNavigate();
-  const [fullName, setFullName] = useState<string>(user ? user.name : '');
-  const [nick, setNick] = useState<string>('');
-  const [googleOauthUrl, setGoogleOauthUrl] = useState('');
+  const history = useHistory();
+  const [fullName, setFullName] = useState<string>(user ? user.name : "");
+  const [nick, setNick] = useState<string>("");
+  const [googleOauthUrl, setGoogleOauthUrl] = useState("");
   const { token: oauthToken } = useQueryParams();
 
   useEffect(() => {
     if (oauthToken) {
       setToken(oauthToken);
-      navigate('/');
+      history.push("/");
     }
-  }, [oauthToken, setToken, navigate]);
+  }, [oauthToken, setToken, history]);
 
   useEffect(() => {
     const loadOauthUrl = async () => {
       try {
-        const response = await axios.get('/auth/google/url');
+        const response = await axios.get("/auth/google/url");
         const { url } = response.data;
-        console.log('URL', url);
+        console.log("URL", url);
         setGoogleOauthUrl(url);
       } catch (e) {
         console.log(e);
@@ -57,11 +58,11 @@ export default function MySettings() {
   }, []);
 
   const logOut = () => {
-    localStorage.removeItem('token');
-    navigate('/');
+    localStorage.removeItem("token");
+    history.push("/");
   };
 
-  console.log('user', user);
+  console.log("user", user);
 
   return (
     <IonPage>
@@ -113,7 +114,7 @@ export default function MySettings() {
           <Button
             disabled={!googleOauthUrl}
             onClick={() => {
-              console.log('redirecting to google', googleOauthUrl);
+              console.log("redirecting to google", googleOauthUrl);
               window.location.href = googleOauthUrl;
             }}
           >

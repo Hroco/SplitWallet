@@ -1,29 +1,30 @@
-import React, { useEffect, useState } from 'react';
+/* eslint-disable import/no-webpack-loader-syntax */
+import React, { useEffect, useState } from "react";
 import {
   BurgerButton,
   NavigationNextItemButton,
   NavigationPrevItemButton,
-} from '../styles/buttons.styled';
+} from "../styles/buttons.styled";
 import {
   MiddlePannel,
   Navbar,
   OpenFooter,
   OpenMainContent,
-} from '../styles/mainContainers.styled';
-import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
-import EditIcon from '-!svg-react-loader!../assets/icons/edit.svg';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
+} from "../styles/mainContainers.styled";
+import TrashIcon from "-!svg-react-loader!../assets/icons/trash.svg";
+import EditIcon from "-!svg-react-loader!../assets/icons/edit.svg";
+import BackIcon from "-!svg-react-loader!../assets/icons/back.svg";
+import { useLocation, useParams, useHistory } from "react-router-dom";
 // import axios from 'axios';
-import MainItem from '../components/MainItem';
-import LoadingScreen from '../components/LoadingScreen';
+import MainItem from "../components/MainItem";
+import LoadingScreen from "../components/LoadingScreen";
 import {
   ImageIconMenu,
   SecondaryItemMenu,
   ThirdItemMenu,
-} from '../styles/Open.styled';
-import CameraIcon from '-!svg-react-loader!../assets/icons/camera.svg';
-import { ArrowRight } from '../styles/utills.styled';
+} from "../styles/Open.styled";
+import CameraIcon from "-!svg-react-loader!../assets/icons/camera.svg";
+import { ArrowRight } from "../styles/utills.styled";
 import {
   IonBackButton,
   IonButton,
@@ -39,12 +40,12 @@ import {
   IonTitle,
   IonToolbar,
   useIonAlert,
-} from '@ionic/react';
-import { useDBFunctions } from '../lib/FrontendDBContext';
+} from "@ionic/react";
+import { useDBFunctions } from "../lib/FrontendDBContext";
 
 function formatDate(date: Date) {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear(); // Get year
 
   return `${day}/${month}/${year}`;
@@ -59,9 +60,9 @@ export default function Open() {
   const { walletId, walletItemId } = useParams<RouteParams>();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const sortType = searchParams.get('sort') || 'DateDesc';
+  const sortType = searchParams.get("sort") || "DateDesc";
   // console.log('sortType', sortType);
-  const navigate = useNavigate();
+  const history = useHistory();
   const [walletItem, setWalletItem] = useState<any>(null);
   const [presentAlert] = useIonAlert();
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
@@ -78,19 +79,19 @@ export default function Open() {
   useEffect(() => {
     if (!initialized) return;
     (async () => {
-      const walletItem = await getWalletItemByWalletItemId(walletItemId || '');
+      const walletItem = await getWalletItemByWalletItemId(walletItemId || "");
       const walletUser = await getWalletUserByEmailAndWalletId(
-        'samko1311@gmail.com',
-        walletId || ''
+        "samko1311@gmail.com",
+        walletId || ""
       );
 
       const { walletItemPrev, walletItemNext } =
         await getPrevAndNextWalletItemByWalletItemIdAndSortType(
-          walletItemId || '',
+          walletItemId || "",
           sortType
         );
 
-      console.log('open useEffect', {
+      console.log("open useEffect", {
         walletItem,
         walletUser,
         walletItemPrev,
@@ -120,8 +121,8 @@ export default function Open() {
 
   async function deleteWalletItem() {
     // axios.delete(`/api/wallets/deleteWalletItemById/${walletItemId}`);
-    await deleteWalletItemById(walletItemId || '');
-    navigate(`/${walletId}/expenses`);
+    await deleteWalletItemById(walletItemId || "");
+    history.push(`/${walletId}/expenses`);
   }
 
   const dateInput = new Date(walletItem.date);
@@ -145,7 +146,7 @@ export default function Open() {
                     button={true}
                     detail={false}
                     onClick={() =>
-                      navigate(`/${walletId}/${walletItemId}/edit`)
+                      history.push(`/${walletId}/${walletItemId}/edit`)
                     }
                   >
                     <EditIcon />
@@ -156,18 +157,18 @@ export default function Open() {
                     detail={false}
                     onClick={() =>
                       presentAlert({
-                        header: 'Confirm delete?',
+                        header: "Confirm delete?",
                         buttons: [
                           {
-                            text: 'CANCEL',
-                            role: 'cancel',
+                            text: "CANCEL",
+                            role: "cancel",
                             handler: () => {
-                              console.log('Alert canceled');
+                              console.log("Alert canceled");
                             },
                           },
                           {
-                            text: 'DELETE',
-                            role: 'delete',
+                            text: "DELETE",
+                            role: "delete",
                             handler: () => {
                               deleteWalletItem();
                             },
@@ -201,8 +202,8 @@ export default function Open() {
           </div>
         </SecondaryItemMenu>
         <MiddlePannel>
-          For {walletItem.recievers.length} participants,{' '}
-          {isCurrentUserOneOfRecievers ? 'including me' : 'but not me'}
+          For {walletItem.recievers.length} participants,{" "}
+          {isCurrentUserOneOfRecievers ? "including me" : "but not me"}
         </MiddlePannel>
 
         {walletItem.recievers &&
@@ -220,7 +221,7 @@ export default function Open() {
             <IonButtons slot="start">
               <IonButton
                 onClick={() =>
-                  navigate(
+                  history.push(
                     `/${walletId}/${prevWalletItem.id}/open?sort=${sortType}`
                   )
                 }
@@ -238,7 +239,7 @@ export default function Open() {
             <IonButtons slot="end">
               <IonButton
                 onClick={() =>
-                  navigate(
+                  history.push(
                     `/${walletId}/${nextWalletItem.id}/open?sort=${sortType}`
                   )
                 }

@@ -1,4 +1,4 @@
-package com.example.app;
+package com.cosentino.app.ionic.react;
 
 import com.getcapacitor.BridgeActivity;
 

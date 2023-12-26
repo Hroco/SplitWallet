@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { BurgerButton } from '../styles/buttons.styled';
-import { ParticipantInputDiv } from '../styles/newWalletItem.styled';
-import { Capacitor } from '@capacitor/core';
-import { MiddlePannel, BottomContent } from '../styles/mainContainers.styled';
-import { MainContentItem } from '../styles/newWallet.styled';
+/* eslint-disable import/no-webpack-loader-syntax */
+import React, { useEffect, useState } from "react";
+import { BurgerButton } from "../styles/buttons.styled";
+import { ParticipantInputDiv } from "../styles/newWalletItem.styled";
+import { Capacitor } from "@capacitor/core";
+import { MiddlePannel, BottomContent } from "../styles/mainContainers.styled";
+import { MainContentItem } from "../styles/newWallet.styled";
 import {
   Input,
   Select,
   Label,
   IonCheckboxOrange,
-} from '../styles/Input.styled';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
-import { z } from 'zod';
-import { useNavigate, useParams } from 'react-router-dom';
+} from "../styles/Input.styled";
+import BackIcon from "-!svg-react-loader!../assets/icons/back.svg";
+import CheckedIcon from "-!svg-react-loader!../assets/icons/checked.svg";
+import { z } from "zod";
+import { useHistory, useParams } from "react-router-dom";
 // import axios from 'axios';
-import LoadingScreen from '../components/LoadingScreen';
+import LoadingScreen from "../components/LoadingScreen";
 import {
   IonBackButton,
   IonButton,
@@ -33,8 +34,8 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-} from '@ionic/react';
-import { useDBFunctions } from '../lib/FrontendDBContext';
+} from "@ionic/react";
+import { useDBFunctions } from "../lib/FrontendDBContext";
 
 const ParticipantsSchema = z.array(
   z.object({
@@ -83,12 +84,12 @@ interface RouteParams {
 }
 
 export default function Add() {
-  const [title, setTitle] = useState<string>('');
+  const [title, setTitle] = useState<string>("");
   const [amount, setAmount] = useState<number>(0);
   const [date, setDate] = useState<Date>(new Date());
-  const [payerId, setPayerId] = useState<string>('');
-  const [type, setType] = useState<string>('expense');
-  const [mainCheckBoxMode, setMainCheckBoxMode] = useState<string>('checked');
+  const [payerId, setPayerId] = useState<string>("");
+  const [type, setType] = useState<string>("expense");
+  const [mainCheckBoxMode, setMainCheckBoxMode] = useState<string>("checked");
   const [mainCheckBox, setMainCheckBox] = useState<boolean>(true);
   const [participants, setParticipants] = useState<
     z.infer<typeof ParticipantsSchema>
@@ -96,12 +97,13 @@ export default function Add() {
   // const [postResponse, setPostResponse] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
 
-  const { walletId } = useParams();
-  const navigate = useNavigate();
+  const { walletId } = useParams<{ walletId: string }>();
+  // const history = useHistory();
+  const history = useHistory();
   const { getWalletById, addWalletItem, initialized } = useDBFunctions();
 
-  if (walletId == undefined) throw new Error('WalletId is undefined.');
-  if (typeof walletId != 'string') throw new Error('WalletId is not string.');
+  if (walletId == undefined) throw new Error("WalletId is undefined.");
+  if (typeof walletId != "string") throw new Error("WalletId is not string.");
 
   /* useEffect(() => {
     (async () => {
@@ -161,9 +163,9 @@ export default function Add() {
   }, [amount, participants]);
 
   function handleMainCheckBoxClick() {
-    console.log('handleMainCheckBoxClick');
-    if (mainCheckBoxMode == 'checked') {
-      setMainCheckBoxMode('unchecked');
+    console.log("handleMainCheckBoxClick");
+    if (mainCheckBoxMode == "checked") {
+      setMainCheckBoxMode("unchecked");
       setParticipants(
         participants.map((participant) => {
           return {
@@ -173,10 +175,10 @@ export default function Add() {
         })
       );
     } else if (
-      mainCheckBoxMode == 'unchecked' ||
-      mainCheckBoxMode == 'crossed'
+      mainCheckBoxMode == "unchecked" ||
+      mainCheckBoxMode == "crossed"
     ) {
-      setMainCheckBoxMode('checked');
+      setMainCheckBoxMode("checked");
       setParticipants(
         participants.map((participant) => {
           return {
@@ -195,9 +197,9 @@ export default function Add() {
     ).length;
 
     if (numberOfCheckedUsers == participants.length)
-      setMainCheckBoxMode('checked');
-    else if (numberOfCheckedUsers == 0) setMainCheckBoxMode('unchecked');
-    else setMainCheckBoxMode('crossed');
+      setMainCheckBoxMode("checked");
+    else if (numberOfCheckedUsers == 0) setMainCheckBoxMode("unchecked");
+    else setMainCheckBoxMode("crossed");
   }, [participants]);
 
   useEffect(() => {
@@ -208,7 +210,7 @@ export default function Add() {
       const newParticipants = [...participants];
       for (let i = 0; i < walletUsers.length; i++) {
         const walletUser = walletUsers[i];
-        if (walletUser == undefined) throw new Error('User is undefined.');
+        if (walletUser == undefined) throw new Error("User is undefined.");
 
         const newItem = {
           id: walletUser.id,
@@ -228,7 +230,7 @@ export default function Add() {
 
     // if (payerId == '') setPayerId(currentWalletUser.id);
 
-    if (payerId == '') setPayerId(walletUsers[0].id);
+    if (payerId == "") setPayerId(walletUsers[0].id);
   }, [wallet]);
 
   // if (wallet == undefined) return <LoadingScreen />;
@@ -239,15 +241,15 @@ export default function Add() {
     ).length;
 
     if (numberOfCheckedUsers == 0)
-      throw new Error('The amount should concert at least one participant.');
-    if (walletId == undefined) throw new Error('WalletId is undefined.');
-    if (typeof walletId != 'string') throw new Error('WalletId is not string.');
+      throw new Error("The amount should concert at least one participant.");
+    if (walletId == undefined) throw new Error("WalletId is undefined.");
+    if (typeof walletId != "string") throw new Error("WalletId is not string.");
 
     const participantData: z.infer<typeof OutputParticipantsSchema> = [];
 
     for (let i = 0; i < participants.length; i++) {
       const participant = participants[i];
-      if (!participant) throw new Error('Participant is undefined.');
+      if (!participant) throw new Error("Participant is undefined.");
 
       if (participant.checked) {
         participantData.push({
@@ -263,7 +265,7 @@ export default function Add() {
       amount: amount,
       date: date,
       payer: payerId,
-      tags: 'Beer',
+      tags: "Beer",
       recieversData: participantData,
       type: type,
     };
@@ -289,16 +291,16 @@ export default function Add() {
     };*/
 
     // axios.post('/api/wallets/addWalletItem/', newWalletItem);
-    console.log('newWalletItem', newWalletItem);
+    console.log("newWalletItem", newWalletItem);
     await addWalletItem(newWalletItem);
 
-    navigate(`/${walletId}/expenses`);
+    history.push(`/${walletId}/expenses`);
   }
 
   function getCutFromAmount(i: number): string {
-    if (participants == undefined) return '';
+    if (participants == undefined) return "";
     const output = participants[i];
-    if (output == undefined) return '';
+    if (output == undefined) return "";
     return output.cutFromAmount.toString();
   }
 
@@ -338,7 +340,7 @@ export default function Add() {
   const participantElements = [];
   for (let i = 0; i < walletUsers.length; i++) {
     const user = walletUsers[i];
-    if (user == undefined) throw new Error('User is undefined.');
+    if (user == undefined) throw new Error("User is undefined.");
 
     const state = getCheckedStatus(i);
 
@@ -365,15 +367,15 @@ export default function Add() {
   }
 
   function setHeading() {
-    if (type == 'expense') return 'New expense';
-    if (type == 'income') return 'New income';
-    if (type == 'moneyTransfer') return 'New money transfer';
+    if (type == "expense") return "New expense";
+    if (type == "income") return "New income";
+    if (type == "moneyTransfer") return "New money transfer";
   }
 
   function setLabel() {
-    if (type == 'expense') return 'Paid by';
-    if (type == 'income') return 'Recieved by';
-    if (type == 'moneyTransfer') return 'Paid by';
+    if (type == "expense") return "Paid by";
+    if (type == "income") return "Recieved by";
+    if (type == "moneyTransfer") return "Paid by";
   }
 
   return (
@@ -436,7 +438,7 @@ export default function Add() {
               label="Date"
               labelPlacement="floating"
               type="date"
-              value={date.toISOString().split('T')[0]}
+              value={date.toISOString().split("T")[0]}
               onIonChange={(e) => setDate(new Date(e.detail.value as string))}
             ></IonInput>
           </IonItem>
@@ -458,8 +460,8 @@ export default function Add() {
         <MiddlePannel>
           <IonCheckboxOrange
             slot="start"
-            indeterminate={mainCheckBoxMode == 'crossed'}
-            checked={mainCheckBoxMode == 'checked'}
+            indeterminate={mainCheckBoxMode == "crossed"}
+            checked={mainCheckBoxMode == "checked"}
             onIonChange={handleMainCheckBoxClick}
           ></IonCheckboxOrange>
           <p>For whom</p>

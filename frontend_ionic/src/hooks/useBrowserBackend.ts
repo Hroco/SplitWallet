@@ -1,9 +1,19 @@
 /* eslint-disable max-len */
-import { useEffect, useRef, useState } from 'react';
-import useSQLiteDB from '../hooks/useSQLiteDB';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
+import { useEffect, useRef, useState } from "react";
+import useSQLiteDB from "./useSQLiteDB";
+import { SQLiteDBConnection } from "@capacitor-community/sqlite";
+import { z } from "zod";
+import { v4 as uuidv4 } from "uuid";
+import SplitWalletDataSource from "../data-sources/SplitWalletDataSource";
+import { Wallets } from "../entity/wallets";
+import { WalletItem } from "../entity/walletItem";
+import { WalletUser } from "../entity/walletUser";
+import { RecieverData } from "../entity/recieverData";
+import { User } from "../entity/user";
+import { Capacitor } from "@capacitor/core";
+import sqliteConnection from "../database";
+import { Repository } from "typeorm";
+import { save } from "ionicons/icons";
 
 const WalletSchema = z.object({
   globalId: z.string(),
@@ -64,316 +74,148 @@ const WalletSchemaSync = z.object({
 export type BrowserBackendFunctions = ReturnType<typeof useBrowserBackend>;
 
 const useBrowserBackend = () => {
-  const { performSQLAction, initialized } = useSQLiteDB();
+  const database = useRef<string | Uint8Array | undefined>(
+    SplitWalletDataSource.options.database
+  );
+  const walletsRepository = useRef<Repository<Wallets>>(null!);
+  const walletItemsRepository = useRef<Repository<WalletItem>>(null!);
+  const walletUserRepository = useRef<Repository<WalletUser>>(null!);
+  const recieverDataRepository = useRef<Repository<RecieverData>>(null!);
+  const userRepository = useRef<Repository<User>>(null!);
+  const [initialized, setInitialized] = useState(false);
 
-  /* useEffect(() => {
-    createTable();
-    // setData();
-    loadData();
-    listOfTables();
-  }, [initialized]);*/
+  useEffect(() => {
+    initialize();
+  }, []);
 
-  const runQuerry = async (query: string, values?: any[]) => {
-    return new Promise<any[] | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const respSelect = await db?.query(query, values);
-          resolve(respSelect?.values);
-        } catch (error) {
-          reject(error);
-        }
-      });
+  async function initialize() {
+    walletsRepository.current = SplitWalletDataSource.getRepository(Wallets);
+    walletItemsRepository.current =
+      SplitWalletDataSource.getRepository(WalletItem);
+    walletUserRepository.current =
+      SplitWalletDataSource.getRepository(WalletUser);
+    recieverDataRepository.current =
+      SplitWalletDataSource.getRepository(RecieverData);
+    userRepository.current = SplitWalletDataSource.getRepository(User);
+
+    await saveToStore();
+
+    (window as any).listOfTables = listOfTables;
+
+    setInitialized(true);
+    /*
+    /*let wallets = await walletsRepository.current.find({
+      relations: ["walletUsers"],
     });
-    /* let output;
+    console.log("wallets-------------------------", wallets);
 
-    await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-      const respSelect = await db?.query(query, values);
-      output = respSelect?.values;
-    });
-    return output;*/
-  };
+    let walletUsers = await walletUserRepository.current.find();
+    console.log("walletUsers-------------------------", walletUsers);
+    */
+  }
 
-  const runExecute = async (query: string, transaction?: boolean) => {
-    await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-      await db?.execute(query, transaction);
-    });
-  };
-
-  const createTable = async () => {
-    console.log('Creating tables');
-    try {
-      // query db
-      performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        const respSelect = await db?.query(`
-        -- CreateTable
-CREATE TABLE IF NOT EXISTS "Wallets" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "globalId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "currency" TEXT NOT NULL,
-    "category" TEXT NOT NULL,
-    "total" REAL NOT NULL DEFAULT 0,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    "isSynced" BOLLEAN
-);
-
--- CreateTable
-CREATE TABLE IF NOT EXISTS "WalletUser" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "bilance" REAL NOT NULL DEFAULT 0,
-    "total" REAL NOT NULL DEFAULT 0,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    "walletsId" TEXT NOT NULL,
-    "userId" TEXT,
-    CONSTRAINT "WalletUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "WalletUser_walletsId_fkey" FOREIGN KEY ("walletsId") REFERENCES "Wallets" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
-CREATE TABLE IF NOT EXISTS "WalletItem" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "tags" TEXT NOT NULL,
-    "amount" REAL NOT NULL,
-    "type" TEXT NOT NULL,
-    "date" DATETIME NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    "walletsId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    CONSTRAINT "WalletItem_userId_fkey" FOREIGN KEY ("userId") REFERENCES "WalletUser" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "WalletItem_walletsId_fkey" FOREIGN KEY ("walletsId") REFERENCES "Wallets" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
-CREATE TABLE IF NOT EXISTS "RecieverData" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "amount" REAL NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    "walletItemId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    CONSTRAINT "RecieverData_userId_fkey" FOREIGN KEY ("userId") REFERENCES "WalletUser" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "RecieverData_walletItemId_fkey" FOREIGN KEY ("walletItemId") REFERENCES "WalletItem" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
-CREATE TABLE IF NOT EXISTS "User" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT,
-    "localId" TEXT NOT NULL,
-    "email" TEXT,
-    "emailVerified" BOLLEAN,
-    "image" TEXT
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
-
-        `);
-      });
-    } catch (error) {
-      console.error('error', error);
+  // This will save data to disc, they are saved in memory by default
+  const saveToStore = async () => {
+    if (
+      Capacitor.getPlatform() === "web" &&
+      typeof database.current === "string"
+    ) {
+      await sqliteConnection.saveToStore(database.current);
     }
   };
 
   const listOfTables = async () => {
-    return new Promise<any | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const listOfTables = await runQuerry(
-            `SELECT name FROM sqlite_master WHERE type='table';`
-          );
-          const listOfWallets = await runQuerry(`SELECT * FROM Wallets;`);
-          const listOfWalletUsers = await runQuerry(
-            `SELECT * FROM WalletUser;`
-          );
-          const listOfWalletItems = await runQuerry(
-            `SELECT * FROM WalletItem;`
-          );
-          const listOfRecieverData = await runQuerry(
-            `SELECT * FROM RecieverData;`
-          );
-          const users = await runQuerry(`SELECT * FROM User;`);
+    const listOfWallets = await walletsRepository.current.find({
+      relations: {
+        walletUsers: {
+          recieverData: true,
+          users: true,
+          Wallets: true,
+          walletItems: true,
+        },
+        walletItems: {
+          payer: true,
+          recievers: true,
+          Wallets: true,
+        },
+      },
+    });
+    const listOfWalletUsers = await walletUserRepository.current.find({
+      relations: {
+        recieverData: true,
+        users: true,
+        Wallets: true,
+        walletItems: true,
+      },
+    });
+    const listOfWalletItems = await walletItemsRepository.current.find({
+      relations: {
+        payer: true,
+        recievers: true,
+        Wallets: true,
+      },
+    });
+    const listOfRecieverData = await recieverDataRepository.current.find({
+      relations: {
+        WalletItem: true,
+        reciever: true,
+      },
+    });
+    const users = await userRepository.current.find();
 
-          console.log('DB Debug Output ------------', {
-            listOfTables,
-            listOfWallets,
-            listOfWalletUsers,
-            listOfWalletItems,
-            listOfRecieverData,
-            users,
-          });
-          resolve({
-            listOfTables,
-            listOfWallets,
-            listOfWalletUsers,
-            listOfWalletItems,
-            listOfRecieverData,
-            users,
-          });
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
+    console.log("DB Debug Output ------------", {
+      listOfWallets,
+      listOfWalletUsers,
+      listOfWalletItems,
+      listOfRecieverData,
+      users,
     });
   };
 
   const getLocalUser = async () => {
-    return new Promise<any | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          if (!db) {
-            throw new Error('db is undefined');
-          }
+    let users = await userRepository.current.find();
+    // console.log("getLocalUser", users);
+    if (users.length === 0) {
+      // console.log("inserting new user TBD", users);
 
-          const usersData = await db.query(`SELECT * FROM User;`);
+      const localUser = new User();
+      localUser.localId = uuidv4();
+      await userRepository.current.save(localUser);
 
-          console.log('getLocalUser TBD', usersData);
+      await saveToStore();
+    }
 
-          if (!usersData || !usersData.values) {
-            throw new Error('error in getting local user');
-          }
+    let usersNew = await userRepository.current.find();
 
-          if (usersData.values.length === 0) {
-            console.log('inserting new user TBD', usersData);
-            const id = uuidv4();
-            const localId = uuidv4();
-            db.query(`INSERT INTO User (id, localId) VALUES (?, ?)`, [
-              id,
-              localId,
-            ]);
-
-            const user = {
-              id: id,
-              name: null,
-              localId: localId,
-              email: null,
-              emailVerified: null,
-              image: null,
-            };
-
-            resolve(user);
-          }
-
-          resolve(usersData.values[0] as any);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
-    });
+    return usersNew[0];
   };
 
   // SHR Partially Done
   const getWalletsWithEmail = async (email: string) => {
-    return new Promise<any | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          console.log('getWalletsWithEmail TBD', db);
-          const wallets = await db?.query(`SELECT * FROM Wallets;`);
-
-          // console.log('getWalletsWithEmail TBD', wallets);
-
-          if (!wallets || !wallets.values) {
-            return;
-          }
-
-          resolve(wallets.values as any[]);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
-    });
+    const wallets = await walletsRepository.current.find();
+    return wallets;
   };
 
   // SHR Done
   const getWalletById = async (id: string) => {
-    return new Promise<any | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const results = await db?.query(`SELECT *
-          FROM Wallets
-          WHERE id = '${id}';`);
-
-          if (!results || !results.values) {
-            throw new Error('wallet not found');
-          }
-
-          const walletUsers = await db?.query(`SELECT Wallets.*, WalletUser.*
-            FROM Wallets
-            LEFT JOIN WalletUser ON Wallets.id = WalletUser.walletsId
-            WHERE Wallets.id = '${id}';`);
-
-          if (!walletUsers || !walletUsers.values) {
-            throw new Error('walletUsers not found');
-          }
-
-          const walletUsersWithAllData = [];
-
-          for (const walletUser of walletUsers.values) {
-            const walletItems = await db?.query(
-              `SELECT WalletItem.*
-              FROM WalletItem
-              WHERE WalletItem.userId = '${walletUser.id}';`
-            );
-
-            if (!walletItems || !walletItems.values) {
-              throw new Error('walletItems not found');
-            }
-
-            const recieverData = await db?.query(
-              `SELECT RecieverData.*
-              FROM RecieverData
-              WHERE RecieverData.userId = '${walletUser.id}';`
-            );
-
-            if (!recieverData || !recieverData.values) {
-              throw new Error('recieverData not found');
-            }
-
-            const users = await db?.query(
-              `SELECT User.*
-              FROM User
-              WHERE User.id = '${walletUser.userId}';`
-            );
-
-            if (!users || !users.values) {
-              throw new Error('users not found');
-            }
-
-            walletUsersWithAllData.push({
-              ...walletUser,
-              WalletItem: walletItems.values,
-              RecieverData: recieverData.values,
-              users: users.values,
-            });
-          }
-
-          const walletWithoutUsers: any = results.values[0];
-
-          const wallet = {
-            ...walletWithoutUsers,
-            walletUsers: walletUsersWithAllData,
-          };
-
-          if (!wallet) {
-            throw new Error('wallet not found');
-          }
-
-          resolve({ wallet });
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
+    console.log("getWalletById TBD");
+    let wallet = await walletsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+      relations: {
+        walletUsers: {
+          recieverData: true,
+          users: true,
+          Wallets: true,
+          walletItems: true,
+        },
+      },
     });
+
+    console.log("getWalletById", wallet);
+
+    return { wallet };
   };
 
   // SHR Partially Done
@@ -381,158 +223,58 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
     email: string,
     walletId: string
   ) => {
-    console.log('getWalletUserByEmailAndWalletId TBD');
-    const walletUser = {};
+    console.log("getWalletUserByEmailAndWalletId TBD");
+    // SHR This should find user by his email and walletId code bellow is for testing
 
-    try {
-      // SHR This should find user by his email and walletId code bellow is for testing
+    let walletUser = await walletUserRepository.current.findOne({
+      where: {
+        walletsId: walletId,
+      },
+    });
 
-      const walletUsers = (await runQuerry(
-        `SELECT * FROM WalletUser WHERE walletsId = '${walletId}';`
-      )) as any[] | undefined;
+    console.log("getWalletUserByEmailAndWalletId", walletUser);
 
-      if (!walletUsers) {
-        throw new Error('walletUsers not found');
-      }
-
-      const walletUser = walletUsers[0];
-
-      return walletUser;
-    } catch (error) {
-      console.error('error', error);
-    }
-
-    return { walletUser };
+    return walletUser;
   };
 
   // SHR Done
   const getWalletItemsByWalletId = async (id: string) => {
-    return new Promise<any | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const results2 = await db?.query(`SELECT *
-            FROM Wallets
-            WHERE id = '${id}';`);
-
-          if (!results2 || !results2.values) {
-            throw new Error('wallet not found');
-          }
-
-          const wallet = results2.values[0];
-
-          if (!wallet) {
-            throw new Error('wallet not found');
-          }
-
-          const walletItemsWithoutPayer = await db?.query(
-            `SELECT * FROM WalletItem WHERE walletsId = '${id}';`
-          );
-
-          if (!walletItemsWithoutPayer || !walletItemsWithoutPayer.values) {
-            resolve({ wallet, walletItems: [] });
-            return;
-          }
-
-          const walletItems = [];
-
-          for (const walletItem of walletItemsWithoutPayer.values) {
-            const results = await db?.query(
-              `SELECT WalletUser.*
-              FROM WalletUser
-              WHERE WalletUser.id = '${walletItem.userId}';`
-            );
-
-            if (!results || !results.values) {
-              throw new Error('walletUser not found');
-            }
-
-            const payer: any = results.values[0];
-
-            walletItems.push({ ...walletItem, payer });
-          }
-
-          resolve({ wallet, walletItems });
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
+    let wallet = await walletsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+      relations: {
+        walletItems: {
+          payer: true,
+        },
+      },
     });
+
+    console.log("getWalletItemsByWalletId", {
+      wallet,
+      walletItems: wallet?.walletItems,
+    });
+
+    return { wallet, walletItems: wallet?.walletItems };
   };
 
   // SHR Done
   const getWalletItemByWalletItemId = async (id: string) => {
-    return new Promise<any | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const results = await db?.query(
-            `SELECT * FROM WalletItem WHERE id = '${id}';`
-          );
-
-          if (!results || !results.values) {
-            throw new Error('WalletItem not found');
-          }
-
-          const walletItemWithoutPayer = results.values[0];
-
-          if (!walletItemWithoutPayer) {
-            throw new Error('walletItem not found');
-          }
-
-          const results2 = await db?.query(
-            `SELECT WalletUser.*
-          FROM WalletUser
-          WHERE WalletUser.id = '${walletItemWithoutPayer.userId}';`
-          );
-
-          if (!results2 || !results2.values) {
-            throw new Error('payer not found');
-          }
-
-          const payer: any = results2.values[0];
-
-          const recieversWithoutIncludedWalletUsers = await db?.query(
-            `SELECT RecieverData.*
-          FROM RecieverData
-          WHERE RecieverData.walletItemId = '${walletItemWithoutPayer.id}';`
-          );
-
-          if (
-            !recieversWithoutIncludedWalletUsers ||
-            !recieversWithoutIncludedWalletUsers.values
-          ) {
-            throw new Error('recievers not found');
-          }
-
-          const recievers = [];
-
-          for (const reciever of recieversWithoutIncludedWalletUsers.values) {
-            const results = await db?.query(
-              `SELECT WalletUser.*
-          FROM WalletUser
-          WHERE WalletUser.id = '${reciever.userId}';`
-            );
-
-            if (!results || !results.values) {
-              throw new Error('walletUser not found');
-            }
-
-            const walletUser: any = results.values[0];
-
-            recievers.push({ ...reciever, reciever: walletUser });
-          }
-
-          if (!recievers) {
-            throw new Error('recievers not found');
-          }
-
-          resolve({ ...walletItemWithoutPayer, payer, recievers });
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
+    let walletItem = await walletItemsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+      relations: {
+        payer: true,
+        recievers: {
+          reciever: true,
+        },
+      },
     });
+
+    console.log("getWalletItemByWalletItemId", walletItem);
+
+    return walletItem;
   };
 
   // SHR Done
@@ -540,80 +282,63 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
     walletItemId: string,
     sortType: string
   ) => {
-    const walletItemPrev = {};
-    const walletItemNext = {};
+    let currentWalletItem = await walletItemsRepository.current.findOne({
+      where: {
+        id: walletItemId,
+      },
+    });
 
-    try {
-      const results = (await runQuerry(
-        `SELECT * FROM WalletItem WHERE id = '${walletItemId}';`
-      )) as any[] | undefined;
+    let walletItems = await walletItemsRepository.current.find({
+      where: {
+        walletsId: currentWalletItem?.walletsId,
+      },
+      relations: {
+        payer: true,
+        recievers: true,
+        Wallets: true,
+      },
+    });
 
-      if (!results) {
-        throw new Error('walletItem not found');
+    walletItems.sort((a: any, b: any) => {
+      switch (sortType) {
+        case "DateAsc":
+          return a.date > b.date ? 1 : -1;
+        case "DateDesc":
+          return a.date < b.date ? 1 : -1;
+        case "AmountAsc":
+          return a.amount > b.amount ? 1 : -1;
+        case "AmountDesc":
+          return a.amount < b.amount ? 1 : -1;
+        case "TitleAsc":
+          return a.name > b.name ? 1 : -1;
+        case "TitleDesc":
+          return a.name < b.name ? 1 : -1;
+        case "PayerAsc":
+          return a.payer.name > b.payer.name ? 1 : -1;
+        case "PayerDesc":
+          return a.payer.name < b.payer.name ? 1 : -1;
+        case "CategoryAsc":
+          return a.type > b.type ? 1 : -1;
+        case "CategoryDesc":
+          return a.type < b.type ? 1 : -1;
+        default:
+          return 0;
       }
+    });
 
-      const currentWalletItem: any = results[0];
+    const walletItemIndex = walletItems.findIndex(
+      (item: any) => item.id === walletItemId
+    );
 
-      if (!currentWalletItem) {
-        throw new Error('walletItems not found');
-      }
+    let walletItemPrev = null;
+    let walletItemNext = null;
 
-      const walletItems = (await runQuerry(`SELECT Wallets.*, WalletItem.*
-      FROM Wallets
-      LEFT JOIN WalletItem ON Wallets.id = WalletItem.walletsId
-      WHERE Wallets.id = '${currentWalletItem.walletsId}';`)) as
-        | any[]
-        | undefined;
+    if (walletItemIndex > 0) {
+      walletItemPrev = walletItems[walletItemIndex - 1];
+    }
 
-      if (!walletItems) {
-        throw new Error('walletItems not found');
-      }
-
-      walletItems.sort((a: any, b: any) => {
-        switch (sortType) {
-          case 'DateAsc':
-            return a.date > b.date ? 1 : -1;
-          case 'DateDesc':
-            return a.date < b.date ? 1 : -1;
-          case 'AmountAsc':
-            return a.amount > b.amount ? 1 : -1;
-          case 'AmountDesc':
-            return a.amount < b.amount ? 1 : -1;
-          case 'TitleAsc':
-            return a.name > b.name ? 1 : -1;
-          case 'TitleDesc':
-            return a.name < b.name ? 1 : -1;
-          case 'PayerAsc':
-            return a.payer.name > b.payer.name ? 1 : -1;
-          case 'PayerDesc':
-            return a.payer.name < b.payer.name ? 1 : -1;
-          case 'CategoryAsc':
-            return a.type > b.type ? 1 : -1;
-          case 'CategoryDesc':
-            return a.type < b.type ? 1 : -1;
-          default:
-            return 0;
-        }
-      });
-
-      const walletItemIndex = walletItems.findIndex(
-        (item: any) => item.id === walletItemId
-      );
-
-      let walletItemPrev = null;
-      let walletItemNext = null;
-
-      if (walletItemIndex > 0) {
-        walletItemPrev = walletItems[walletItemIndex - 1];
-      }
-
-      if (walletItemIndex < walletItems.length - 1) {
-        walletItemNext = walletItems[walletItemIndex + 1];
-      }
-
-      return { walletItemPrev, walletItemNext };
-    } catch (error) {
-      console.error('error', error);
+    if (walletItemIndex < walletItems.length - 1) {
+      walletItemNext = walletItems[walletItemIndex + 1];
     }
 
     return { walletItemPrev, walletItemNext };
@@ -621,184 +346,174 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
   // SHR Done
   const getWalletUsersByWalletId = async (id: string) => {
-    return new Promise<any[]>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const walletUsers = await db?.query(
-            `SELECT * FROM WalletUser WHERE walletsId = '${id}';`
-          );
-
-          if (!walletUsers || !walletUsers.values) {
-            throw new Error('walletUsers not found');
-          }
-
-          resolve(walletUsers.values);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
+    let walletUsers = await walletUserRepository.current.find({
+      where: {
+        walletsId: id,
+      },
     });
+
+    console.log("getWalletUsersByWalletId", walletUsers);
+
+    return walletUsers;
   };
 
   // SHR Done
   const addWallet = async (input: z.infer<typeof WalletSchema>) => {
-    return new Promise<boolean | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          console.log('addWallet input', input);
-          const validationResult = WalletSchema.safeParse(input);
+    console.log("addWallet input", input);
+    const validationResult = WalletSchema.safeParse(input);
 
-          if (!validationResult.success) {
-            throw new Error('validationResult error');
-          }
+    if (!validationResult.success) {
+      throw new Error("validationResult error");
+    }
 
-          const transactionQueries = [];
+    const wallet = new Wallets();
+    wallet.name = input.name;
+    wallet.globalId = input.globalId;
+    wallet.description = input.description;
+    wallet.currency = input.currency;
+    wallet.category = input.category;
+    wallet.total = 0;
+    wallet.createdAt = new Date();
+    wallet.updatedAt = new Date();
+    wallet.isSynced = input.isSynced;
+    await walletsRepository.current.save(wallet);
 
-          const walletId = uuidv4();
+    for (const user of input.userList) {
+      const walletUser = new WalletUser();
+      walletUser.name = user.name;
+      walletUser.bilance = 0;
+      walletUser.total = 0;
+      walletUser.createdAt = new Date();
+      walletUser.updatedAt = new Date();
+      walletUser.Wallets = wallet;
+      await walletUserRepository.current.save(walletUser);
+    }
 
-          transactionQueries.push({
-            statement: `INSERT INTO Wallets (id, globalId, name, description, currency, category, createdAt, updatedAt, isSynced) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
-            values: [
-              walletId,
-              input.globalId,
-              input.name,
-              input.description,
-              input.currency,
-              input.category,
-              input.isSynced,
-            ],
-          });
+    await listOfTables();
 
-          for (const user of input.userList) {
-            const walletUserId = uuidv4();
+    await saveToStore();
 
-            transactionQueries.push({
-              statement: `INSERT INTO WalletUser (id, name, bilance, total, createdAt, updatedAt, walletsId) VALUES (?, ?, '0', '0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
-              values: [walletUserId, user.name, walletId],
-            });
-          }
-
-          // console.log('transactionQueries', transactionQueries);
-
-          await db?.executeTransaction(transactionQueries, false);
-
-          resolve(true);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
-    });
+    return wallet;
   };
 
   // SHR Done
   const addWalletItem = async (input: z.infer<typeof WalletItemSchema>) => {
-    return new Promise<boolean | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const validationResult = WalletItemSchema.safeParse(input);
+    const validationResult = WalletItemSchema.safeParse(input);
 
-          if (!validationResult.success) {
-            throw new Error('validationResult error');
-          }
+    if (!validationResult.success) {
+      throw new Error("validationResult error");
+    }
 
-          const transactionQueries = [];
-
-          const walletItemId = uuidv4();
-          const date = new Date(input.date)
-            .toISOString()
-            .slice(0, 19)
-            .replace('T', ' ');
-
-          transactionQueries.push({
-            statement: `INSERT INTO WalletItem (id, name, tags, amount, type, date, createdAt, updatedAt, walletsId, userId) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?) `,
-            values: [
-              walletItemId,
-              input.name,
-              input.tags,
-              input.amount,
-              input.type,
-              date,
-              input.walletId,
-              input.payer,
-            ],
-          });
-
-          for (const receiver of input.recieversData) {
-            const receiverId = uuidv4();
-            transactionQueries.push({
-              statement: `INSERT INTO RecieverData (id, userId, amount, createdAt, updatedAt, walletItemId) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?) `,
-              values: [
-                receiverId,
-                receiver.id,
-                receiver.cutFromAmount,
-                walletItemId,
-              ],
-            });
-          }
-          // Update bliance of payer
-          let newBilance = 0;
-          if (input.type === 'expense' || input.type === 'moneyTransfer') {
-            newBilance += input.amount;
-          }
-          if (input.type === 'income') {
-            newBilance -= input.amount;
-          }
-
-          transactionQueries.push({
-            statement: `UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?`,
-            values: [newBilance, input.payer],
-          });
-
-          let newTotal = 0;
-          if (input.type === 'expense') {
-            newTotal += input.amount;
-          }
-          if (input.type === 'income') {
-            newTotal -= input.amount;
-          }
-          // Monney transfer doesnt affect total
-
-          transactionQueries.push({
-            statement: `UPDATE Wallets SET total = total + ? WHERE id = ?`,
-            values: [newTotal, input.walletId],
-          });
-
-          // Update bliance of recievers
-          for (const receiver of input.recieversData) {
-            let newBilance = 0;
-            let newTotal = 0;
-
-            if (input.type === 'expense') {
-              newBilance -= receiver.cutFromAmount;
-              newTotal += receiver.cutFromAmount;
-            }
-            if (input.type === 'income') {
-              newBilance += receiver.cutFromAmount;
-              newTotal -= receiver.cutFromAmount;
-            }
-            if (input.type === 'moneyTransfer') {
-              newBilance -= receiver.cutFromAmount;
-            }
-
-            transactionQueries.push({
-              statement: `UPDATE WalletUser SET bilance = bilance + ?, total = total + ? WHERE id = ?`,
-              values: [newBilance, newTotal, receiver.id],
-            });
-          }
-
-          // console.log('transactionQueries', transactionQueries);
-
-          await db?.executeTransaction(transactionQueries, false);
-
-          resolve(true);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
+    const wallet = await walletsRepository.current.findOne({
+      where: {
+        id: input.walletId,
+      },
     });
+
+    if (!wallet) {
+      throw new Error("Wallet not found");
+    }
+
+    const payer = await walletUserRepository.current.findOne({
+      where: {
+        id: input.payer,
+      },
+    });
+
+    if (!payer) {
+      throw new Error("Payer not found");
+    }
+
+    const date = new Date(input.date);
+    const tags: string[] = [input.tags || ""];
+
+    const walletItem = new WalletItem();
+    walletItem.name = input.name;
+    walletItem.tags = tags;
+    walletItem.amount = input.amount;
+    walletItem.type = input.type;
+    walletItem.date = date;
+    walletItem.Wallets = wallet;
+    walletItem.payer = payer;
+
+    await walletItemsRepository.current.save(walletItem);
+
+    for (const receiver of input.recieversData) {
+      const walletUser = await walletUserRepository.current.findOne({
+        where: {
+          id: receiver.id,
+        },
+      });
+
+      if (!walletUser) {
+        throw new Error("WalletUser not found");
+      }
+
+      const recieverData = new RecieverData();
+      recieverData.reciever = walletUser;
+      recieverData.amount = receiver.cutFromAmount;
+      recieverData.WalletItem = walletItem;
+
+      await recieverDataRepository.current.save(recieverData);
+    }
+
+    // Update bliance of payer
+    let newBilance = 0;
+    if (input.type === "expense" || input.type === "moneyTransfer") {
+      newBilance += input.amount;
+    }
+    if (input.type === "income") {
+      newBilance -= input.amount;
+    }
+
+    payer.bilance += newBilance;
+    await walletUserRepository.current.save(payer);
+
+    let newTotal = 0;
+    if (input.type === "expense") {
+      newTotal += input.amount;
+    }
+    if (input.type === "income") {
+      newTotal -= input.amount;
+    }
+    // Monney transfer doesnt affect total
+
+    wallet.total += newTotal;
+    await walletsRepository.current.save(wallet);
+
+    // Update bliance of recievers
+    for (const receiver of input.recieversData) {
+      let newBilance = 0;
+      let newTotal = 0;
+
+      if (input.type === "expense") {
+        newBilance -= receiver.cutFromAmount;
+        newTotal += receiver.cutFromAmount;
+      }
+      if (input.type === "income") {
+        newBilance += receiver.cutFromAmount;
+        newTotal -= receiver.cutFromAmount;
+      }
+      if (input.type === "moneyTransfer") {
+        newBilance -= receiver.cutFromAmount;
+      }
+
+      const walletUser = await walletUserRepository.current.findOne({
+        where: {
+          id: receiver.id,
+        },
+      });
+
+      if (!walletUser) {
+        throw new Error("WalletUser not found");
+      }
+
+      walletUser.bilance += newBilance;
+      walletUser.total += newTotal;
+      await walletUserRepository.current.save(walletUser);
+    }
+
+    await saveToStore();
   };
 
   // SHR Todo
@@ -806,228 +521,203 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
     id: string,
     input: z.infer<typeof WalletItemSchema>
   ) => {
-    return new Promise<boolean | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          // Validate input
-          const validationResult = WalletItemSchema.safeParse(input);
+    // Validate input
+    const validationResult = WalletItemSchema.safeParse(input);
 
-          if (!validationResult.success) {
-            throw new Error('validationResult error');
-          }
+    if (!validationResult.success) {
+      throw new Error("validationResult error");
+    }
 
-          const transactionQueries = [];
-
-          const results = await db?.query(
-            'SELECT * FROM WalletItem WHERE id = ?',
-            [id]
-          );
-
-          if (!results || !results.values || results.values.length === 0) {
-            throw new Error('WalletItem not found');
-          }
-
-          const walletItemWithoutPayer = results.values[0];
-
-          if (!walletItemWithoutPayer) {
-            throw new Error('walletItem not found');
-          }
-
-          // Query the payer
-          const results2 = await db?.query(
-            'SELECT WalletUser.* FROM WalletUser WHERE WalletUser.id = ?',
-            [walletItemWithoutPayer.userId]
-          );
-
-          if (!results2 || !results2.values || results2.values.length === 0) {
-            throw new Error('payer not found');
-          }
-
-          const payer: any = results2.values[0];
-
-          const recieversWithoutIncludedWalletUsers = await db?.query(
-            'SELECT RecieverData.* FROM RecieverData WHERE RecieverData.walletItemId = ?',
-            [walletItemWithoutPayer.id]
-          );
-
-          if (
-            !recieversWithoutIncludedWalletUsers ||
-            !recieversWithoutIncludedWalletUsers.values
-          ) {
-            throw new Error('recievers not found');
-          }
-
-          const recievers = [];
-
-          for (const reciever of recieversWithoutIncludedWalletUsers.values) {
-            const results = await db?.query(
-              'SELECT WalletUser.* FROM WalletUser WHERE WalletUser.id = ?',
-              [reciever.userId]
-            );
-
-            if (!results || !results.values || results.values.length === 0) {
-              throw new Error('walletUser not found');
-            }
-
-            const walletUser: any = results.values[0];
-
-            recievers.push({ ...reciever, reciever: walletUser });
-          }
-
-          if (!recievers) {
-            throw new Error('recievers not found');
-          }
-
-          const oldWalletItem = { ...walletItemWithoutPayer, payer, recievers };
-
-          transactionQueries.push({
-            statement: 'DELETE FROM RecieverData WHERE walletItemId = ?',
-            values: [id],
-          });
-
-          const date = new Date(input.date)
-            .toISOString()
-            .slice(0, 19)
-            .replace('T', ' ');
-
-          transactionQueries.push({
-            statement:
-              'UPDATE WalletItem SET name = ?, amount = ?, date = ?, tags = ?, type = ?, userId = ? WHERE id = ?',
-            values: [
-              input.name,
-              input.amount,
-              date,
-              input.tags,
-              input.type,
-              input.payer,
-              id,
-            ],
-          });
-
-          for (const receiver of input.recieversData) {
-            const receiverId = uuidv4();
-            transactionQueries.push({
-              statement:
-                'INSERT INTO RecieverData (id, userId, amount, createdAt, updatedAt, walletItemId) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)',
-              values: [receiverId, receiver.id, receiver.cutFromAmount, id],
-            });
-          }
-
-          // Remove bilance from old payer
-          let oldBalance = 0;
-          if (
-            oldWalletItem.type === 'expense' ||
-            oldWalletItem.type === 'moneyTransfer'
-          ) {
-            oldBalance -= oldWalletItem.amount;
-          }
-          if (oldWalletItem.type === 'income') {
-            oldBalance += oldWalletItem.amount;
-          }
-
-          transactionQueries.push({
-            statement:
-              'UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?',
-            values: [oldBalance, payer.id],
-          });
-
-          // Update bliance of new payer
-          let newBalance = 0;
-          if (input.type === 'expense' || input.type === 'moneyTransfer') {
-            newBalance += input.amount;
-          }
-          if (input.type === 'income') {
-            newBalance -= input.amount;
-          }
-
-          transactionQueries.push({
-            statement:
-              'UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?',
-            values: [newBalance, input.payer],
-          });
-
-          // Update Wallet Total of payer
-          // Remove old total
-          let oldTotal = 0;
-          if (oldWalletItem.type === 'expense') {
-            oldTotal -= oldWalletItem.amount;
-          }
-          if (oldWalletItem.type === 'income') {
-            oldTotal += oldWalletItem.amount;
-          }
-
-          // Add New total
-          let newTotal = 0;
-          if (input.type === 'expense') {
-            newTotal += input.amount;
-          }
-          if (input.type === 'income') {
-            newTotal -= input.amount;
-          }
-          // Monney transfer doesnt affect total
-
-          transactionQueries.push({
-            statement: 'UPDATE Wallets SET total = total + ? + ? WHERE id = ?',
-            values: [oldTotal, newTotal, oldWalletItem.walletsId],
-          });
-
-          // Remove old bilance from old receivers
-          for (const receiver of oldWalletItem.recievers) {
-            let oldBalance = 0;
-            let oldTotal = 0;
-            if (oldWalletItem.type === 'expense') {
-              oldBalance += receiver.amount;
-              oldTotal -= receiver.amount;
-            }
-            if (oldWalletItem.type === 'income') {
-              oldBalance -= receiver.amount;
-              oldTotal += receiver.amount;
-            }
-            if (oldWalletItem.type === 'moneyTransfer') {
-              oldBalance += receiver.amount;
-            }
-
-            transactionQueries.push({
-              statement:
-                'UPDATE WalletUser SET bilance = bilance + ?, total = total + ? WHERE id = ?',
-              values: [oldBalance, oldTotal, receiver.reciever.id],
-            });
-          }
-
-          // Update bliance of recievers
-          for (const receiver of input.recieversData) {
-            let newBilance = 0;
-            let newTotal = 0;
-
-            if (input.type === 'expense') {
-              newBilance -= receiver.cutFromAmount;
-              newTotal += receiver.cutFromAmount;
-            }
-            if (input.type === 'income') {
-              newBilance += receiver.cutFromAmount;
-              newTotal -= receiver.cutFromAmount;
-            }
-            if (input.type === 'moneyTransfer') {
-              newBilance -= receiver.cutFromAmount;
-            }
-
-            transactionQueries.push({
-              statement: `UPDATE WalletUser SET bilance = bilance + ?, total = total + ? WHERE id = ?`,
-              values: [newBilance, newTotal, receiver.id],
-            });
-          }
-
-          // console.log('transactionQueries', transactionQueries);
-
-          await db?.executeTransaction(transactionQueries, false);
-
-          resolve(true);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
+    const oldWalletItem = await walletItemsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+      relations: {
+        payer: true,
+        Wallets: true,
+        recievers: {
+          reciever: true,
+        },
+      },
     });
+
+    if (!oldWalletItem) {
+      throw new Error("WalletItem not found");
+    }
+
+    const recieverData = await recieverDataRepository.current.find({
+      where: {
+        walletItemId: id,
+      },
+    });
+
+    if (!recieverData) {
+      throw new Error("RecieverData not found");
+    }
+
+    for (const reciever of recieverData) {
+      await recieverDataRepository.current.remove(reciever);
+    }
+
+    const date = new Date(input.date);
+    const tags: string[] = [input.tags || ""];
+
+    const walletItem = await walletItemsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+      relations: {
+        payer: true,
+        recievers: true,
+      },
+    });
+
+    if (!walletItem) {
+      throw new Error("WalletItem not found");
+    }
+
+    const payer = await walletUserRepository.current.findOne({
+      where: {
+        id: input.payer,
+      },
+    });
+
+    if (!payer) {
+      throw new Error("Payer not found");
+    }
+
+    walletItem.name = input.name;
+    walletItem.amount = input.amount;
+    walletItem.date = date;
+    walletItem.tags = tags;
+    walletItem.type = input.type;
+    walletItem.payer = payer;
+    await walletItemsRepository.current.save(walletItem);
+
+    for (const receiver of input.recieversData) {
+      const walletUser = await walletUserRepository.current.findOne({
+        where: {
+          id: receiver.id,
+        },
+      });
+
+      if (!walletUser) {
+        throw new Error("WalletUser not found");
+      }
+
+      const recieverData = new RecieverData();
+      recieverData.reciever = walletUser;
+      recieverData.amount = receiver.cutFromAmount;
+      recieverData.WalletItem = walletItem;
+
+      await recieverDataRepository.current.save(recieverData);
+    }
+
+    // Remove bilance from old payer
+    let oldBalance = 0;
+    if (
+      oldWalletItem.type === "expense" ||
+      oldWalletItem.type === "moneyTransfer"
+    ) {
+      oldBalance -= oldWalletItem.amount;
+    }
+    if (oldWalletItem.type === "income") {
+      oldBalance += oldWalletItem.amount;
+    }
+
+    oldWalletItem.payer.bilance += oldBalance;
+    await walletUserRepository.current.save(oldWalletItem.payer);
+
+    // Update bliance of new payer
+    let newBalance = 0;
+    if (input.type === "expense" || input.type === "moneyTransfer") {
+      newBalance += input.amount;
+    }
+    if (input.type === "income") {
+      newBalance -= input.amount;
+    }
+
+    payer.bilance += newBalance;
+    await walletUserRepository.current.save(payer);
+
+    // Update Wallet Total of payer
+    // Remove old total
+    let oldTotal = 0;
+    if (oldWalletItem.type === "expense") {
+      oldTotal -= oldWalletItem.amount;
+    }
+    if (oldWalletItem.type === "income") {
+      oldTotal += oldWalletItem.amount;
+    }
+
+    // Add New total
+    let newTotal = 0;
+    if (input.type === "expense") {
+      newTotal += input.amount;
+    }
+    if (input.type === "income") {
+      newTotal -= input.amount;
+    }
+    // Monney transfer doesnt affect total
+
+    oldWalletItem.Wallets.total =
+      oldWalletItem.Wallets.total + oldTotal + newTotal;
+    await walletsRepository.current.save(oldWalletItem.Wallets);
+
+    // Remove old bilance from old receivers
+    for (const receiver of oldWalletItem.recievers) {
+      let oldBalance = 0;
+      let oldTotal = 0;
+      if (oldWalletItem.type === "expense") {
+        oldBalance += receiver.amount;
+        oldTotal -= receiver.amount;
+      }
+      if (oldWalletItem.type === "income") {
+        oldBalance -= receiver.amount;
+        oldTotal += receiver.amount;
+      }
+      if (oldWalletItem.type === "moneyTransfer") {
+        oldBalance += receiver.amount;
+      }
+
+      receiver.reciever.bilance += oldBalance;
+      receiver.reciever.total += oldTotal;
+      await walletUserRepository.current.save(receiver.reciever);
+    }
+
+    // Update bliance of recievers
+    for (const receiver of input.recieversData) {
+      let newBilance = 0;
+      let newTotal = 0;
+
+      if (input.type === "expense") {
+        newBilance -= receiver.cutFromAmount;
+        newTotal += receiver.cutFromAmount;
+      }
+      if (input.type === "income") {
+        newBilance += receiver.cutFromAmount;
+        newTotal -= receiver.cutFromAmount;
+      }
+      if (input.type === "moneyTransfer") {
+        newBilance -= receiver.cutFromAmount;
+      }
+
+      const newReceiver = await walletUserRepository.current.findOne({
+        where: {
+          id: receiver.id,
+        },
+      });
+
+      if (!newReceiver) {
+        throw new Error("WalletUser not found");
+      }
+
+      newReceiver.bilance += newBilance;
+      newReceiver.total += newTotal;
+      await walletUserRepository.current.save(newReceiver);
+    }
+
+    await saveToStore();
   };
 
   // SHR Done
@@ -1035,431 +725,325 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
     id: string,
     input: any // z.infer<typeof WalletSchema>
   ) => {
-    return new Promise<boolean | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const validationResult = WalletSchema.safeParse(input);
+    console.log("editWallet input", input);
+    const validationResult = WalletSchema.safeParse(input);
 
-          if (!validationResult.success) {
-            throw new Error('validationResult error');
-          }
+    if (!validationResult.success) {
+      throw new Error("validationResult error");
+    }
 
-          const transactionQueries = [];
+    const oldWallet = await walletsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+      relations: {
+        walletUsers: true,
+      },
+    });
 
-          const results = await db?.query(`SELECT *
-            FROM Wallets
-            WHERE id = '${id}';`);
+    if (!oldWallet) {
+      throw new Error("Wallet not found");
+    }
 
-          if (!results || !results.values) {
-            throw new Error('wallet not found');
-          }
+    const wallet = await walletsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+    });
 
-          const walletUsers = await db?.query(`SELECT Wallets.*, WalletUser.*
-            FROM Wallets
-            LEFT JOIN WalletUser ON Wallets.id = WalletUser.walletsId
-            WHERE Wallets.id = '${id}';`);
+    if (!wallet) {
+      throw new Error("Wallet not found");
+    }
 
-          if (!walletUsers || !walletUsers.values) {
-            throw new Error('walletUsers not found');
-          }
+    wallet.name = input.name;
+    wallet.description = input.description;
+    wallet.currency = input.currency;
+    wallet.category = input.category;
+    wallet.updatedAt = new Date();
+    wallet.isSynced = input.isSynced;
+    await walletsRepository.current.save(wallet);
 
-          const walletWithoutUsers: any = results.values[0];
+    const createOperations: any[] = [];
 
-          const oldWallet = {
-            ...walletWithoutUsers,
-            walletUsers: walletUsers.values,
-          };
+    for (const user of input.userList) {
+      if (user.id == null) {
+        createOperations.push({
+          name: user.name,
+          walletId: id,
+        });
+      }
+    }
 
-          if (!oldWallet) {
-            throw new Error('wallet not found');
-          }
+    let updateOperations: any[] = [];
 
-          const createOperations: any[] = [];
+    for (const user of input.userList) {
+      if (user.id != null) {
+        const existingItem = oldWallet.walletUsers.find(
+          (dbItem: any) => dbItem.id === user.id
+        );
 
-          for (const user of input.userList) {
-            if (user.id == null) {
-              createOperations.push({
-                name: user.name,
-                walletId: id,
-              });
-            }
-          }
-
-          let updateOperations: any[] = [];
-
-          for (const user of input.userList) {
-            if (user.id != null) {
-              const existingItem = oldWallet.walletUsers.find(
-                (dbItem: any) => dbItem.id === user.id
-              );
-
-              if (existingItem) {
-                updateOperations.push({
-                  id: user.id,
-                  name: user.name,
-                });
-              }
-            }
-          }
-
-          if (updateOperations) {
-            updateOperations = updateOperations.filter((op: any) => !op.delete);
-          }
-
-          const deleteOperations: any[] = [];
-
-          // Determine items to delete
-          for (const dbUser of walletUsers.values) {
-            if (
-              !input.userList.some((newUser: any) => newUser.id === dbUser.id)
-            ) {
-              deleteOperations.push(dbUser.id);
-            }
-          }
-          // Update wallet
-          transactionQueries.push({
-            statement: `UPDATE Wallets SET name = ?, description = ?, currency = ?, category = ? WHERE id = ?`,
-            values: [
-              input.name,
-              input.description,
-              input.currency,
-              input.category,
-              id,
-            ],
+        if (existingItem) {
+          updateOperations.push({
+            id: user.id,
+            name: user.name,
           });
-
-          // Insert new wallet users
-          if (createOperations.length > 0) {
-            for (const operation of createOperations) {
-              const walletUserId = uuidv4();
-
-              transactionQueries.push({
-                statement: `INSERT INTO WalletUser (id, name, bilance, total, createdAt, updatedAt, walletsId) VALUES (?, ?, '0', '0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
-                values: [walletUserId, operation.name, operation.walletId],
-              });
-            }
-          }
-
-          // Update existing wallet users
-          if (updateOperations.length > 0) {
-            for (const operation of updateOperations) {
-              transactionQueries.push({
-                statement: `UPDATE WalletUser SET name = ? WHERE id = ?`,
-                values: [operation.name, operation.id],
-              });
-            }
-          }
-
-          // Delete wallet users
-          if (deleteOperations.length > 0) {
-            for (const operation of deleteOperations) {
-              transactionQueries.push({
-                statement: `DELETE FROM WalletUser WHERE id = ?`,
-                values: [operation],
-              });
-            }
-          }
-
-          // console.log('transactionQueries', transactionQueries);
-
-          await db?.executeTransaction(transactionQueries, false);
-
-          resolve(true);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
         }
-      });
-    });
-  };
+      }
+    }
 
-  async function delay(ms: number) {
-    return new Promise<void>((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  }
+    if (updateOperations) {
+      updateOperations = updateOperations.filter((op: any) => !op.delete);
+    }
+
+    const deleteOperations: any[] = [];
+
+    // Determine items to delete
+    for (const dbUser of oldWallet.walletUsers) {
+      if (!input.userList.some((newUser: any) => newUser.id === dbUser.id)) {
+        deleteOperations.push(dbUser.id);
+      }
+    }
+
+    // Insert new wallet users
+    if (createOperations.length > 0) {
+      for (const operation of createOperations) {
+        const walletUser = new WalletUser();
+        walletUser.name = operation.name;
+        walletUser.bilance = 0;
+        walletUser.total = 0;
+        walletUser.createdAt = new Date();
+        walletUser.updatedAt = new Date();
+        walletUser.Wallets = wallet;
+        await walletUserRepository.current.save(walletUser);
+      }
+    }
+
+    // Update existing wallet users
+    if (updateOperations.length > 0) {
+      for (const operation of updateOperations) {
+        const walletUser = await walletUserRepository.current.findOne({
+          where: {
+            id: operation.id,
+          },
+        });
+
+        if (!walletUser) {
+          throw new Error("WalletUser not found");
+        }
+
+        walletUser.name = operation.name;
+        await walletUserRepository.current.save(walletUser);
+      }
+    }
+
+    // Delete wallet users
+    if (deleteOperations.length > 0) {
+      for (const operation of deleteOperations) {
+        const walletUser = await walletUserRepository.current.findOne({
+          where: {
+            id: operation,
+          },
+        });
+
+        if (!walletUser) {
+          throw new Error("WalletUser not found");
+        }
+
+        await walletUserRepository.current.remove(walletUser);
+      }
+    }
+
+    await saveToStore();
+
+    return id;
+  };
 
   // SHR Todo
   const deleteWalletItemById = async (id: string) => {
-    return new Promise<boolean | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const transactionQueries = [];
-
-          const results = await db?.query(
-            'SELECT * FROM WalletItem WHERE id = ?',
-            [id]
-          );
-
-          if (!results || !results.values || results.values.length === 0) {
-            throw new Error('WalletItem not found');
-          }
-
-          const walletItemWithoutPayer = results.values[0];
-
-          if (!walletItemWithoutPayer) {
-            throw new Error('walletItem not found');
-          }
-
-          // Query the payer
-          const results2 = await db?.query(
-            'SELECT WalletUser.* FROM WalletUser WHERE WalletUser.id = ?',
-            [walletItemWithoutPayer.userId]
-          );
-
-          if (!results2 || !results2.values || results2.values.length === 0) {
-            throw new Error('payer not found');
-          }
-
-          const payer: any = results2.values[0];
-
-          const recieversWithoutIncludedWalletUsers = await db?.query(
-            'SELECT RecieverData.* FROM RecieverData WHERE RecieverData.walletItemId = ?',
-            [walletItemWithoutPayer.id]
-          );
-
-          if (
-            !recieversWithoutIncludedWalletUsers ||
-            !recieversWithoutIncludedWalletUsers.values
-          ) {
-            throw new Error('recievers not found');
-          }
-
-          const recievers = [];
-
-          for (const reciever of recieversWithoutIncludedWalletUsers.values) {
-            const results = await db?.query(
-              'SELECT WalletUser.* FROM WalletUser WHERE WalletUser.id = ?',
-              [reciever.userId]
-            );
-
-            if (!results || !results.values || results.values.length === 0) {
-              throw new Error('walletUser not found');
-            }
-
-            const walletUser: any = results.values[0];
-
-            recievers.push({ ...reciever, reciever: walletUser });
-          }
-
-          if (!recievers) {
-            throw new Error('recievers not found');
-          }
-
-          const oldWalletItem = { ...walletItemWithoutPayer, payer, recievers };
-
-          // Remove bilance from old payer
-          let oldBalance = 0;
-          if (
-            oldWalletItem.type === 'expense' ||
-            oldWalletItem.type === 'moneyTransfer'
-          ) {
-            oldBalance -= oldWalletItem.amount;
-          }
-          if (oldWalletItem.type === 'income') {
-            oldBalance += oldWalletItem.amount;
-          }
-
-          transactionQueries.push({
-            statement:
-              'UPDATE WalletUser SET bilance = bilance + ? WHERE id = ?',
-            values: [oldBalance, payer.id],
-          });
-
-          // Remove Wallet Total of payer
-          // Remove old total and apply new total
-          let newTotal = 0;
-          if (oldWalletItem.type === 'expense') {
-            newTotal -= oldWalletItem.amount;
-          }
-          if (oldWalletItem.type === 'income') {
-            newTotal += oldWalletItem.amount;
-          }
-          // Monney transfer doesnt affect total
-
-          transactionQueries.push({
-            statement: 'UPDATE Wallets SET total = total + ? WHERE id = ?',
-            values: [newTotal, oldWalletItem.walletsId],
-          });
-
-          // Remove old bliance from old recievers
-          for (const receiver of oldWalletItem.recievers) {
-            let oldBilance = 0;
-            let oldTotal = 0;
-            if (oldWalletItem.type === 'expense') {
-              oldBilance += receiver.amount;
-              oldTotal -= receiver.amount;
-            }
-            if (oldWalletItem.type === 'income') {
-              oldBilance -= receiver.amount;
-              oldTotal += receiver.amount;
-            }
-            if (oldWalletItem.type === 'moneyTransfer') {
-              oldBilance += receiver.amount;
-            }
-
-            transactionQueries.push({
-              statement:
-                'UPDATE WalletUser SET bilance = bilance + ?, total = total + ? WHERE id = ?',
-              values: [oldBilance, oldTotal, receiver.reciever.id],
-            });
-          }
-
-          transactionQueries.push({
-            statement: 'DELETE FROM WalletItem WHERE id = ?',
-            values: [id],
-          });
-
-          // console.log('transactionQueries', transactionQueries);
-
-          await db?.executeTransaction(transactionQueries, false);
-
-          resolve(true);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
-      });
+    const oldWalletItem = await walletItemsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+      relations: {
+        payer: true,
+        recievers: {
+          reciever: true,
+        },
+        Wallets: true,
+      },
     });
+
+    if (!oldWalletItem) {
+      throw new Error("WalletItem not found");
+    }
+
+    // Remove bilance from old payer
+    let oldBalance = 0;
+    if (
+      oldWalletItem.type === "expense" ||
+      oldWalletItem.type === "moneyTransfer"
+    ) {
+      oldBalance -= oldWalletItem.amount;
+    }
+    if (oldWalletItem.type === "income") {
+      oldBalance += oldWalletItem.amount;
+    }
+
+    oldWalletItem.payer.bilance += oldBalance;
+    await walletUserRepository.current.save(oldWalletItem.payer);
+
+    // Remove Wallet Total of payer
+    // Remove old total and apply new total
+    let newTotal = 0;
+    if (oldWalletItem.type === "expense") {
+      newTotal -= oldWalletItem.amount;
+    }
+    if (oldWalletItem.type === "income") {
+      newTotal += oldWalletItem.amount;
+    }
+    // Monney transfer doesnt affect total
+
+    oldWalletItem.Wallets.total += newTotal;
+    await walletsRepository.current.save(oldWalletItem.Wallets);
+
+    // Remove old bliance from old recievers
+    for (const receiver of oldWalletItem.recievers) {
+      let oldBilance = 0;
+      let oldTotal = 0;
+      if (oldWalletItem.type === "expense") {
+        oldBilance += receiver.amount;
+        oldTotal -= receiver.amount;
+      }
+      if (oldWalletItem.type === "income") {
+        oldBilance -= receiver.amount;
+        oldTotal += receiver.amount;
+      }
+      if (oldWalletItem.type === "moneyTransfer") {
+        oldBilance += receiver.amount;
+      }
+
+      receiver.reciever.bilance += oldBilance;
+      receiver.reciever.total += oldTotal;
+      await walletUserRepository.current.save(receiver.reciever);
+    }
+
+    // Delete wallet item
+    await walletItemsRepository.current.remove(oldWalletItem);
+
+    await saveToStore();
   };
 
   // SHR Done
   const deleteWalletById = async (id: string) => {
-    try {
-      const query = `DELETE FROM Wallets WHERE id = '${id}'`;
-      await runQuerry(query);
-    } catch (error) {
-      console.error('error', error);
+    const wallet = await walletsRepository.current.findOne({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!wallet) {
+      throw new Error("Wallet not found");
     }
+
+    await walletsRepository.current.remove(wallet);
+
+    await listOfTables();
+
+    await saveToStore();
+
+    // SHR This is workaround to refresh data in app
+    return id;
   };
 
   // SHR TBD
   const getUnsyncedWallets = async () => {
-    console.log('getUnsyncedWallets TBD');
+    const wallets = await walletsRepository.current.find({
+      where: {
+        isSynced: false,
+      },
+      relations: {
+        walletUsers: {
+          recieverData: true,
+          users: true,
+          Wallets: true,
+          walletItems: true,
+        },
+        walletItems: {
+          payer: true,
+          recievers: true,
+          Wallets: true,
+        },
+      },
+    });
 
-    const walletsWithAllData = [];
-
-    try {
-      const walletsWithoutAllData = (await runQuerry(
-        `SELECT * FROM Wallets WHERE isSynced = '0';`
-      )) as any[] | undefined;
-
-      if (!walletsWithoutAllData) {
-        throw new Error('getUnsyncedWallets error');
-      }
-
-      for (const wallets of walletsWithoutAllData) {
-        // console.log('getting full wallet');
-        const fullWallet = await getWalletById(wallets.id);
-
-        // console.log('fullWallet', fullWallet);
-        walletsWithAllData.push(fullWallet.wallet);
-      }
-
-      return walletsWithAllData;
-    } catch (error) {
-      console.error('error', error);
-      throw new Error('getUnsyncedWallets error');
-    }
-
-    return walletsWithAllData;
+    return wallets;
   };
 
   // SHR TBD
   const markWalletAsSynced = async (input: any) => {
-    console.log('markWalletAsSynced TBD');
-
-    return new Promise<boolean | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const transactionQueries = [];
-
-          for (const wallet of input) {
-            console.log('wallett', wallet);
-
-            // Update wallet
-            transactionQueries.push({
-              statement: `UPDATE Wallets SET isSynced = ? WHERE id = ?`,
-              values: [1, wallet.id],
-            });
-          }
-
-          await db?.executeTransaction(transactionQueries, false);
-          resolve(true);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
+    for (const wallet of input) {
+      console.log("wallett", wallet);
+      const walletToUpdate = await walletsRepository.current.findOne({
+        where: {
+          id: wallet.id,
+        },
       });
-    });
+
+      if (!walletToUpdate) {
+        throw new Error("Wallet not found");
+      }
+
+      walletToUpdate.isSynced = true;
+
+      await walletsRepository.current.save(walletToUpdate);
+    }
+
+    await saveToStore();
   };
 
   const applyUpdateToLocalDB = async (input: any) => {
-    // console.log('applyUpdateToLocalDB TBD');
-    return new Promise<boolean | undefined>(async (resolve, reject) => {
-      await performSQLAction(async (db: SQLiteDBConnection | undefined) => {
-        try {
-          const transactionQueries = [];
+    for (const wallet of input) {
+      console.log("wallet", wallet);
 
-          for (const wallet of input) {
-            console.log('wallet', wallet);
-            const results = await db?.query(`SELECT *
-              FROM Wallets
-              WHERE globalId = '${wallet.globalId}';`);
-
-            console.log('results', results);
-
-            if (results && results.values?.length === 0) {
-              console.log('wallet not found creating new one');
-              transactionQueries.push({
-                statement: `INSERT INTO Wallets (id, globalId, name, description, currency, category, createdAt, updatedAt, isSynced) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
-                values: [
-                  wallet.id,
-                  wallet.globalId,
-                  wallet.name,
-                  wallet.description,
-                  wallet.currency,
-                  wallet.category,
-                  1,
-                ],
-              });
-
-              for (const user of wallet.walletUsers) {
-                transactionQueries.push({
-                  statement: `INSERT INTO WalletUser (id, name, bilance, total, createdAt, updatedAt, walletsId) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
-                  values: [
-                    user.id,
-                    user.name,
-                    user.bilance,
-                    user.total,
-                    wallet.id,
-                  ],
-                });
-              }
-            } else if (results && results.values?.length === 1) {
-              console.log('wallet found updating');
-            } else {
-              console.log('error');
-              throw new Error('error');
-            }
-          }
-          console.log('transactionQueries', transactionQueries);
-          const response = await db?.executeTransaction(
-            transactionQueries,
-            false
-          );
-          console.log('response', response);
-          resolve(true);
-        } catch (error) {
-          console.error('error', error);
-          reject(error);
-        }
+      const walletToUpdate = await walletsRepository.current.findOne({
+        where: {
+          globalId: wallet.globalId,
+        },
       });
-    });
+
+      if (!walletToUpdate) {
+        console.log("wallet not found creating new one");
+        const walletNew = new Wallets();
+        walletNew.globalId = wallet.globalId;
+        walletNew.name = wallet.name;
+        walletNew.description = wallet.description;
+        walletNew.currency = wallet.currency;
+        walletNew.category = wallet.category;
+        walletNew.total = wallet.total;
+        walletNew.createdAt = wallet.createdAt;
+        walletNew.updatedAt = wallet.updatedAt;
+        walletNew.isSynced = true;
+        await walletsRepository.current.save(walletNew);
+
+        for (const user of wallet.walletUsers) {
+          const walletUserNew = new WalletUser();
+          walletUserNew.name = user.name;
+          walletUserNew.bilance = user.bilance;
+          walletUserNew.total = user.total;
+          walletUserNew.createdAt = user.createdAt;
+          walletUserNew.updatedAt = user.updatedAt;
+          walletUserNew.Wallets = walletNew;
+          await walletUserRepository.current.save(walletUserNew);
+        }
+      } else {
+        console.log("wallet found updating");
+      }
+    }
+
+    await saveToStore();
   };
 
   return {
-    createTable,
     listOfTables,
     getLocalUser,
     getWalletsWithEmail,

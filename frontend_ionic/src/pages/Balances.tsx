@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+/* eslint-disable import/no-webpack-loader-syntax */
+import React, { useEffect, useState } from "react";
+import { useHistory, useParams } from "react-router-dom";
 import {
   BalancesMainContent,
   Navbar,
   MiddlePannel,
   BottomContent,
   BalancesTopPannel,
-} from '../styles/mainContainers.styled';
-import { ExpenseButton } from '../styles/buttons.styled';
-import BalanceItem from '../components/BalanceItem';
-import ReimbursementItem from '../components/ReimbursementItem';
+} from "../styles/mainContainers.styled";
+import { ExpenseButton } from "../styles/buttons.styled";
+import BalanceItem from "../components/BalanceItem";
+import ReimbursementItem from "../components/ReimbursementItem";
 import {
   IonBackButton,
   IonButtons,
@@ -19,11 +20,11 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-} from '@ionic/react';
-import { useDBFunctions } from '../lib/FrontendDBContext';
+} from "@ionic/react";
+import { useDBFunctions } from "../lib/FrontendDBContext";
 
 function deepCopy(obj: any): any {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
@@ -46,8 +47,8 @@ function deepCopy(obj: any): any {
 }
 
 export default function Balances() {
-  const { walletId } = useParams();
-  const navigate = useNavigate();
+  const { walletId } = useParams<{ walletId: string }>();
+  const history = useHistory();
   const [walletUsers, setWalletUsers] = useState<any[]>([]);
   const [bilanceBarPositiveRatio, setBilanceBarPositiveRatio] =
     useState<number>(0);
@@ -59,7 +60,7 @@ export default function Balances() {
   useEffect(() => {
     if (!initialized) return;
     (async () => {
-      const users = await getWalletUsersByWalletId(walletId || '');
+      const users = await getWalletUsersByWalletId(walletId || "");
       // console.log('walletUsers', users);
       if (users) {
         setWalletUsers(users);
@@ -157,10 +158,10 @@ export default function Balances() {
         </IonToolbar>
       </IonHeader>
       <Navbar>
-        <ExpenseButton onClick={() => navigate(`/${walletId}/expenses`)}>
+        <ExpenseButton onClick={() => history.push(`/${walletId}/expenses`)}>
           <h1>MY EXPENSES</h1>
         </ExpenseButton>
-        <ExpenseButton onClick={() => navigate(`/${walletId}/balances`)}>
+        <ExpenseButton onClick={() => history.push(`/${walletId}/balances`)}>
           <h1>BALANCES</h1>
         </ExpenseButton>
       </Navbar>

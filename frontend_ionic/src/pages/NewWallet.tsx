@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { z } from 'zod';
-import { BurgerButton, CategoryButton } from '../styles/buttons.styled';
+/* eslint-disable import/no-webpack-loader-syntax */
+import React, { useEffect, useState } from "react";
+import { z } from "zod";
+import { BurgerButton, CategoryButton } from "../styles/buttons.styled";
 import {
   ParticipantInputDiv,
   MainContentItem,
-} from '../styles/newWallet.styled';
-import { MiddlePannel, BottomContent } from '../styles/mainContainers.styled';
-import { Input, Select, Label } from '../styles/Input.styled';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import CheckedIcon from '-!svg-react-loader!../assets/icons/checked.svg';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+} from "../styles/newWallet.styled";
+import { MiddlePannel, BottomContent } from "../styles/mainContainers.styled";
+import { Input, Select, Label } from "../styles/Input.styled";
+import BackIcon from "-!svg-react-loader!../assets/icons/back.svg";
+import CheckedIcon from "-!svg-react-loader!../assets/icons/checked.svg";
+import { useHistory } from "react-router-dom";
+import axios from "axios";
 import {
   IonBackButton,
   IonButton,
@@ -27,10 +28,10 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-} from '@ionic/react';
-import { checkmarkOutline } from 'ionicons/icons';
-import { useDBFunctions } from '../lib/FrontendDBContext';
-import { v4 as uuidv4 } from 'uuid';
+} from "@ionic/react";
+import { checkmarkOutline } from "ionicons/icons";
+import { useDBFunctions } from "../lib/FrontendDBContext";
+import { v4 as uuidv4 } from "uuid";
 
 const UserListSchema = z.array(
   z.object({
@@ -42,12 +43,12 @@ const UserListSchema = z.array(
 const ParticipantsSchema = z.array(z.string());
 
 export default function NewWallet() {
-  const navigate = useNavigate();
+  const history = useHistory();
 
-  const [title, setTitle] = useState<string>('');
-  const [decription, setDecription] = useState<string>('');
-  const [currency, setCurrency] = useState<string>('');
-  const [category, setCategory] = useState<string>('');
+  const [title, setTitle] = useState<string>("");
+  const [decription, setDecription] = useState<string>("");
+  const [currency, setCurrency] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
   const [participants, setParticipants] = useState<
     z.infer<typeof ParticipantsSchema>
   >([]);
@@ -79,25 +80,25 @@ export default function NewWallet() {
     const outputTemp = {
       globalId: uuidv4(),
       name: `Test ${currentTime}`,
-      description: 'Test1 Des',
-      currency: 'eur',
-      category: 'couple',
+      description: "Test1 Des",
+      currency: "eur",
+      category: "couple",
       userList: [
         {
-          name: 'Samo',
-          email: 'samko1311@gmail.com',
+          name: "Samo",
+          email: "samko1311@gmail.com",
         },
         {
-          name: 'Isi',
+          name: "Isi",
         },
       ],
     };
 
-    console.log('outputTemp', outputTemp);
+    // console.log("outputTemp", outputTemp);
 
     await addWallet(outputTemp);
 
-    navigate('/');
+    history.push("/");
   }
 
   /* useEffect(() => {
@@ -109,9 +110,9 @@ export default function NewWallet() {
   }, [history.location.pathname]);*/
 
   function getName(i: number): string {
-    if (participants == undefined) return '';
+    if (participants == undefined) return "";
     const output = participants[i];
-    if (output == undefined) return '';
+    if (output == undefined) return "";
     return output;
   }
 
@@ -127,7 +128,7 @@ export default function NewWallet() {
       newParticipants.splice(i, 1);
       setParticipants(newParticipants);
     } else {
-      console.error('Invalid index');
+      console.error("Invalid index");
     }
   }
 
@@ -145,7 +146,7 @@ export default function NewWallet() {
               onChange={(e) => setName(i, e.target.value)}
             />
           </div>
-          {getName(i) != '' && (
+          {getName(i) != "" && (
             <button onClick={() => deleteUser(i)}>Delete</button>
           )}
         </ParticipantInputDiv>
@@ -212,38 +213,38 @@ export default function NewWallet() {
             <p>Category</p>
             <div>
               <CategoryButton
-                data-clicked-state={category == 'trip'}
-                onClick={() => setCategory('trip')}
+                data-clicked-state={category == "trip"}
+                onClick={() => setCategory("trip")}
               >
                 Trip
               </CategoryButton>
               <CategoryButton
-                data-clicked-state={category == 'sharedHouse'}
-                onClick={() => setCategory('sharedHouse')}
+                data-clicked-state={category == "sharedHouse"}
+                onClick={() => setCategory("sharedHouse")}
               >
                 Shared house
               </CategoryButton>
               <CategoryButton
-                data-clicked-state={category == 'couple'}
-                onClick={() => setCategory('couple')}
+                data-clicked-state={category == "couple"}
+                onClick={() => setCategory("couple")}
               >
                 Couple
               </CategoryButton>
               <CategoryButton
-                data-clicked-state={category == 'event'}
-                onClick={() => setCategory('event')}
+                data-clicked-state={category == "event"}
+                onClick={() => setCategory("event")}
               >
                 Event
               </CategoryButton>
               <CategoryButton
-                data-clicked-state={category == 'project'}
-                onClick={() => setCategory('project')}
+                data-clicked-state={category == "project"}
+                onClick={() => setCategory("project")}
               >
                 Project
               </CategoryButton>
               <CategoryButton
-                data-clicked-state={category == 'other'}
-                onClick={() => setCategory('other')}
+                data-clicked-state={category == "other"}
+                onClick={() => setCategory("other")}
               >
                 Other
               </CategoryButton>

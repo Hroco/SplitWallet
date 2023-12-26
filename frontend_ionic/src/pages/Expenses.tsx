@@ -1,29 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import contentData from '../assets/testContentData';
-import ExpenseItem from '../components/ExpenseItem';
-import { TotalExpenseDiv, MenuHeading } from '../styles/MainItemPage.styled';
+/* eslint-disable import/no-webpack-loader-syntax */
+import React, { useEffect, useState } from "react";
+import { useHistory, useParams } from "react-router-dom";
+import contentData from "../assets/testContentData";
+import ExpenseItem from "../components/ExpenseItem";
+import { TotalExpenseDiv, MenuHeading } from "../styles/MainItemPage.styled";
 import {
   WalletItemAddButton,
   BurgerButton,
   ExpenseButton,
-} from '../styles/buttons.styled';
+} from "../styles/buttons.styled";
 import {
   ExpenseMainContent,
   Navbar,
   ExpenseFooter,
-} from '../styles/mainContainers.styled';
-import AddIcon from '-!svg-react-loader!../assets/icons/addPlus.svg';
-import BurgerIcon from '-!svg-react-loader!../assets/icons/hamburger.svg';
-import BackIcon from '-!svg-react-loader!../assets/icons/back.svg';
-import HistoryIcon from '-!svg-react-loader!../assets/icons/history.svg';
-import TrashIcon from '-!svg-react-loader!../assets/icons/trash.svg';
-import EditIcon from '-!svg-react-loader!../assets/icons/edit.svg';
-import BurgerMenu from '../components/DropDownMenu';
+} from "../styles/mainContainers.styled";
+import AddIcon from "-!svg-react-loader!../assets/icons/addPlus.svg";
+import BurgerIcon from "-!svg-react-loader!../assets/icons/hamburger.svg";
+import BackIcon from "-!svg-react-loader!../assets/icons/back.svg";
+import HistoryIcon from "-!svg-react-loader!../assets/icons/history.svg";
+import TrashIcon from "-!svg-react-loader!../assets/icons/trash.svg";
+import EditIcon from "-!svg-react-loader!../assets/icons/edit.svg";
+import BurgerMenu from "../components/DropDownMenu";
 // import axios from 'axios';
-import LoadingScreen from '../components/LoadingScreen';
-import { Button } from '../styles/DropDownMenu.styled';
-import { ArrowDown, ArrowUp } from '../styles/utills.styled';
+import LoadingScreen from "../components/LoadingScreen";
+import { Button } from "../styles/DropDownMenu.styled";
+import { ArrowDown, ArrowUp } from "../styles/utills.styled";
 import {
   IonBackButton,
   IonButton,
@@ -39,33 +40,33 @@ import {
   IonTitle,
   IonToolbar,
   useIonAlert,
-} from '@ionic/react';
-import { useDBFunctions } from '../lib/FrontendDBContext';
+} from "@ionic/react";
+import { useDBFunctions } from "../lib/FrontendDBContext";
 
 enum SortType {
-  DateAsc = 'DateAsc',
-  DateDesc = 'DateDesc',
-  AmountAsc = 'AmountAsc',
-  AmountDesc = 'AmountDesc',
-  TitleAsc = 'TitleAsc',
-  TitleDesc = 'TitleDesc',
-  PayerAsc = 'PayerAsc',
-  PayerDesc = 'PayerDesc',
-  CategoryAsc = 'CategoryAsc',
-  CategoryDesc = 'CategoryDesc',
+  DateAsc = "DateAsc",
+  DateDesc = "DateDesc",
+  AmountAsc = "AmountAsc",
+  AmountDesc = "AmountDesc",
+  TitleAsc = "TitleAsc",
+  TitleDesc = "TitleDesc",
+  PayerAsc = "PayerAsc",
+  PayerDesc = "PayerDesc",
+  CategoryAsc = "CategoryAsc",
+  CategoryDesc = "CategoryDesc",
 }
 
 export default function Expenses() {
-  const { walletId } = useParams();
-  const navigate = useNavigate();
+  const { walletId } = useParams<{ walletId: string }>();
+  const history = useHistory();
   // line bellow neads to be handled properly in the future
   const [sortType, setSortType] = useState<SortType>(SortType.DateDesc);
   const [walletItems, setWalletItems] = useState<any[] | null>(null);
   const [wallet, setWallet] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
   const [presentAlert] = useIonAlert();
-  if (walletId == undefined) throw new Error('WalletId is undefined.');
-  if (typeof walletId != 'string') throw new Error('WalletId is not string.');
+  if (walletId == undefined) throw new Error("WalletId is undefined.");
+  if (typeof walletId != "string") throw new Error("WalletId is not string.");
   const {
     getWalletItemsByWalletId,
     getWalletUserByEmailAndWalletId,
@@ -80,7 +81,7 @@ export default function Expenses() {
     (async () => {
       const { wallet, walletItems } = await getWalletItemsByWalletId(walletId);
       const walletUser = await getWalletUserByEmailAndWalletId(
-        'samko1311@gmail.com',
+        "samko1311@gmail.com",
         walletId
       );
 
@@ -240,13 +241,13 @@ export default function Expenses() {
 
   async function deleteWallet() {
     // axios.delete(`/api/wallets/deleteWalletById/${walletId}`);
-    await deleteWalletById(walletId || '');
-    navigate('/');
+    await deleteWalletById(walletId || "");
+    history.push("/");
   }
 
   function getIcon(buttonType: string, sortType: SortType) {
     if (
-      buttonType == 'amount' &&
+      buttonType == "amount" &&
       sortType != SortType.AmountAsc &&
       sortType != SortType.AmountDesc
     ) {
@@ -254,7 +255,7 @@ export default function Expenses() {
     }
 
     if (
-      buttonType == 'title' &&
+      buttonType == "title" &&
       sortType != SortType.TitleAsc &&
       sortType != SortType.TitleDesc
     ) {
@@ -262,7 +263,7 @@ export default function Expenses() {
     }
 
     if (
-      buttonType == 'date' &&
+      buttonType == "date" &&
       sortType != SortType.DateAsc &&
       sortType != SortType.DateDesc
     ) {
@@ -270,7 +271,7 @@ export default function Expenses() {
     }
 
     if (
-      buttonType == 'payer' &&
+      buttonType == "payer" &&
       sortType != SortType.PayerAsc &&
       sortType != SortType.PayerDesc
     ) {
@@ -278,7 +279,7 @@ export default function Expenses() {
     }
 
     if (
-      buttonType == 'category' &&
+      buttonType == "category" &&
       sortType != SortType.CategoryAsc &&
       sortType != SortType.CategoryDesc
     ) {
@@ -385,7 +386,7 @@ export default function Expenses() {
                   <IonItem
                     button={true}
                     detail={false}
-                    onClick={() => navigate(`/${walletId}/edit`)}
+                    onClick={() => history.push(`/${walletId}/edit`)}
                   >
                     <EditIcon />
                     <IonTitle>Edit</IonTitle>
@@ -415,7 +416,7 @@ export default function Expenses() {
                             )
                           }
                         >
-                          {getIcon('title', sortType)} Title
+                          {getIcon("title", sortType)} Title
                         </IonItem>
                         <IonItem
                           button={true}
@@ -427,7 +428,7 @@ export default function Expenses() {
                             )
                           }
                         >
-                          {getIcon('amount', sortType)} Amount
+                          {getIcon("amount", sortType)} Amount
                         </IonItem>
                         <IonItem
                           button={true}
@@ -436,7 +437,7 @@ export default function Expenses() {
                             toggleSortType(SortType.DateAsc, SortType.DateDesc)
                           }
                         >
-                          {getIcon('date', sortType)} Expense date
+                          {getIcon("date", sortType)} Expense date
                         </IonItem>
                         <IonItem
                           button={true}
@@ -448,7 +449,7 @@ export default function Expenses() {
                             )
                           }
                         >
-                          {getIcon('payer', sortType)} Payer
+                          {getIcon("payer", sortType)} Payer
                         </IonItem>
                         <IonItem
                           button={true}
@@ -460,7 +461,7 @@ export default function Expenses() {
                             )
                           }
                         >
-                          {getIcon('category', sortType)} Category
+                          {getIcon("category", sortType)} Category
                         </IonItem>
                       </IonList>
                     </IonContent>
@@ -470,18 +471,18 @@ export default function Expenses() {
                     detail={false}
                     onClick={() =>
                       presentAlert({
-                        header: 'Confirm delete?',
+                        header: "Confirm delete?",
                         buttons: [
                           {
-                            text: 'CANCEL',
-                            role: 'cancel',
+                            text: "CANCEL",
+                            role: "cancel",
                             handler: () => {
-                              console.log('Alert canceled');
+                              console.log("Alert canceled");
                             },
                           },
                           {
-                            text: 'DELETE',
-                            role: 'delete',
+                            text: "DELETE",
+                            role: "delete",
                             handler: () => {
                               deleteWallet();
                             },
@@ -496,7 +497,7 @@ export default function Expenses() {
                   <IonItem
                     button={true}
                     detail={false}
-                    onClick={() => navigate(`/${walletId}/feed`)}
+                    onClick={() => history.push(`/${walletId}/feed`)}
                   >
                     <HistoryIcon />
                     <IonTitle>History</IonTitle>
@@ -508,10 +509,10 @@ export default function Expenses() {
         </IonToolbar>
       </IonHeader>
       <Navbar>
-        <ExpenseButton onClick={() => navigate(`/${walletId}/expenses`)}>
+        <ExpenseButton onClick={() => history.push(`/${walletId}/expenses`)}>
           <h1>MY EXPENSES</h1>
         </ExpenseButton>
-        <ExpenseButton onClick={() => navigate(`/${walletId}/balances`)}>
+        <ExpenseButton onClick={() => history.push(`/${walletId}/balances`)}>
           <h1>BALANCES</h1>
         </ExpenseButton>
       </Navbar>
@@ -521,7 +522,7 @@ export default function Expenses() {
             walletItems.map((walletItem: any, index: number) => (
               <ExpenseItem
                 onClick={() =>
-                  navigate(
+                  history.push(
                     `/${walletId}/${walletItem.id}/open?sort=${sortType}`
                   )
                 }
@@ -540,7 +541,7 @@ export default function Expenses() {
           <p>MY TOTAL</p>
           <h2>€ {currentWalletUser.total.toFixed(2)}</h2>
         </div>
-        <WalletItemAddButton onClick={() => navigate(`/${walletId}/add`)}>
+        <WalletItemAddButton onClick={() => history.push(`/${walletId}/add`)}>
           <AddIcon />
         </WalletItemAddButton>
         <TotalExpenseDiv>
