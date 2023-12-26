@@ -96,7 +96,7 @@ export default function NewWallet() {
 
     // console.log("outputTemp", outputTemp);
 
-    await addWallet(outputTemp);
+    await addWallet(output);
 
     history.push("/");
   }
@@ -144,10 +144,16 @@ export default function NewWallet() {
               id="name"
               value={getName(i)}
               onChange={(e) => setName(i, e.target.value)}
+              data-test-target={"newWalletParticipantName" + i}
             />
           </div>
           {getName(i) != "" && (
-            <button onClick={() => deleteUser(i)}>Delete</button>
+            <button
+              onClick={() => deleteUser(i)}
+              data-test-target={"newWalletParticipantDelete" + i}
+            >
+              Delete
+            </button>
           )}
         </ParticipantInputDiv>
       </MainContentItem>
@@ -159,11 +165,18 @@ export default function NewWallet() {
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/"></IonBackButton>
+            <IonBackButton
+              defaultHref="/"
+              data-test-target="newWalletBackButton"
+            ></IonBackButton>
           </IonButtons>
           <IonTitle>New Wallet</IonTitle>
           <IonButtons slot="end">
-            <IonButton size="large" onClick={() => handleAddWallet()}>
+            <IonButton
+              size="large"
+              onClick={() => handleAddWallet()}
+              data-test-target="addNewWallet"
+            >
               <IonIcon icon={checkmarkOutline}></IonIcon>
             </IonButton>
           </IonButtons>
@@ -179,6 +192,7 @@ export default function NewWallet() {
               maxlength={50}
               value={title}
               onIonChange={(e) => setTitle(e.detail.value as string)}
+              data-test-target="newWalletTitle"
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -189,6 +203,7 @@ export default function NewWallet() {
               maxlength={500}
               value={decription}
               onIonChange={(e) => setDecription(e.detail.value as string)}
+              data-test-target="newWalletDescription"
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -197,6 +212,7 @@ export default function NewWallet() {
               placeholder="eur"
               value={currency as string}
               onIonChange={(e) => setCurrency(e.detail.value as string)}
+              data-test-target="newWalletCurrency"
             >
               <IonSelectOption value="eur">Eur</IonSelectOption>
               <IonSelectOption value="usd">Usd</IonSelectOption>
@@ -215,36 +231,42 @@ export default function NewWallet() {
               <CategoryButton
                 data-clicked-state={category == "trip"}
                 onClick={() => setCategory("trip")}
+                data-test-target="newWalletCategoryTrip"
               >
                 Trip
               </CategoryButton>
               <CategoryButton
                 data-clicked-state={category == "sharedHouse"}
                 onClick={() => setCategory("sharedHouse")}
+                data-test-target="newWalletCategorySharedHouse"
               >
                 Shared house
               </CategoryButton>
               <CategoryButton
                 data-clicked-state={category == "couple"}
                 onClick={() => setCategory("couple")}
+                data-test-target="newWalletCategoryCouple"
               >
                 Couple
               </CategoryButton>
               <CategoryButton
                 data-clicked-state={category == "event"}
                 onClick={() => setCategory("event")}
+                data-test-target="newWalletCategoryEvent"
               >
                 Event
               </CategoryButton>
               <CategoryButton
                 data-clicked-state={category == "project"}
                 onClick={() => setCategory("project")}
+                data-test-target="newWalletCategoryProject"
               >
                 Project
               </CategoryButton>
               <CategoryButton
                 data-clicked-state={category == "other"}
                 onClick={() => setCategory("other")}
+                data-test-target="newWalletCategoryOther"
               >
                 Other
               </CategoryButton>

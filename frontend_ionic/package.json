@@ -11,11 +11,11 @@
     "@capacitor-community/sqlite": "^5.5.1-2",
     "@capacitor/android": "^5.3.0",
     "@capacitor/core": "^5.3.0",
-    "@capacitor/ios": "^5.3.0",
     "@capacitor/dialog": "^5.0.0",
+    "@capacitor/ios": "^5.3.0",
     "@capacitor/toast": "^5.0.0",
-    "@ionic/pwa-elements": "^3.1.1",
     "@ionic/core": "^7.4.3",
+    "@ionic/pwa-elements": "^3.1.1",
     "@ionic/react": "^7.4.3",
     "@ionic/react-router": "^6.6.1",
     "@svgr/webpack": "^8.1.0",
@@ -64,7 +64,8 @@
     "ionic:build": "npm run build",
     "ionic:serve": "npm run start",
     "build_android": "ionic build && npx cap copy --inline android",
-    "build_ios": "ionic build && npx cap copy --inline ios"
+    "build_ios": "ionic build && npx cap copy --inline ios",
+    "cypress:open": "cypress open"
   },
   "eslintConfig": {
     "extends": [
@@ -91,7 +92,8 @@
     "@types/react-modal": "^3.13.1",
     "@types/uuid": "^9.0.7",
     "copyfiles": "^2.4.1",
-    "craco-swc": "^0.5.1"
+    "craco-swc": "^0.5.1",
+    "cypress": "^13.6.1"
   },
   "repository": {
     "type": "git",

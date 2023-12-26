@@ -39,6 +39,7 @@ export default function HomePage() {
                     button={true}
                     detail={false}
                     onClick={() => history.push(`/mysettings`)}
+                    data-test-target="mySettingsButton"
                   >
                     <IonIcon slot="start" icon={settingsOutline}></IonIcon>
                     <IonTitle>My Settings</IonTitle>
@@ -57,10 +58,14 @@ export default function HomePage() {
               key={index}
               name={item.name}
               description={item.description}
+              data-test-target={"wallet" + index}
             />
           ))}
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButtonOrange onClick={() => history.push("/newWallet")}>
+          <IonFabButtonOrange
+            onClick={() => history.push("/newWallet")}
+            data-test-target="addButton"
+          >
             <IonIcon icon={add}></IonIcon>
           </IonFabButtonOrange>
         </IonFab>
