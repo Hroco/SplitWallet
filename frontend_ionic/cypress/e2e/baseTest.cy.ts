@@ -3,15 +3,25 @@ describe("Basic Test", () => {
     // This code will run before each test in this describe block
     cy.visit("http://localhost:3000/");
     cy.viewport(412, 915);
-    cy.clearAllCookies();
+  });
 
-    // indexedDB.deleteDatabase('name_of_your_database');
+  after(() => {
+    // This code will run after all tests
+    cy.window()
+      .its("clearDB")
+      .then((clearDB) => {
+        clearDB();
+
+        cy.visit("http://localhost:3000/");
+      });
   });
 
   it("Create New Wallet", () => {
     cy.url().should("include", "/");
 
-    cy.get('[data-test-target="addButton"]').click();
+    cy.get('[data-test-target="addButton"]', { timeout: 10000 })
+      .should("be.visible")
+      .click();
 
     cy.get('[data-test-target="newWalletTitle"]').type("Pohoda 2023");
 

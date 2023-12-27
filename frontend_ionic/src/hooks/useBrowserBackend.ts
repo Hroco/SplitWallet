@@ -101,6 +101,9 @@ const useBrowserBackend = () => {
     await saveToStore();
 
     (window as any).listOfTables = listOfTables;
+    (window as any).clearDB = clearDB;
+
+    // clearDB();
 
     setInitialized(true);
     /*
@@ -122,6 +125,18 @@ const useBrowserBackend = () => {
     ) {
       await sqliteConnection.saveToStore(database.current);
     }
+  };
+
+  const clearDB = async () => {
+    await walletsRepository.current.clear();
+    await walletItemsRepository.current.clear();
+    await walletUserRepository.current.clear();
+    await recieverDataRepository.current.clear();
+    await userRepository.current.clear();
+
+    await saveToStore();
+
+    return true;
   };
 
   const listOfTables = async () => {
