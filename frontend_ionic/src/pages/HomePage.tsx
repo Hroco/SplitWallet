@@ -58,7 +58,9 @@ export default function HomePage() {
               key={index}
               name={item.name}
               description={item.description}
-              data-test-target={"wallet" + index}
+              cypressButtonId={`walletButton${index}`}
+              cypressNameId={`walletName${index}`}
+              cypressDescriptionId={`walletDescription${index}`}
             />
           ))}
         <IonFab slot="fixed" vertical="bottom" horizontal="end">

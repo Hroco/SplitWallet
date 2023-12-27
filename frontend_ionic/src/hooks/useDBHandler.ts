@@ -95,7 +95,7 @@ export default function useDBHandler() {
       // console.log('res', res);
       if (res.status === 201 || res.status === 200) {
         // Wallet created successfully on server
-        console.log("Wallet created successfully on server");
+        //console.log("Wallet created successfully on server");
         return true;
       }
     } catch (error: any) {
@@ -103,7 +103,7 @@ export default function useDBHandler() {
         console.error("error from online server", error);
         throw error;
       }
-      console.log("Server is offline");
+      //console.log("Server is offline");
 
       return false;
     }
@@ -111,22 +111,22 @@ export default function useDBHandler() {
 
   const syncWallets = async () => {
     // sync wallets here
-    console.log("syncWallets TBD");
+    //console.log("syncWallets TBD");
 
     // Upload local changes to the server
     const unsyncedWallets = await getUnsyncedWallets();
 
-    console.log("unsyncedWallets", unsyncedWallets);
+    //console.log("unsyncedWallets", unsyncedWallets);
 
     if (unsyncedWallets.length === 0) {
-      console.log("No unsynced wallets");
+      //console.log("No unsynced wallets");
     } else {
       const isSynced = await sendAndReturnStatus(() =>
         axios.put("/api/wallets/update/", unsyncedWallets)
       );
 
       if (isSynced) {
-        console.log("markWalletAsSynced");
+        //console.log("markWalletAsSynced");
         await markWalletAsSynced(unsyncedWallets);
       }
       // console.log('isSynced', isSynced);
@@ -159,13 +159,13 @@ export default function useDBHandler() {
 
     // If user is loged, it should have email in his local account, we should add that email into input then
     // If user is not logged in then jsut create Local wallet probably with unsynced flag ?
-    console.log("addWallet", input);
+    //console.log("addWallet", input);
 
     const isOnline = await sendAndReturnStatus(() =>
       axios.post("/api/wallets/addWallet/", input)
     );
 
-    console.log("isOnline", isOnline);
+    //console.log("isOnline", isOnline);
     let newWallet;
     if (isOnline) {
       newWallet = await addWalletLocal({ ...input, isSynced: true });
@@ -173,7 +173,7 @@ export default function useDBHandler() {
       // Add Wallet to local db with unsynced flag
       newWallet = await addWalletLocal({ ...input, isSynced: false });
     }
-    console.log("setting new wallet", newWallet);
+    //console.log("setting new wallet", newWallet);
     setNewWallet(newWallet);
   };
 

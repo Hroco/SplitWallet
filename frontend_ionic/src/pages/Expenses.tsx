@@ -509,10 +509,16 @@ export default function Expenses() {
         </IonToolbar>
       </IonHeader>
       <Navbar>
-        <ExpenseButton onClick={() => history.push(`/${walletId}/expenses`)}>
+        <ExpenseButton
+          onClick={() => history.push(`/${walletId}/expenses`)}
+          data-test-target="expenseButton"
+        >
           <h1>MY EXPENSES</h1>
         </ExpenseButton>
-        <ExpenseButton onClick={() => history.push(`/${walletId}/balances`)}>
+        <ExpenseButton
+          onClick={() => history.push(`/${walletId}/balances`)}
+          data-test-target="balancesButton"
+        >
           <h1>BALANCES</h1>
         </ExpenseButton>
       </Navbar>
@@ -539,14 +545,19 @@ export default function Expenses() {
       <ExpenseFooter>
         <div>
           <p>MY TOTAL</p>
-          <h2>€ {currentWalletUser.total.toFixed(2)}</h2>
+          <h2 data-test-target="currentUserTotal">
+            € {currentWalletUser.total.toFixed(2)}
+          </h2>
         </div>
-        <WalletItemAddButton onClick={() => history.push(`/${walletId}/add`)}>
+        <WalletItemAddButton
+          onClick={() => history.push(`/${walletId}/add`)}
+          data-test-target="addItemButton"
+        >
           <AddIcon />
         </WalletItemAddButton>
         <TotalExpenseDiv>
           <p>TOTAL EXPENSES</p>
-          <h2>€ {wallet.total.toFixed(2)}</h2>
+          <h2 data-test-target="walletTotal">€ {wallet.total.toFixed(2)}</h2>
         </TotalExpenseDiv>
       </ExpenseFooter>
     </IonPage>

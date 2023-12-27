@@ -163,7 +163,7 @@ export default function Add() {
   }, [amount, participants]);
 
   function handleMainCheckBoxClick() {
-    console.log("handleMainCheckBoxClick");
+    //console.log("handleMainCheckBoxClick");
     if (mainCheckBoxMode == "checked") {
       setMainCheckBoxMode("unchecked");
       setParticipants(
@@ -291,7 +291,7 @@ export default function Add() {
     };*/
 
     // axios.post('/api/wallets/addWalletItem/', newWalletItem);
-    console.log("newWalletItem", newWalletItem);
+    //console.log("newWalletItem", newWalletItem);
     await addWalletItem(newWalletItem);
 
     history.push(`/${walletId}/expenses`);
@@ -353,14 +353,18 @@ export default function Add() {
             onIonChange={(event: any) =>
               setCheckedStatus(i, event.target.checked)
             }
+            data-test-target={"newWalletItemUserCheckbox" + i}
           ></IonCheckboxOrange>
-          <IonLabel>{user.name}</IonLabel>
+          <IonLabel data-test-target={"newWalletItemUserName" + i}>
+            {user.name}
+          </IonLabel>
         </div>
 
         <Input
           type="number"
           value={parseFloat(getCutFromAmount(i)).toFixed(2)}
           onChange={(e) => setCutFromAmount(i, parseInt(e.target.value))}
+          data-test-target={"newWalletItemUserValue" + i}
         />
       </ParticipantInputDiv>
     );
@@ -389,7 +393,10 @@ export default function Add() {
           </IonButtons>
           <IonTitle>{setHeading()}</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={() => handleAddWalletItem()}>
+            <IonButton
+              data-test-target="addNewWalletItem"
+              onClick={() => handleAddWalletItem()}
+            >
               <CheckedIcon />
             </IonButton>
           </IonButtons>
@@ -403,6 +410,7 @@ export default function Add() {
               placeholder="expense"
               value={type as string}
               onIonChange={(e) => setType(e.detail.value as string)}
+              data-test-target="newWalletItemType"
             >
               <IonSelectOption value="expense">Expense</IonSelectOption>
               <IonSelectOption value="income">Income</IonSelectOption>
@@ -419,6 +427,7 @@ export default function Add() {
               maxlength={50}
               value={title}
               onIonChange={(e) => setTitle(e.detail.value as string)}
+              data-test-target="newWalletItemTitle"
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -431,6 +440,7 @@ export default function Add() {
               onIonChange={(e) =>
                 setAmount(parseFloat(e.detail.value as string))
               }
+              data-test-target="newWalletItemAmount"
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -440,6 +450,7 @@ export default function Add() {
               type="date"
               value={date.toISOString().split("T")[0]}
               onIonChange={(e) => setDate(new Date(e.detail.value as string))}
+              data-test-target="newWalletItemDate"
             ></IonInput>
           </IonItem>
           <IonItem>
@@ -447,6 +458,7 @@ export default function Add() {
               label={setLabel()}
               value={payerId as string}
               onIonChange={(e) => setPayerId(e.detail.value as string)}
+              data-test-target="newWalletItemPayer"
             >
               {walletUsers &&
                 walletUsers.map((walletUser: any, index: number) => (

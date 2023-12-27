@@ -178,13 +178,17 @@ const useBrowserBackend = () => {
     });
     const users = await userRepository.current.find();
 
-    console.log("DB Debug Output ------------", {
+    const lists = {
       listOfWallets,
       listOfWalletUsers,
       listOfWalletItems,
       listOfRecieverData,
       users,
-    });
+    };
+
+    //console.log("DB Debug Output ------------", lists);
+
+    return lists;
   };
 
   const getLocalUser = async () => {
@@ -213,7 +217,7 @@ const useBrowserBackend = () => {
 
   // SHR Done
   const getWalletById = async (id: string) => {
-    console.log("getWalletById TBD");
+    //console.log("getWalletById TBD");
     let wallet = await walletsRepository.current.findOne({
       where: {
         id: id,
@@ -228,7 +232,7 @@ const useBrowserBackend = () => {
       },
     });
 
-    console.log("getWalletById", wallet);
+    //console.log("getWalletById", wallet);
 
     return { wallet };
   };
@@ -238,7 +242,7 @@ const useBrowserBackend = () => {
     email: string,
     walletId: string
   ) => {
-    console.log("getWalletUserByEmailAndWalletId TBD");
+    //console.log("getWalletUserByEmailAndWalletId TBD");
     // SHR This should find user by his email and walletId code bellow is for testing
 
     let walletUser = await walletUserRepository.current.findOne({
@@ -247,7 +251,7 @@ const useBrowserBackend = () => {
       },
     });
 
-    console.log("getWalletUserByEmailAndWalletId", walletUser);
+    //console.log("getWalletUserByEmailAndWalletId", walletUser);
 
     return walletUser;
   };
@@ -265,10 +269,10 @@ const useBrowserBackend = () => {
       },
     });
 
-    console.log("getWalletItemsByWalletId", {
+    /*console.log("getWalletItemsByWalletId", {
       wallet,
       walletItems: wallet?.walletItems,
-    });
+    });*/
 
     return { wallet, walletItems: wallet?.walletItems };
   };
@@ -374,7 +378,7 @@ const useBrowserBackend = () => {
 
   // SHR Done
   const addWallet = async (input: z.infer<typeof WalletSchema>) => {
-    console.log("addWallet input", input);
+    //console.log("addWallet input", input);
     const validationResult = WalletSchema.safeParse(input);
 
     if (!validationResult.success) {

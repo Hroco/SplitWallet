@@ -158,10 +158,16 @@ export default function Balances() {
         </IonToolbar>
       </IonHeader>
       <Navbar>
-        <ExpenseButton onClick={() => history.push(`/${walletId}/expenses`)}>
+        <ExpenseButton
+          onClick={() => history.push(`/${walletId}/expenses`)}
+          data-test-target="expenseButton"
+        >
           <h1>MY EXPENSES</h1>
         </ExpenseButton>
-        <ExpenseButton onClick={() => history.push(`/${walletId}/balances`)}>
+        <ExpenseButton
+          onClick={() => history.push(`/${walletId}/balances`)}
+          data-test-target="balancesButton"
+        >
           <h1>BALANCES</h1>
         </ExpenseButton>
       </Navbar>
@@ -174,6 +180,7 @@ export default function Balances() {
                 key={index}
                 name={walletUser.name}
                 value={walletUser.bilance}
+                index={index}
                 ratio={
                   walletUser.bilance > 0
                     ? bilanceBarPositiveRatio
@@ -187,6 +194,7 @@ export default function Balances() {
           {reimbursements.map((reimbursement, index) => (
             <ReimbursementItem
               key={index}
+              index={index}
               payer={reimbursement.to}
               debtor={reimbursement.from}
               price={reimbursement.amount}

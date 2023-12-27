@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   BalanceItemDiv,
   MainItemHR,
@@ -6,15 +6,21 @@ import {
   NegativeBalanceBar,
   BalanceItemPLeft,
   BalanceItemPRight,
-} from '../styles/MainItem.styled';
+} from "../styles/MainItem.styled";
 
 type BalanceItemProps = {
   name: string;
   value: number;
   ratio: number;
+  index?: number;
 };
 
-export default function BalanceItem({ name, value, ratio }: BalanceItemProps) {
+export default function BalanceItem({
+  name,
+  value,
+  ratio,
+  index,
+}: BalanceItemProps) {
   value = Math.abs(value) < 0.00001 ? 0 : value;
 
   const percentage = ratio * value;
@@ -23,8 +29,8 @@ export default function BalanceItem({ name, value, ratio }: BalanceItemProps) {
   return (
     <>
       <BalanceItemDiv>
-        <BalanceItemPLeft>
-          {value > 0 ? name : '-€' + absValue}
+        <BalanceItemPLeft data-test-target={"balancesItemLeft" + index}>
+          {value > 0 ? name : "-€" + absValue}
         </BalanceItemPLeft>
         <div>
           {value > 0 ? (
@@ -33,8 +39,8 @@ export default function BalanceItem({ name, value, ratio }: BalanceItemProps) {
             <NegativeBalanceBar width={width}></NegativeBalanceBar>
           )}
         </div>
-        <BalanceItemPRight>
-          {value > 0 ? '+€' + absValue : name}
+        <BalanceItemPRight data-test-target={"balancesItemRight" + index}>
+          {value > 0 ? "+€" + absValue : name}
         </BalanceItemPRight>
       </BalanceItemDiv>
       <MainItemHR />
