@@ -25,12 +25,14 @@ import {
   useIonViewDidEnter,
 } from "@ionic/react";
 import { useDBFunctions } from "../lib/FrontendDBContext";
+import { v4 as uuidv4 } from "uuid";
 
 const ParticipantsSchema = z.array(
   z.object({
     id: z.string(),
     checked: z.boolean(),
     cutFromAmount: z.number(),
+    walletUserId: z.string(),
   })
 );
 
@@ -38,10 +40,12 @@ const OutputParticipantsSchema = z.array(
   z.object({
     id: z.string(),
     cutFromAmount: z.number(),
+    walletUserId: z.string(),
   })
 );
 
 const WalletItemSchema = z.object({
+  id: z.string(),
   walletId: z.string(),
   name: z.string(),
   amount: z.number(),
@@ -49,10 +53,14 @@ const WalletItemSchema = z.object({
   payer: z.string(),
   tags: z.string().optional(),
   recieversData: z.array(
-    z.object({ id: z.string(), cutFromAmount: z.number() })
+    z.object({
+      id: z.string(),
+      cutFromAmount: z.number(),
+      walletUserId: z.string(),
+    })
   ),
   type: z.string(),
-  isSynced: z.boolean(),
+  deleted: z.boolean(),
 });
 
 function arraysAreEqual(arr1: any, arr2: any) {
@@ -141,15 +149,17 @@ export default function Edit() {
             id: walletUser.id,
             cutFromAmount: 0,
             checked: false,
+            walletUserId: walletUser.id,
           };
-          newParticipants[i] = newItem;
+          newParticipants.push(newItem);
         } else {
           const newItem = {
             id: walletUser.id,
             cutFromAmount: existingReceiver.amount,
             checked: true,
+            walletUserId: walletUser.id,
           };
-          newParticipants[i] = newItem;
+          newParticipants.push(newItem);
         }
       }
       setParticipants(newParticipants);
@@ -257,11 +267,13 @@ export default function Edit() {
         participantData.push({
           id: participant.id,
           cutFromAmount: participant.cutFromAmount,
+          walletUserId: participant.walletUserId,
         });
       }
     }
 
     const newWalletItem: z.infer<typeof WalletItemSchema> = {
+      id: uuidv4(),
       walletId: walletId,
       name: title,
       amount: amount,
@@ -270,7 +282,7 @@ export default function Edit() {
       tags: "Beer",
       recieversData: participantData,
       type: type,
-      isSynced: false,
+      deleted: false,
     };
 
     await editWalletItem(walletItemId || "", newWalletItem);

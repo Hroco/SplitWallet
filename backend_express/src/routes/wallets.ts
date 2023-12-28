@@ -62,6 +62,7 @@ const WalletItemSchema = z.object({
     })
   ),
   type: z.string(),
+  deleted: z.boolean(),
 });
 
 const WalletItemSchemaSync = z.object({
@@ -591,9 +592,10 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
         },
         recievers: {
           create: input.recieversData.map((receiver: any) => ({
+            id: receiver.id,
             amount: receiver.cutFromAmount,
             reciever: {
-              connect: { id: receiver.id },
+              connect: { id: receiver.walletUserId },
             },
           })),
         },

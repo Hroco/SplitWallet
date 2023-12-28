@@ -267,7 +267,6 @@ export default function Add() {
       if (!participant) throw new Error("Participant is undefined.");
 
       if (participant.checked) {
-        console.log("participant", participant);
         participantData.push({
           id: participant.id,
           cutFromAmount: participant.cutFromAmount,

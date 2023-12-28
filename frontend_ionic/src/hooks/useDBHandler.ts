@@ -76,6 +76,7 @@ export default function useDBHandler() {
   const [currentWalletItems, setCurrentWalletItems] = useState<any>(null);
   const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
   const [deletedWalletItemId, setDeletedWalletItemId] = useState<any>(null);
+  const [editedWalletItemId, setEditedWalletItemId] = useState<any>(null);
 
   useEffect(() => {
     if (!initialized) return;
@@ -136,7 +137,13 @@ export default function useDBHandler() {
       setCurrentWallet(wallet);
       setCurrentWalletUser(walletUser);
     })();
-  }, [initialized, walletId, newWalletItem, deletedWalletItemId]);
+  }, [
+    initialized,
+    walletId,
+    newWalletItem,
+    deletedWalletItemId,
+    editedWalletItemId,
+  ]);
 
   const sendAndReturnStatus = async (callback: () => any) => {
     // console.log("sendAndReturnStatus", callback);
@@ -267,7 +274,19 @@ export default function useDBHandler() {
     id: string,
     input: any //z.infer<typeof WalletItemSchema>
   ) => {
-    await editWalletItemLocal(id, input);
+    const isOnline = await sendAndReturnStatus(() =>
+      axios.put(`/api/wallets/editWalletItem/${id}`, input)
+    );
+
+    console.log("isOnline", isOnline);
+    let editedId;
+    if (isOnline) {
+      editedId = await editWalletItemLocal(id, { ...input, isSynced: true });
+    } else {
+      // Add Wallet to local db with unsynced flag
+      editedId = await editWalletItemLocal(id, { ...input, isSynced: false });
+    }
+    setEditedWalletItemId(editedId);
   };
 
   const editWallet = async (

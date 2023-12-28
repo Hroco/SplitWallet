@@ -646,7 +646,7 @@ const useBrowserBackend = () => {
     for (const receiver of input.recieversData) {
       const walletUser = await walletUserRepository.current.findOne({
         where: {
-          id: receiver.id,
+          id: receiver.walletUserId,
         },
       });
 
