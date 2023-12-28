@@ -1,10 +1,10 @@
 /* eslint-disable max-len */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 import {
   SQLiteDBConnection,
   SQLiteConnection,
   CapacitorSQLite,
-} from '@capacitor-community/sqlite';
+} from "@capacitor-community/sqlite";
 
 const useSQLiteDB = () => {
   const db = useRef<SQLiteDBConnection>();
@@ -17,19 +17,19 @@ const useSQLiteDB = () => {
 
       sqlite.current = new SQLiteConnection(CapacitorSQLite);
       const ret = await sqlite.current.checkConnectionsConsistency();
-      const isConn = (await sqlite.current.isConnection('splitWallet', false))
+      const isConn = (await sqlite.current.isConnection("splitWallet", false))
         .result;
 
       if (ret.result && isConn) {
         db.current = await sqlite.current.retrieveConnection(
-          'splitWallet',
+          "splitWallet",
           false
         );
       } else {
         db.current = await sqlite.current.createConnection(
-          'splitWallet',
+          "splitWallet",
           false,
-          'no-encryption',
+          "no-encryption",
           1,
           false
         );
@@ -51,11 +51,11 @@ const useSQLiteDB = () => {
       const test = await db.current?.isDBOpen();
       // console.log('isDBOpen', test);
       await db.current?.open();
-      console.log('actionStart-----------------------', action);
+      console.log("actionStart-----------------------", action);
       await action(db.current);
-      console.log('actionEnd-----------------------', action);
+      console.log("actionEnd-----------------------", action);
     } catch (error) {
-      console.error('error', (error as Error).message);
+      console.error("error", (error as Error).message);
       alert((error as Error).message);
     } finally {
       try {
@@ -70,13 +70,12 @@ const useSQLiteDB = () => {
    * structure
    */
   const initializeTables = async () => {
-    console.log('initializeTables');
+    console.log("initializeTables");
     performSQLAction(async (db: SQLiteDBConnection | undefined) => {
       const queryCreateTable = `
       -- CreateTable
 CREATE TABLE IF NOT EXISTS "Wallets" (
   "id" TEXT NOT NULL PRIMARY KEY,
-  "globalId" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "description" TEXT NOT NULL,
   "currency" TEXT NOT NULL,

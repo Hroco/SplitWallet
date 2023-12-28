@@ -34,13 +34,24 @@ import {
 } from "@ionic/react";
 import { checkmarkOutline } from "ionicons/icons";
 import { useDBFunctions } from "../lib/FrontendDBContext";
+import { v4 as uuidv4 } from "uuid";
 
 const UserListSchema = z.array(
   z.object({
-    id: z.string().optional(),
+    id: z.string(),
     name: z.string(),
     emailList: z.string().optional(),
     canBeDeleted: z.boolean(),
+    deleted: z.boolean().optional(),
+  })
+);
+
+const OutputUserListSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string().optional(),
+    deleted: z.boolean().optional(),
   })
 );
 
@@ -99,6 +110,8 @@ export default function EditWallet() {
     if (participants.length == 0) {
       const newParticipants = [...participants];
       for (let i = 0; i < walletUsers.length; i++) {
+        if (walletUsers[i].deleted) continue;
+
         const walletUser = walletUsers[i];
         if (walletUser == undefined) throw new Error("User is undefined.");
         console.log("walletUser", walletUser);
@@ -117,8 +130,9 @@ export default function EditWallet() {
             id: walletUser.id,
             name: walletUser.name,
             canBeDeleted: canBeDeleted,
+            deleted: walletUser.deleted,
           };
-          newParticipants[i] = newItem;
+          newParticipants.push(newItem);
         } else {
           const email = user.email;
           const newItem = {
@@ -126,6 +140,7 @@ export default function EditWallet() {
             name: walletUser.name,
             emailList: email,
             canBeDeleted: canBeDeleted,
+            deleted: walletUser.deleted,
           };
           newParticipants[i] = newItem;
         }
@@ -135,23 +150,28 @@ export default function EditWallet() {
   }, [wallet]);
 
   async function handleAddWallet() {
-    /* const userList: z.infer<typeof UserListSchema> = participants.map(
+    const userList: z.infer<typeof OutputUserListSchema> = participants.map(
       (item, index) => {
         if (index == 0) {
-          return { name: item.name, email: 'samko1311@gmail.com' };
+          return {
+            id: item.id,
+            name: item.name,
+            email: "samko1311@gmail.com",
+            deleted: item.deleted,
+          };
         }
-        return { name: name };
+        return { id: item.id, name: item.name, delete: item.deleted };
       }
-    );*/
+    );
 
     const output = {
+      id: walletId,
       name: title,
-      globalId: wallet.globalId,
       description: decription,
       currency: currency,
       category: category,
-      isSynced: false,
-      userList: participants,
+      userList: userList,
+      deleted: false,
     };
 
     await editWallet(walletId || "", output);
@@ -170,7 +190,7 @@ export default function EditWallet() {
     const newParticipants = [...participants];
     let newParticipant = newParticipants[i];
     if (newParticipant == undefined) {
-      newParticipant = { name: "", canBeDeleted: true };
+      newParticipant = { id: uuidv4(), name: "", canBeDeleted: true };
       newParticipants.push(newParticipant);
     }
     newParticipants[i].name = name;
@@ -184,7 +204,8 @@ export default function EditWallet() {
         console.error("Cannot delete this user because it is in one of items.");
         return;
       }
-      newParticipants.splice(i, 1);
+      //newParticipants.splice(i, 1);
+      newParticipants[i] = { ...newParticipants[i], deleted: true };
       setParticipants(newParticipants);
     } else {
       console.error("Invalid index");
@@ -192,7 +213,9 @@ export default function EditWallet() {
   }
 
   const participantElements = [];
+  console.log("participants", participants);
   for (let i = 0; i < participants.length + 1; i++) {
+    if (participants[i] != undefined && participants[i].deleted) continue;
     participantElements.push(
       <MainContentItem>
         <ParticipantInputDiv>

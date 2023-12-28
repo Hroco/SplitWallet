@@ -1,11 +1,10 @@
 {
-  "name": "capacitor-sqlite-react-typeorm-app",
+  "name": "split-wallet-frontend",
   "version": "1.0",
   "private": true,
-  "description": "Ionic/React Capacitor SQLite + TypeORM App",
-  "homepage": "./",
-  "author": "Marcello Cosentino",
-  "license": "MIT",
+  "proxy": "http://localhost:8000/",
+  "description": "SplitWallet monney manager app",
+  "author": "Nexelon",
   "dependencies": {
     "@capacitor-community/electron": "^4.1.2",
     "@capacitor-community/sqlite": "^5.5.1-2",
@@ -97,9 +96,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/cosentino/capacitor-sqlite-react-typeorm-app.git"
+    "url": "https://github.com/Hroco/SplitWallet.git"
   },
   "bugs": {
-    "url": "https://github.com/cosentino/capacitor-sqlite-react-typeorm-app.git/issues"
+    "url": "https://github.com/Hroco/SplitWallet.git/issues"
   }
 }

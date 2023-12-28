@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   ManyToOne,
   OneToMany,
@@ -15,7 +15,7 @@ import { User } from "./user";
 
 @Entity("walletUser")
 export class WalletUser {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryColumn()
   id!: string;
 
   @Column()
@@ -54,4 +54,7 @@ export class WalletUser {
 
   @Column({ nullable: true })
   userId!: string | null;
+
+  @Column({ default: false })
+  deleted!: boolean;
 }

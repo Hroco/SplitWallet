@@ -63,7 +63,8 @@ export default function Balances() {
       const users = await getWalletUsersByWalletId(walletId || "");
       // console.log('walletUsers', users);
       if (users) {
-        setWalletUsers(users);
+        const notDeletedUsers = users.filter((item: any) => !item.deleted);
+        setWalletUsers(notDeletedUsers);
       }
     })();
   }, [initialized]);

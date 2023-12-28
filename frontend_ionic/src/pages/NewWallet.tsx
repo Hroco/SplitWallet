@@ -36,7 +36,7 @@ import { v4 as uuidv4 } from "uuid";
 const UserListSchema = z.array(
   z.object({
     name: z.string(),
-    id: z.string().optional() /* emailList: z.string().optional()*/,
+    id: z.string() /* emailList: z.string().optional()*/,
   })
 );
 
@@ -60,14 +60,14 @@ export default function NewWallet() {
     const userList: z.infer<typeof UserListSchema> = participants.map(
       (name, index) => {
         if (index == 0) {
-          return { name: name, id: localUser.id };
+          return { id: uuidv4(), name: name /*, id: localUser.id*/ };
         }
-        return { name: name };
+        return { id: uuidv4(), name: name };
       }
     );
 
     const output = {
-      globalId: uuidv4(),
+      id: uuidv4(),
       name: title,
       description: decription,
       currency: currency,
@@ -78,25 +78,28 @@ export default function NewWallet() {
     const currentTime = new Date().toLocaleTimeString();
 
     const outputTemp = {
-      globalId: uuidv4(),
+      id: uuidv4(),
       name: `Test ${currentTime}`,
       description: "Test1 Des",
       currency: "eur",
       category: "couple",
       userList: [
         {
+          id: uuidv4(),
           name: "Samo",
           email: "samko1311@gmail.com",
         },
         {
+          id: uuidv4(),
           name: "Isi",
         },
       ],
+      deleted: false,
     };
 
-    // console.log("outputTemp", outputTemp);
+    console.log("outputTemp", outputTemp);
 
-    await addWallet(output);
+    await addWallet(outputTemp);
 
     history.push("/");
   }

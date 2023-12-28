@@ -36,12 +36,14 @@ import {
   IonToolbar,
 } from "@ionic/react";
 import { useDBFunctions } from "../lib/FrontendDBContext";
+import { v4 as uuidv4 } from "uuid";
 
 const ParticipantsSchema = z.array(
   z.object({
     id: z.string(),
     checked: z.boolean(),
     cutFromAmount: z.number(),
+    walletUserId: z.string(),
   })
 );
 
@@ -49,10 +51,12 @@ const OutputParticipantsSchema = z.array(
   z.object({
     id: z.string(),
     cutFromAmount: z.number(),
+    walletUserId: z.string(),
   })
 );
 
 const WalletItemSchema = z.object({
+  id: z.string(),
   walletId: z.string(),
   name: z.string(),
   amount: z.number(),
@@ -60,9 +64,14 @@ const WalletItemSchema = z.object({
   payer: z.string(),
   tags: z.string().optional(),
   recieversData: z.array(
-    z.object({ id: z.string(), cutFromAmount: z.number() })
+    z.object({
+      id: z.string(),
+      cutFromAmount: z.number(),
+      walletUserId: z.string(),
+    })
   ),
   type: z.string(),
+  deleted: z.boolean(),
 });
 
 function arraysAreEqual(arr1: any, arr2: any) {
@@ -134,6 +143,8 @@ export default function Add() {
     const numberOfCheckedUsers = participants.filter(
       (participant) => participant.checked === true
     ).length;
+    console.log("numberOfCheckedUsers", numberOfCheckedUsers);
+    console.log("participants", participants);
     if (numberOfCheckedUsers > 0) {
       const newUserAmount = amount / numberOfCheckedUsers;
 
@@ -209,15 +220,19 @@ export default function Add() {
     if (participants.length == 0) {
       const newParticipants = [...participants];
       for (let i = 0; i < walletUsers.length; i++) {
+        if (walletUsers[i].deleted) continue;
         const walletUser = walletUsers[i];
         if (walletUser == undefined) throw new Error("User is undefined.");
 
         const newItem = {
-          id: walletUser.id,
+          id: uuidv4(),
           cutFromAmount: 0,
           checked: true,
+          walletUserId: walletUser.id,
         };
-        newParticipants[i] = newItem;
+
+        console.log("newItem", newItem);
+        newParticipants.push(newItem);
       }
       setParticipants(newParticipants);
     }
@@ -252,14 +267,17 @@ export default function Add() {
       if (!participant) throw new Error("Participant is undefined.");
 
       if (participant.checked) {
+        console.log("participant", participant);
         participantData.push({
           id: participant.id,
           cutFromAmount: participant.cutFromAmount,
+          walletUserId: participant.walletUserId,
         });
       }
     }
 
     const newWalletItem: z.infer<typeof WalletItemSchema> = {
+      id: uuidv4(),
       walletId: walletId,
       name: title,
       amount: amount,
@@ -268,6 +286,7 @@ export default function Add() {
       tags: "Beer",
       recieversData: participantData,
       type: type,
+      deleted: false,
     };
 
     /* const testObject = {
@@ -291,7 +310,7 @@ export default function Add() {
     };*/
 
     // axios.post('/api/wallets/addWalletItem/', newWalletItem);
-    //console.log("newWalletItem", newWalletItem);
+    console.log("newWalletItem", newWalletItem);
     await addWalletItem(newWalletItem);
 
     history.push(`/${walletId}/expenses`);
@@ -333,13 +352,15 @@ export default function Add() {
 
   if (wallet == undefined) return <LoadingScreen />;
 
-  const walletUsers = wallet.walletUsers;
+  const notDeletedwalletUsers = wallet.walletUsers.filter(
+    (item: any) => !item.deleted
+  );
 
-  // console.log('participants', participants);
+  console.log("notDeletedwalletUsers", notDeletedwalletUsers);
 
   const participantElements = [];
-  for (let i = 0; i < walletUsers.length; i++) {
-    const user = walletUsers[i];
+  for (let i = 0; i < notDeletedwalletUsers.length; i++) {
+    const user = notDeletedwalletUsers[i];
     if (user == undefined) throw new Error("User is undefined.");
 
     const state = getCheckedStatus(i);
@@ -460,8 +481,8 @@ export default function Add() {
               onIonChange={(e) => setPayerId(e.detail.value as string)}
               data-test-target="newWalletItemPayer"
             >
-              {walletUsers &&
-                walletUsers.map((walletUser: any, index: number) => (
+              {notDeletedwalletUsers &&
+                notDeletedwalletUsers.map((walletUser: any, index: number) => (
                   <IonSelectOption key={walletUser.id} value={walletUser.id}>
                     {walletUser.name}
                   </IonSelectOption>

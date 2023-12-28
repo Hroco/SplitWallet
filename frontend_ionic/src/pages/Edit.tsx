@@ -52,6 +52,7 @@ const WalletItemSchema = z.object({
     z.object({ id: z.string(), cutFromAmount: z.number() })
   ),
   type: z.string(),
+  isSynced: z.boolean(),
 });
 
 function arraysAreEqual(arr1: any, arr2: any) {
@@ -269,6 +270,7 @@ export default function Edit() {
       tags: "Beer",
       recieversData: participantData,
       type: type,
+      isSynced: false,
     };
 
     await editWalletItem(walletItemId || "", newWalletItem);

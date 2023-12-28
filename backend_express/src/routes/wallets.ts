@@ -1,17 +1,17 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, Wallets } from "@prisma/client";
 import express, { Request, Response } from "express";
 import { prisma } from "../db";
 import { z } from "zod";
 const router = express.Router();
 
 const WalletSchema = z.object({
-  globalId: z.string(),
+  id: z.string(),
   name: z.string(),
   description: z.string(),
   currency: z.string(),
   category: z.string(),
   userList: z.array(
-    z.object({ name: z.string(), email: z.string().optional() })
+    z.object({ id: z.string(), name: z.string(), email: z.string().optional() })
   ),
 });
 
@@ -35,7 +35,6 @@ const WalletUserSchemaSync = z.object({
 
 const WalletSchemaSync = z.object({
   id: z.string(),
-  globalId: z.string(),
   name: z.string(),
   description: z.string(),
   currency: z.string(),
@@ -48,6 +47,25 @@ const WalletSchemaSync = z.object({
 });
 
 const WalletItemSchema = z.object({
+  id: z.string(),
+  walletId: z.string(),
+  name: z.string(),
+  amount: z.number(),
+  date: z.string().datetime(),
+  payer: z.string(),
+  tags: z.string().optional(),
+  recieversData: z.array(
+    z.object({
+      id: z.string(),
+      cutFromAmount: z.number(),
+      walletUserId: z.string(),
+    })
+  ),
+  type: z.string(),
+});
+
+const WalletItemSchemaSync = z.object({
+  id: z.string(),
   walletId: z.string(),
   name: z.string(),
   amount: z.number(),
@@ -59,6 +77,10 @@ const WalletItemSchema = z.object({
   ),
   type: z.string(),
 });
+
+function isUserInWallet(wallet: any, userId: string) {
+  return wallet.walletUsers.some((user: any) => user.id === userId);
+}
 
 router.get(
   "/getWalletsWithEmail/:email",
@@ -330,11 +352,13 @@ router.post("/addWallet", async (req: Request, res: Response) => {
 
       if (!userList.email) {
         return {
+          id: userList.id,
           name: userList.name,
         };
       }
 
       return {
+        id: userList.id,
         name: userList.name,
         /*users: {
           connect: {
@@ -346,7 +370,7 @@ router.post("/addWallet", async (req: Request, res: Response) => {
 
     await prisma.wallets.create({
       data: {
-        globalId: input.globalId,
+        id: input.id,
         name: input.name,
         description: input.description,
         currency: input.currency,
@@ -383,9 +407,12 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid input data." });
     }
 
+    console.log("addWalletItem", input);
+
     // Create wallet item
     await prisma.walletItem.create({
       data: {
+        id: input.id,
         name: input.name,
         amount: input.amount,
         date: input.date,
@@ -396,9 +423,10 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
         },
         recievers: {
           create: input.recieversData.map((receiver: any) => ({
+            id: receiver.id,
             amount: receiver.cutFromAmount,
             reciever: {
-              connect: { id: receiver.id },
+              connect: { id: receiver.walletUserId },
             },
           })),
         },
@@ -460,7 +488,7 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
     // Update bliance of recievers
     input.recieversData.map(async (receiver: any) => {
       const walletUser = await prisma.walletUser.findFirst({
-        where: { id: receiver.id },
+        where: { id: receiver.walletUserId },
       });
 
       if (!walletUser) {
@@ -486,7 +514,7 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
       // const newTotal = walletUser.total + receiver.cutFromAmount;
 
       await prisma.walletUser.update({
-        where: { id: receiver.id },
+        where: { id: receiver.walletUserId },
         data: {
           bilance: newBilance,
           total: newTotal,
@@ -496,7 +524,12 @@ router.post("/addWalletItem", async (req: Request, res: Response) => {
 
     res.sendStatus(201); // 201 Created - Resource successfully created
   } catch (error) {
-    res.sendStatus(500);
+    console.log(error);
+    res.status(500).json({
+      state: "online",
+      error: "SplitWallet Internal Server Error",
+      details: error,
+    });
   }
 });
 
@@ -768,6 +801,145 @@ router.put("/editWallet/:id", async (req: Request, res: Response) => {
     const createOperations: any[] = [];
 
     for (const user of input.userList) {
+      if (!isUserInWallet(oldWallet, user.id)) {
+        createOperations.push({
+          id: user.id,
+          name: user.name,
+        });
+      }
+    }
+
+    let updateOperations: any[] = [];
+
+    for (const user of input.userList) {
+      if (isUserInWallet(oldWallet, user.id)) {
+        if (user.delete) {
+          updateOperations.push({
+            where: { id: user.id },
+            data: {
+              name: user.name,
+              deleted: user.delete,
+            },
+          });
+        } else {
+          updateOperations.push({
+            where: { id: user.id },
+            data: {
+              name: user.name,
+            },
+          });
+        }
+      }
+    }
+
+    // Update wallet
+    await prisma.wallets.update({
+      where: { id: id },
+      data: {
+        name: input.name,
+        description: input.description,
+        currency: input.currency,
+        category: input.category,
+        walletUsers: {
+          ...(createOperations.length > 0 ? { create: createOperations } : {}),
+          ...(updateOperations.length > 0 ? { update: updateOperations } : {}),
+        },
+      },
+    });
+
+    res.sendStatus(200);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.put("/updateWallets/", async (req: Request, res: Response) => {
+  try {
+    console.log("updateWallets");
+
+    // Validate input
+    const input = req.body; // Extract required fields from req.body
+    // console.log("update input", input);
+
+    for (const wallet of input) {
+      // console.log("wallett", wallet);
+
+      const validationResult = WalletSchemaSync.safeParse(wallet);
+      if (!validationResult.success) {
+        console.log(validationResult);
+        const customErrors = validationResult.error.issues.map(
+          (issue) => issue.message
+        );
+        const errorMessage = "CHYBA \n" + customErrors.join("\n");
+        console.log(errorMessage);
+        return res.status(400).json({ error: "Invalid input data." });
+      }
+
+      const oldWallet = await prisma.wallets.findFirst({
+        where: { id: wallet.id },
+        include: {
+          walletUsers: true,
+        },
+      });
+
+      if (!oldWallet) {
+        // Create wallet
+        console.log("create wallet that was created offline");
+        const walletUsersToCreate = wallet.walletUsers.map((userList: any) => {
+          // console.log("userList", userList);
+
+          if (!userList.email) {
+            return {
+              name: userList.name,
+            };
+          }
+
+          return {
+            name: userList.name,
+            /*users: {
+              connect: {
+                email: userList.email,
+              },
+            },*/
+          };
+        });
+
+        await prisma.wallets.create({
+          data: {
+            id: wallet.id,
+            name: wallet.name,
+            description: wallet.description,
+            currency: wallet.currency,
+            category: wallet.category,
+            walletUsers: {
+              create: walletUsersToCreate,
+            },
+          },
+        });
+
+        res.sendStatus(200);
+      } else {
+        // Update wallet
+        console.log("update wallet that was updated offline TBD");
+
+        res.sendStatus(200);
+      }
+    }
+
+    /*const oldWallet = await prisma.wallets.findFirst({
+      where: { id: id },
+      include: {
+        walletUsers: true,
+      },
+    });
+
+    if (!oldWallet) {
+      return res.sendStatus(404);
+    }
+
+    const createOperations: any[] = [];
+
+    for (const user of input.userList) {
       if (user.id == null) {
         createOperations.push({
           name: user.name,
@@ -827,25 +999,24 @@ router.put("/editWallet/:id", async (req: Request, res: Response) => {
         },
       },
     });
-
-    res.sendStatus(200);
+*/
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-router.put("/update/", async (req: Request, res: Response) => {
+router.put("/updateWalletItems/", async (req: Request, res: Response) => {
   try {
-    console.log("update");
+    console.log("updateWalletItems");
 
     // Validate input
     const input = req.body; // Extract required fields from req.body
     // console.log("update input", input);
 
-    for (const wallet of input) {
+    for (const walletItem of input) {
       // console.log("wallett", wallet);
 
-      const validationResult = WalletSchemaSync.safeParse(wallet);
+      const validationResult = WalletItemSchemaSync.safeParse(walletItem);
       if (!validationResult.success) {
         console.log(validationResult);
         const customErrors = validationResult.error.issues.map(
@@ -856,44 +1027,39 @@ router.put("/update/", async (req: Request, res: Response) => {
         return res.status(400).json({ error: "Invalid input data." });
       }
 
-      const oldWallet = await prisma.wallets.findFirst({
-        where: { id: wallet.id },
+      const oldWalletItem = await prisma.walletItem.findFirst({
+        where: { id: walletItem.id },
         include: {
-          walletUsers: true,
+          recievers: true,
         },
       });
 
-      if (!oldWallet) {
+      if (!oldWalletItem) {
         // Create wallet
-        console.log("create wallet that was created offline");
-        const walletUsersToCreate = wallet.walletUsers.map((userList: any) => {
-          // console.log("userList", userList);
+        console.log("create walletItem that was created offline");
 
-          if (!userList.email) {
-            return {
-              name: userList.name,
-            };
-          }
-
-          return {
-            name: userList.name,
-            /*users: {
-              connect: {
-                email: userList.email,
-              },
-            },*/
-          };
-        });
-
-        await prisma.wallets.create({
+        await prisma.walletItem.create({
           data: {
-            globalId: wallet.globalId,
-            name: wallet.name,
-            description: wallet.description,
-            currency: wallet.currency,
-            category: wallet.category,
-            walletUsers: {
-              create: walletUsersToCreate,
+            id: walletItem.id,
+            name: walletItem.name,
+            amount: walletItem.amount,
+            date: walletItem.date,
+            type: walletItem.type,
+            tags: walletItem.tags ? walletItem.tags.split(",") : [], // Assuming tags is a comma-separated string
+            payer: {
+              connect: { id: walletItem.payer },
+            },
+            recievers: {
+              create: walletItem.recieversData.map((receiver: any) => ({
+                id: receiver.id,
+                amount: receiver.cutFromAmount,
+                reciever: {
+                  connect: { id: receiver.id },
+                },
+              })),
+            },
+            Wallets: {
+              connect: { id: walletItem.walletId },
             },
           },
         });
@@ -901,7 +1067,7 @@ router.put("/update/", async (req: Request, res: Response) => {
         res.sendStatus(200);
       } else {
         // Update wallet
-        console.log("update wallet that was updated offline TBD");
+        console.log("update walletItem that was updated offline TBD");
 
         res.sendStatus(200);
       }
@@ -1006,6 +1172,11 @@ router.get("/updatesForEmail/:email", async (req: Request, res: Response) => {
     const wallets = await prisma.wallets.findMany({
       include: {
         walletUsers: true,
+        walletItems: {
+          include: {
+            recievers: true, // Include the reciever from RecieverData
+          },
+        },
       },
     });
 
@@ -1124,9 +1295,16 @@ router.delete(
         });
       }
 
-      await prisma.walletItem.delete({
+      await prisma.walletItem.update({
         where: { id: id },
+        data: {
+          deleted: true,
+        },
       });
+
+      /*await prisma.walletItem.delete({
+        where: { id: id },
+      });*/
 
       res.sendStatus(200);
     } catch (error) {
@@ -1150,9 +1328,16 @@ router.delete("/deleteWalletById/:id", async (req: Request, res: Response) => {
       return res.sendStatus(404);
     }
 
-    await prisma.wallets.delete({
+    await prisma.wallets.update({
       where: { id: id },
+      data: {
+        deleted: true,
+      },
     });
+
+    /*await prisma.wallets.delete({
+      where: { id: id },
+    });*/
 
     res.sendStatus(200);
   } catch (error) {

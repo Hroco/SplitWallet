@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   OneToMany,
   CreateDateColumn,
@@ -14,7 +14,7 @@ import { RecieverData } from "./recieverData";
 
 @Entity("walletItem")
 export class WalletItem {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryColumn()
   id!: string;
 
   @Column()
@@ -56,4 +56,10 @@ export class WalletItem {
 
   @Column()
   userId!: string;
+
+  @Column({ default: false })
+  isSynced!: boolean;
+
+  @Column({ default: false })
+  deleted!: boolean;
 }

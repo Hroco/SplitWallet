@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   ManyToOne,
   CreateDateColumn,
@@ -12,7 +12,7 @@ import { WalletItem } from "./walletItem";
 
 @Entity("recieverData")
 export class RecieverData {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryColumn()
   id!: string;
 
   @ManyToOne(() => WalletUser, (walletUser) => walletUser.recieverData, {
@@ -41,4 +41,7 @@ export class RecieverData {
 
   @Column()
   userId!: string;
+
+  @Column({ default: false })
+  deleted!: boolean;
 }

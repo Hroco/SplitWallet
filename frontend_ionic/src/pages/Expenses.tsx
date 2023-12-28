@@ -61,68 +61,24 @@ export default function Expenses() {
   const history = useHistory();
   // line bellow neads to be handled properly in the future
   const [sortType, setSortType] = useState<SortType>(SortType.DateDesc);
-  const [walletItems, setWalletItems] = useState<any[] | null>(null);
-  const [wallet, setWallet] = useState<any>(null);
-  const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
+  // const [walletItems, setWalletItems] = useState<any[] | null>(null);
+  // const [wallet, setWallet] = useState<any>(null);
+  // const [currentWalletUser, setCurrentWalletUser] = useState<any>(null);
   const [presentAlert] = useIonAlert();
-  if (walletId == undefined) throw new Error("WalletId is undefined.");
+  if (walletId === undefined) throw new Error("WalletId is undefined.");
   if (typeof walletId != "string") throw new Error("WalletId is not string.");
   const {
-    getWalletItemsByWalletId,
-    getWalletUserByEmailAndWalletId,
     deleteWalletById,
-    listOfTables,
-    initialized,
+    setWalletId,
+    currentWalletUser,
+    currentWallet,
+    currentWalletItems,
+    setCurrentWalletItems,
   } = useDBFunctions();
 
   useEffect(() => {
-    if (!initialized) return;
-
-    (async () => {
-      const { wallet, walletItems } = await getWalletItemsByWalletId(walletId);
-      const walletUser = await getWalletUserByEmailAndWalletId(
-        "samko1311@gmail.com",
-        walletId
-      );
-
-      await listOfTables();
-
-      if (wallet == undefined) return;
-      if (walletItems == undefined) return;
-      if (walletUser == undefined) return;
-
-      /* (walletItems as any[]).sort((a: any, b: any) => {
-        switch (sortType) {
-          case SortType.DateAsc:
-            return a.date > b.date ? 1 : -1;
-          case SortType.DateDesc:
-            return a.date < b.date ? 1 : -1;
-          case SortType.AmountAsc:
-            return a.amount > b.amount ? 1 : -1;
-          case SortType.AmountDesc:
-            return a.amount < b.amount ? 1 : -1;
-          case SortType.TitleAsc:
-            return a.name > b.name ? 1 : -1;
-          case SortType.TitleDesc:
-            return a.name < b.name ? 1 : -1;
-          case SortType.PayerAsc:
-            return a.payer.name > b.payer.name ? 1 : -1;
-          case SortType.PayerDesc:
-            return a.payer.name < b.payer.name ? 1 : -1;
-          case SortType.CategoryAsc:
-            return a.type > b.type ? 1 : -1;
-          case SortType.CategoryDesc:
-            return a.type < b.type ? 1 : -1;
-          default:
-            return 0;
-        }
-      });*/
-
-      setWalletItems(walletItems as any[]);
-      setWallet(wallet);
-      setCurrentWalletUser(walletUser);
-    })();
-  }, [initialized]);
+    setWalletId(walletId);
+  }, []);
 
   /* useIonViewWillEnter(() => {
     console.log('ionViewWillEnter event fired');
@@ -199,8 +155,8 @@ export default function Expenses() {
   }, []);*/
 
   useEffect(() => {
-    if (walletItems == undefined) return;
-    walletItems.sort((a: any, b: any) => {
+    if (currentWalletItems == undefined) return;
+    currentWalletItems.sort((a: any, b: any) => {
       switch (sortType) {
         case SortType.DateAsc:
           return a.date > b.date ? 1 : -1;
@@ -227,7 +183,7 @@ export default function Expenses() {
       }
     });
     // setShouldShowBurgerMenu(false);
-    setWalletItems([...walletItems]);
+    setCurrentWalletItems([...currentWalletItems]);
   }, [sortType]);
 
   /* useEffect(() => {
@@ -357,15 +313,16 @@ export default function Expenses() {
   }
 
   function toggleSortType(asc: SortType, desc: SortType) {
-    if (sortType == asc) {
+    if (sortType === asc) {
       setSortType(desc);
     } else {
       setSortType(asc);
     }
   }
 
-  if (wallet == undefined) return <LoadingScreen />;
-  if (currentWalletUser == undefined) return <LoadingScreen />;
+  if (!currentWallet || currentWallet === undefined) return <LoadingScreen />;
+  if (!currentWalletUser || currentWalletUser === undefined)
+    return <LoadingScreen />;
 
   return (
     <IonPage>
@@ -374,7 +331,7 @@ export default function Expenses() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/"></IonBackButton>
           </IonButtons>
-          <IonTitle>{wallet.name}</IonTitle>
+          <IonTitle>{currentWallet.name}</IonTitle>
           <IonButtons slot="end">
             <IonMenuButton
               autoHide={false}
@@ -524,8 +481,8 @@ export default function Expenses() {
       </Navbar>
       <IonContent>
         <IonList>
-          {walletItems &&
-            walletItems.map((walletItem: any, index: number) => (
+          {currentWalletItems &&
+            currentWalletItems.map((walletItem: any, index: number) => (
               <ExpenseItem
                 onClick={() =>
                   history.push(
@@ -557,7 +514,9 @@ export default function Expenses() {
         </WalletItemAddButton>
         <TotalExpenseDiv>
           <p>TOTAL EXPENSES</p>
-          <h2 data-test-target="walletTotal">€ {wallet.total.toFixed(2)}</h2>
+          <h2 data-test-target="walletTotal">
+            € {currentWallet.total.toFixed(2)}
+          </h2>
         </TotalExpenseDiv>
       </ExpenseFooter>
     </IonPage>

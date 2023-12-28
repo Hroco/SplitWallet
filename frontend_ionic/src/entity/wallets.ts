@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   OneToMany,
   CreateDateColumn,
@@ -11,11 +11,8 @@ import { WalletUser } from "./walletUser";
 
 @Entity("wallets")
 export class Wallets {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryColumn()
   id!: string;
-
-  @Column({ unique: true })
-  globalId!: string;
 
   @Column()
   name!: string;
@@ -40,6 +37,9 @@ export class Wallets {
 
   @Column({ default: false })
   isSynced!: boolean;
+
+  @Column({ default: false })
+  deleted!: boolean;
 
   @OneToMany(() => WalletUser, (walletUser) => walletUser.Wallets)
   walletUsers!: WalletUser[];

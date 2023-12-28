@@ -16,18 +16,20 @@ import { Repository } from "typeorm";
 import { save } from "ionicons/icons";
 
 const WalletSchema = z.object({
-  globalId: z.string(),
+  id: z.string(),
   name: z.string(),
   description: z.string(),
   currency: z.string(),
   category: z.string(),
   userList: z.array(
-    z.object({ name: z.string(), email: z.string().optional() })
+    z.object({ id: z.string(), name: z.string(), email: z.string().optional() })
   ),
   isSynced: z.boolean(),
+  deleted: z.boolean(),
 });
 
 const WalletItemSchema = z.object({
+  id: z.string(),
   walletId: z.string(),
   name: z.string(),
   amount: z.number(),
@@ -35,9 +37,15 @@ const WalletItemSchema = z.object({
   payer: z.string(),
   tags: z.string().optional(),
   recieversData: z.array(
-    z.object({ id: z.string(), cutFromAmount: z.number() })
+    z.object({
+      id: z.string(),
+      cutFromAmount: z.number(),
+      walletUserId: z.string(),
+    })
   ),
   type: z.string(),
+  isSynced: z.boolean(),
+  deleted: z.boolean(),
 });
 
 const WalletUserSchemaSync = z.object({
@@ -71,6 +79,10 @@ const WalletSchemaSync = z.object({
   walletUsers: z.array(WalletUserSchemaSync),
 });
 
+function isUserInWallet(wallet: any, userId: string) {
+  return wallet.walletUsers.some((user: any) => user.id === userId);
+}
+
 export type BrowserBackendFunctions = ReturnType<typeof useBrowserBackend>;
 
 const useBrowserBackend = () => {
@@ -102,6 +114,7 @@ const useBrowserBackend = () => {
 
     (window as any).listOfTables = listOfTables;
     (window as any).clearDB = clearDB;
+    (window as any).logDB = logDB;
 
     // clearDB();
 
@@ -137,6 +150,12 @@ const useBrowserBackend = () => {
     await saveToStore();
 
     return true;
+  };
+
+  const logDB = () => {
+    listOfTables().then((lists) => {
+      console.log("DB Debug Output ------------", lists);
+    });
   };
 
   const listOfTables = async () => {
@@ -198,6 +217,7 @@ const useBrowserBackend = () => {
       // console.log("inserting new user TBD", users);
 
       const localUser = new User();
+      localUser.id = uuidv4();
       localUser.localId = uuidv4();
       await userRepository.current.save(localUser);
 
@@ -386,8 +406,8 @@ const useBrowserBackend = () => {
     }
 
     const wallet = new Wallets();
+    wallet.id = input.id;
     wallet.name = input.name;
-    wallet.globalId = input.globalId;
     wallet.description = input.description;
     wallet.currency = input.currency;
     wallet.category = input.category;
@@ -395,16 +415,19 @@ const useBrowserBackend = () => {
     wallet.createdAt = new Date();
     wallet.updatedAt = new Date();
     wallet.isSynced = input.isSynced;
+    wallet.deleted = false;
     await walletsRepository.current.save(wallet);
 
     for (const user of input.userList) {
       const walletUser = new WalletUser();
+      walletUser.id = user.id;
       walletUser.name = user.name;
       walletUser.bilance = 0;
       walletUser.total = 0;
       walletUser.createdAt = new Date();
       walletUser.updatedAt = new Date();
       walletUser.Wallets = wallet;
+      walletUser.deleted = false;
       await walletUserRepository.current.save(walletUser);
     }
 
@@ -417,6 +440,7 @@ const useBrowserBackend = () => {
 
   // SHR Done
   const addWalletItem = async (input: z.infer<typeof WalletItemSchema>) => {
+    console.log("addWalletItem input", input);
     const validationResult = WalletItemSchema.safeParse(input);
 
     if (!validationResult.success) {
@@ -447,6 +471,7 @@ const useBrowserBackend = () => {
     const tags: string[] = [input.tags || ""];
 
     const walletItem = new WalletItem();
+    walletItem.id = input.id;
     walletItem.name = input.name;
     walletItem.tags = tags;
     walletItem.amount = input.amount;
@@ -454,13 +479,14 @@ const useBrowserBackend = () => {
     walletItem.date = date;
     walletItem.Wallets = wallet;
     walletItem.payer = payer;
-
+    walletItem.isSynced = input.isSynced;
+    walletItem.deleted = false;
     await walletItemsRepository.current.save(walletItem);
 
     for (const receiver of input.recieversData) {
       const walletUser = await walletUserRepository.current.findOne({
         where: {
-          id: receiver.id,
+          id: receiver.walletUserId,
         },
       });
 
@@ -469,10 +495,11 @@ const useBrowserBackend = () => {
       }
 
       const recieverData = new RecieverData();
+      recieverData.id = receiver.id;
       recieverData.reciever = walletUser;
       recieverData.amount = receiver.cutFromAmount;
       recieverData.WalletItem = walletItem;
-
+      recieverData.deleted = false;
       await recieverDataRepository.current.save(recieverData);
     }
 
@@ -519,7 +546,7 @@ const useBrowserBackend = () => {
 
       const walletUser = await walletUserRepository.current.findOne({
         where: {
-          id: receiver.id,
+          id: receiver.walletUserId,
         },
       });
 
@@ -533,6 +560,8 @@ const useBrowserBackend = () => {
     }
 
     await saveToStore();
+
+    return walletItem;
   };
 
   // SHR Todo
@@ -611,6 +640,7 @@ const useBrowserBackend = () => {
     walletItem.tags = tags;
     walletItem.type = input.type;
     walletItem.payer = payer;
+    walletItem.deleted = input.deleted;
     await walletItemsRepository.current.save(walletItem);
 
     for (const receiver of input.recieversData) {
@@ -625,10 +655,11 @@ const useBrowserBackend = () => {
       }
 
       const recieverData = new RecieverData();
+      recieverData.id = receiver.id;
       recieverData.reciever = walletUser;
       recieverData.amount = receiver.cutFromAmount;
       recieverData.WalletItem = walletItem;
-
+      recieverData.deleted = false;
       await recieverDataRepository.current.save(recieverData);
     }
 
@@ -737,6 +768,9 @@ const useBrowserBackend = () => {
     }
 
     await saveToStore();
+
+    console.log("edit walletItem return value", walletItem);
+    return walletItem;
   };
 
   // SHR Done
@@ -780,15 +814,16 @@ const useBrowserBackend = () => {
     wallet.category = input.category;
     wallet.updatedAt = new Date();
     wallet.isSynced = input.isSynced;
+    wallet.deleted = input.deleted;
     await walletsRepository.current.save(wallet);
 
     const createOperations: any[] = [];
 
     for (const user of input.userList) {
-      if (user.id == null) {
+      if (!isUserInWallet(oldWallet, user.id)) {
         createOperations.push({
+          id: user.id,
           name: user.name,
-          walletId: id,
         });
       }
     }
@@ -796,30 +831,20 @@ const useBrowserBackend = () => {
     let updateOperations: any[] = [];
 
     for (const user of input.userList) {
-      if (user.id != null) {
-        const existingItem = oldWallet.walletUsers.find(
-          (dbItem: any) => dbItem.id === user.id
-        );
-
-        if (existingItem) {
+      if (isUserInWallet(oldWallet, user.id)) {
+        if (user.delete) {
           updateOperations.push({
             id: user.id,
             name: user.name,
+            deleted: user.delete,
+          });
+        } else {
+          updateOperations.push({
+            id: user.id,
+            name: user.name,
+            deleted: false,
           });
         }
-      }
-    }
-
-    if (updateOperations) {
-      updateOperations = updateOperations.filter((op: any) => !op.delete);
-    }
-
-    const deleteOperations: any[] = [];
-
-    // Determine items to delete
-    for (const dbUser of oldWallet.walletUsers) {
-      if (!input.userList.some((newUser: any) => newUser.id === dbUser.id)) {
-        deleteOperations.push(dbUser.id);
       }
     }
 
@@ -827,12 +852,14 @@ const useBrowserBackend = () => {
     if (createOperations.length > 0) {
       for (const operation of createOperations) {
         const walletUser = new WalletUser();
+        walletUser.id = operation.id;
         walletUser.name = operation.name;
         walletUser.bilance = 0;
         walletUser.total = 0;
         walletUser.createdAt = new Date();
         walletUser.updatedAt = new Date();
         walletUser.Wallets = wallet;
+        walletUser.deleted = false;
         await walletUserRepository.current.save(walletUser);
       }
     }
@@ -851,24 +878,8 @@ const useBrowserBackend = () => {
         }
 
         walletUser.name = operation.name;
+        walletUser.deleted = operation.deleted;
         await walletUserRepository.current.save(walletUser);
-      }
-    }
-
-    // Delete wallet users
-    if (deleteOperations.length > 0) {
-      for (const operation of deleteOperations) {
-        const walletUser = await walletUserRepository.current.findOne({
-          where: {
-            id: operation,
-          },
-        });
-
-        if (!walletUser) {
-          throw new Error("WalletUser not found");
-        }
-
-        await walletUserRepository.current.remove(walletUser);
       }
     }
 
@@ -878,7 +889,7 @@ const useBrowserBackend = () => {
   };
 
   // SHR Todo
-  const deleteWalletItemById = async (id: string) => {
+  const deleteWalletItemById = async (id: string, options: any) => {
     const oldWalletItem = await walletItemsRepository.current.findOne({
       where: {
         id: id,
@@ -947,13 +958,19 @@ const useBrowserBackend = () => {
     }
 
     // Delete wallet item
-    await walletItemsRepository.current.remove(oldWalletItem);
+    oldWalletItem.deleted = true;
+    oldWalletItem.isSynced = options.isSynced;
+    await walletItemsRepository.current.save(oldWalletItem);
+    //await walletItemsRepository.current.remove(oldWalletItem);
 
     await saveToStore();
+
+    // SHR This is workaround to refresh data in app
+    return id;
   };
 
   // SHR Done
-  const deleteWalletById = async (id: string) => {
+  const deleteWalletById = async (id: string, options: any) => {
     const wallet = await walletsRepository.current.findOne({
       where: {
         id: id,
@@ -964,9 +981,10 @@ const useBrowserBackend = () => {
       throw new Error("Wallet not found");
     }
 
-    await walletsRepository.current.remove(wallet);
-
-    await listOfTables();
+    wallet.deleted = true;
+    wallet.isSynced = options.isSynced;
+    await walletsRepository.current.save(wallet);
+    //await walletsRepository.current.remove(wallet);
 
     await saveToStore();
 
@@ -998,6 +1016,20 @@ const useBrowserBackend = () => {
     return wallets;
   };
 
+  const getUnsyncedWalletItems = async () => {
+    const walletItems = await walletItemsRepository.current.find({
+      where: {
+        isSynced: false,
+      },
+      relations: {
+        recievers: true,
+        payer: true,
+      },
+    });
+
+    return walletItems;
+  };
+
   // SHR TBD
   const markWalletAsSynced = async (input: any) => {
     for (const wallet of input) {
@@ -1020,20 +1052,41 @@ const useBrowserBackend = () => {
     await saveToStore();
   };
 
+  const markWalletItemsAsSynced = async (input: any) => {
+    for (const walletItem of input) {
+      console.log("walletItem", walletItem);
+      const walletItemToUpdate = await walletItemsRepository.current.findOne({
+        where: {
+          id: walletItem.id,
+        },
+      });
+
+      if (!walletItemToUpdate) {
+        throw new Error("Wallet Item not found");
+      }
+
+      walletItemToUpdate.isSynced = true;
+
+      await walletItemsRepository.current.save(walletItemToUpdate);
+    }
+
+    await saveToStore();
+  };
+
   const applyUpdateToLocalDB = async (input: any) => {
     for (const wallet of input) {
       console.log("wallet", wallet);
 
       const walletToUpdate = await walletsRepository.current.findOne({
         where: {
-          globalId: wallet.globalId,
+          id: wallet.id,
         },
       });
 
       if (!walletToUpdate) {
         console.log("wallet not found creating new one");
         const walletNew = new Wallets();
-        walletNew.globalId = wallet.globalId;
+        walletNew.id = wallet.id;
         walletNew.name = wallet.name;
         walletNew.description = wallet.description;
         walletNew.currency = wallet.currency;
@@ -1042,20 +1095,236 @@ const useBrowserBackend = () => {
         walletNew.createdAt = wallet.createdAt;
         walletNew.updatedAt = wallet.updatedAt;
         walletNew.isSynced = true;
+        walletNew.deleted = wallet.deleted;
         await walletsRepository.current.save(walletNew);
 
         for (const user of wallet.walletUsers) {
           const walletUserNew = new WalletUser();
+          walletUserNew.id = user.id;
           walletUserNew.name = user.name;
           walletUserNew.bilance = user.bilance;
           walletUserNew.total = user.total;
           walletUserNew.createdAt = user.createdAt;
           walletUserNew.updatedAt = user.updatedAt;
           walletUserNew.Wallets = walletNew;
+          walletUserNew.deleted = user.deleted;
           await walletUserRepository.current.save(walletUserNew);
+        }
+
+        for (const walletItem of wallet.walletItems) {
+          const payer = await walletUserRepository.current.findOne({
+            where: {
+              id: walletItem.payer,
+            },
+          });
+
+          if (!payer) {
+            throw new Error("Payer not found");
+          }
+
+          const walletItemNew = new WalletItem();
+          walletItemNew.id = walletItem.id;
+          walletItemNew.name = walletItem.name;
+          walletItemNew.tags = walletItem.tags;
+          walletItemNew.amount = walletItem.amount;
+          walletItemNew.type = walletItem.type;
+          walletItemNew.date = walletItem.date;
+          walletItemNew.Wallets = walletNew;
+          walletItemNew.payer = payer;
+          walletItemNew.isSynced = true;
+          walletItemNew.createdAt = walletItem.createdAt;
+          walletItemNew.updatedAt = walletItem.updatedAt;
+          walletItemNew.deleted = walletItem.deleted;
+          await walletItemsRepository.current.save(walletItemNew);
+
+          for (const receiver of walletItem.recievers) {
+            const walletUser = await walletUserRepository.current.findOne({
+              where: {
+                id: receiver.walletUserId,
+              },
+            });
+
+            if (!walletUser) {
+              throw new Error("WalletUser not found");
+            }
+
+            console.log("receiver", receiver);
+            console.log("walletItem", walletItem);
+            console.log("walletUser", walletUser);
+
+            const recieverData = new RecieverData();
+            recieverData.id = receiver.id;
+            recieverData.reciever = walletUser;
+            recieverData.amount = receiver.amount;
+            recieverData.WalletItem = walletItem;
+            recieverData.createdAt = receiver.createdAt;
+            recieverData.updatedAt = receiver.updatedAt;
+            recieverData.deleted = receiver.deleted;
+            await recieverDataRepository.current.save(recieverData);
+          }
         }
       } else {
         console.log("wallet found updating");
+
+        walletToUpdate.name = wallet.name;
+        walletToUpdate.description = wallet.description;
+        walletToUpdate.currency = wallet.currency;
+        walletToUpdate.category = wallet.category;
+        walletToUpdate.total = wallet.total;
+        walletToUpdate.createdAt = wallet.createdAt;
+        walletToUpdate.updatedAt = wallet.updatedAt;
+        walletToUpdate.isSynced = true;
+        walletToUpdate.deleted = wallet.deleted;
+        await walletsRepository.current.save(walletToUpdate);
+
+        for (const user of wallet.walletUsers) {
+          const walletUserToUpdate = await walletUserRepository.current.findOne(
+            {
+              where: {
+                id: user.id,
+              },
+            }
+          );
+
+          if (!walletUserToUpdate) {
+            console.log("walletUser not found creating new one");
+            const walletUserNew = new WalletUser();
+            walletUserNew.id = user.id;
+            walletUserNew.name = user.name;
+            walletUserNew.bilance = user.bilance;
+            walletUserNew.total = user.total;
+            walletUserNew.createdAt = user.createdAt;
+            walletUserNew.updatedAt = user.updatedAt;
+            walletUserNew.Wallets = walletToUpdate;
+            walletUserNew.deleted = user.deleted;
+            await walletUserRepository.current.save(walletUserNew);
+          } else {
+            console.log("walletUser found updating");
+            walletUserToUpdate.name = user.name;
+            walletUserToUpdate.bilance = user.bilance;
+            walletUserToUpdate.total = user.total;
+            walletUserToUpdate.createdAt = user.createdAt;
+            walletUserToUpdate.updatedAt = user.updatedAt;
+            walletUserToUpdate.Wallets = walletToUpdate;
+            walletUserToUpdate.deleted = user.deleted;
+            await walletUserRepository.current.save(walletUserToUpdate);
+          }
+        }
+
+        for (const walletItem of wallet.walletItems) {
+          const walletItemToUpdate =
+            await walletItemsRepository.current.findOne({
+              where: {
+                id: walletItem.id,
+              },
+            });
+
+          const payer = await walletUserRepository.current.findOne({
+            where: {
+              id: walletItem.payer,
+            },
+          });
+
+          if (!payer) {
+            throw new Error("Payer not found");
+          }
+
+          if (!walletItemToUpdate) {
+            console.log("walletItem not found creating new one");
+            const walletItemNew = new WalletItem();
+            walletItemNew.id = walletItem.id;
+            walletItemNew.name = walletItem.name;
+            walletItemNew.tags = walletItem.tags;
+            walletItemNew.amount = walletItem.amount;
+            walletItemNew.type = walletItem.type;
+            walletItemNew.date = walletItem.date;
+            walletItemNew.Wallets = walletToUpdate;
+            walletItemNew.payer = payer;
+            walletItemNew.isSynced = true;
+            walletItemNew.createdAt = walletItem.createdAt;
+            walletItemNew.updatedAt = walletItem.updatedAt;
+            walletItemNew.deleted = walletItem.deleted;
+            await walletItemsRepository.current.save(walletItemNew);
+
+            for (const receiver of walletItem.recievers) {
+              const walletUser = await walletUserRepository.current.findOne({
+                where: {
+                  id: receiver.walletUserId,
+                },
+              });
+
+              if (!walletUser) {
+                throw new Error("WalletUser not found");
+              }
+
+              const recieverData = new RecieverData();
+              recieverData.id = receiver.id;
+              recieverData.reciever = walletUser;
+              recieverData.amount = receiver.amount;
+              recieverData.WalletItem = walletItem;
+              recieverData.createdAt = receiver.createdAt;
+              recieverData.updatedAt = receiver.updatedAt;
+              recieverData.deleted = receiver.deleted;
+              await recieverDataRepository.current.save(recieverData);
+            }
+          } else {
+            console.log("walletItem found updating");
+
+            walletItemToUpdate.name = walletItem.name;
+            walletItemToUpdate.tags = walletItem.tags;
+            walletItemToUpdate.amount = walletItem.amount;
+            walletItemToUpdate.type = walletItem.type;
+            walletItemToUpdate.date = walletItem.date;
+            walletItemToUpdate.Wallets = walletToUpdate;
+            walletItemToUpdate.payer = payer;
+            walletItemToUpdate.isSynced = true;
+            walletItemToUpdate.createdAt = walletItem.createdAt;
+            walletItemToUpdate.updatedAt = walletItem.updatedAt;
+            walletItemToUpdate.deleted = walletItem.deleted;
+            await walletItemsRepository.current.save(walletItemToUpdate);
+
+            for (const receiver of walletItem.recievers) {
+              const receiverToUpdate =
+                await recieverDataRepository.current.findOne({
+                  where: {
+                    id: receiver.id,
+                  },
+                });
+
+              const walletUser = await walletUserRepository.current.findOne({
+                where: {
+                  id: receiver.walletUserId,
+                },
+              });
+
+              if (!walletUser) {
+                throw new Error("WalletUser not found");
+              }
+
+              if (!receiverToUpdate) {
+                console.log("walletItem not found creating new one");
+                const recieverData = new RecieverData();
+                recieverData.id = receiver.id;
+                recieverData.reciever = walletUser;
+                recieverData.amount = receiver.amount;
+                recieverData.WalletItem = walletItem;
+                recieverData.createdAt = receiver.createdAt;
+                recieverData.updatedAt = receiver.updatedAt;
+                recieverData.deleted = receiver.deleted;
+                await recieverDataRepository.current.save(recieverData);
+              } else {
+                console.log("walletItem found updating");
+                receiverToUpdate.reciever = walletUser;
+                receiverToUpdate.amount = receiver.amount;
+                receiverToUpdate.WalletItem = walletItem;
+                receiverToUpdate.createdAt = receiver.createdAt;
+                receiverToUpdate.updatedAt = receiver.updatedAt;
+                receiverToUpdate.deleted = receiver.deleted;
+                await recieverDataRepository.current.save(receiverToUpdate);
+              }
+            }
+          }
+        }
       }
     }
 
@@ -1080,8 +1349,10 @@ const useBrowserBackend = () => {
     deleteWalletById,
     initialized,
     getUnsyncedWallets,
+    getUnsyncedWalletItems,
     markWalletAsSynced,
     applyUpdateToLocalDB,
+    markWalletItemsAsSynced,
   };
 };
 

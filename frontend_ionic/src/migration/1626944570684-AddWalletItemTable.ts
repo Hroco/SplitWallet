@@ -14,6 +14,7 @@ export class AddWalletItemTable1626944570684 implements MigrationInterface {
       "updatedAt" DATETIME NOT NULL,
       "walletsId" TEXT NOT NULL,
       "userId" TEXT NOT NULL,
+      "isSynced" BOOLLEAN,
       CONSTRAINT "WalletItem_userId_fkey" FOREIGN KEY ("userId") REFERENCES "WalletUser" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
       CONSTRAINT "WalletItem_walletsId_fkey" FOREIGN KEY ("walletsId") REFERENCES "Wallets" ("id") ON DELETE CASCADE ON UPDATE CASCADE
     );

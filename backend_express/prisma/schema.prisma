@@ -15,8 +15,7 @@ datasource db {
 }
 
 model Wallets {
-  id          String       @id @default(cuid())
-  globalId    String       @unique
+  id          String       @id
   name        String
   description String
   currency    String
@@ -26,10 +25,11 @@ model Wallets {
   updatedAt   DateTime     @updatedAt
   walletUsers WalletUser[]
   walletItems WalletItem[]
+  deleted     Boolean      @default(false)
 }
 
 model WalletUser {
-  id           String         @id @default(cuid())
+  id           String         @id
   name         String
   bilance      Float          @default(0)
   total        Float          @default(0)
@@ -41,10 +41,11 @@ model WalletUser {
   Wallets      Wallets        @relation(fields: [walletsId], references: [id], onDelete: Cascade)
   walletsId    String
   userId       String?
+  deleted      Boolean        @default(false)
 }
 
 model WalletItem {
-  id        String         @id @default(cuid())
+  id        String         @id
   name      String
   tags      String[]
   payer     WalletUser     @relation(fields: [userId], references: [id])
@@ -57,10 +58,11 @@ model WalletItem {
   Wallets   Wallets        @relation(fields: [walletsId], references: [id], onDelete: Cascade)
   walletsId String
   userId    String
+  deleted   Boolean        @default(false)
 }
 
 model RecieverData {
-  id           String     @id @default(cuid())
+  id           String     @id
   reciever     WalletUser @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount       Float
   createdAt    DateTime   @default(now())
@@ -68,6 +70,7 @@ model RecieverData {
   WalletItem   WalletItem @relation(fields: [walletItemId], references: [id], onDelete: Cascade)
   walletItemId String
   userId       String
+  deleted      Boolean    @default(false)
 }
 
 // Necessary for Next auth
