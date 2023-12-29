@@ -143,8 +143,8 @@ export default function Add() {
     const numberOfCheckedUsers = participants.filter(
       (participant) => participant.checked === true
     ).length;
-    console.log("numberOfCheckedUsers", numberOfCheckedUsers);
-    console.log("participants", participants);
+    // console.log("numberOfCheckedUsers", numberOfCheckedUsers);
+    // console.log("participants", participants);
     if (numberOfCheckedUsers > 0) {
       const newUserAmount = amount / numberOfCheckedUsers;
 
@@ -231,7 +231,7 @@ export default function Add() {
           walletUserId: walletUser.id,
         };
 
-        console.log("newItem", newItem);
+        //console.log("newItem", newItem);
         newParticipants.push(newItem);
       }
       setParticipants(newParticipants);
@@ -309,7 +309,7 @@ export default function Add() {
     };*/
 
     // axios.post('/api/wallets/addWalletItem/', newWalletItem);
-    console.log("newWalletItem", newWalletItem);
+    //console.log("newWalletItem", newWalletItem);
     await addWalletItem(newWalletItem);
 
     history.push(`/${walletId}/expenses`);
@@ -354,8 +354,6 @@ export default function Add() {
   const notDeletedwalletUsers = wallet.walletUsers.filter(
     (item: any) => !item.deleted
   );
-
-  console.log("notDeletedwalletUsers", notDeletedwalletUsers);
 
   const participantElements = [];
   for (let i = 0; i < notDeletedwalletUsers.length; i++) {

@@ -105,7 +105,7 @@ export default function NewWallet() {
       deleted: false,
     };
 
-    console.log("outputTemp", outputTemp);
+    //console.log("outputTemp", outputTemp);
 
     await addWallet(outputTemp);
 

@@ -152,8 +152,8 @@ const useBrowserBackend = () => {
     return true;
   };
 
-  const logDB = (prefix?: string) => {
-    listOfTables().then((lists) => {
+  const logDB = async (prefix?: string) => {
+    await listOfTables().then((lists) => {
       console.log(`${prefix} DB Debug Output ------------`, lists);
     });
   };
@@ -311,7 +311,7 @@ const useBrowserBackend = () => {
       },
     });
 
-    console.log("getWalletItemByWalletItemId", walletItem);
+    // console.log("getWalletItemByWalletItemId", walletItem);
 
     return walletItem;
   };
@@ -391,7 +391,7 @@ const useBrowserBackend = () => {
       },
     });
 
-    console.log("getWalletUsersByWalletId", walletUsers);
+    // console.log("getWalletUsersByWalletId", walletUsers);
 
     return walletUsers;
   };
@@ -440,7 +440,7 @@ const useBrowserBackend = () => {
 
   // SHR Done
   const addWalletItem = async (input: z.infer<typeof WalletItemSchema>) => {
-    console.log("addWalletItem input", input);
+    //console.log("addWalletItem input", input);
     const validationResult = WalletItemSchema.safeParse(input);
 
     if (!validationResult.success) {
@@ -664,6 +664,16 @@ const useBrowserBackend = () => {
     }
 
     // Remove bilance from old payer
+    const oldPayer = await walletUserRepository.current.findOne({
+      where: {
+        id: oldWalletItem.payer.id,
+      },
+    });
+
+    if (!oldPayer) {
+      throw new Error("Payer not found");
+    }
+
     let oldBalance = 0;
     if (
       oldWalletItem.type === "expense" ||
@@ -675,10 +685,20 @@ const useBrowserBackend = () => {
       oldBalance += oldWalletItem.amount;
     }
 
-    oldWalletItem.payer.bilance += oldBalance;
-    await walletUserRepository.current.save(oldWalletItem.payer);
+    oldPayer.bilance += oldBalance;
+    await walletUserRepository.current.save(oldPayer);
 
     // Update bliance of new payer
+    const newPayer = await walletUserRepository.current.findOne({
+      where: {
+        id: input.payer,
+      },
+    });
+
+    if (!newPayer) {
+      throw new Error("Payer not found");
+    }
+
     let newBalance = 0;
     if (input.type === "expense" || input.type === "moneyTransfer") {
       newBalance += input.amount;
@@ -687,8 +707,8 @@ const useBrowserBackend = () => {
       newBalance -= input.amount;
     }
 
-    payer.bilance += newBalance;
-    await walletUserRepository.current.save(payer);
+    newPayer.bilance += newBalance;
+    await walletUserRepository.current.save(newPayer);
 
     // Update Wallet Total of payer
     // Remove old total
@@ -789,7 +809,7 @@ const useBrowserBackend = () => {
     id: string,
     input: any // z.infer<typeof WalletSchema>
   ) => {
-    console.log("editWallet input", input);
+    //console.log("editWallet input", input);
     const validationResult = WalletSchema.safeParse(input);
 
     if (!validationResult.success) {
@@ -918,6 +938,16 @@ const useBrowserBackend = () => {
       throw new Error("WalletItem not found");
     }
 
+    const payer = await walletUserRepository.current.findOne({
+      where: {
+        id: oldWalletItem.payer.id,
+      },
+    });
+
+    if (!payer) {
+      throw new Error("Payer not found");
+    }
+
     // Remove bilance from old payer
     let oldBalance = 0;
     if (
@@ -930,8 +960,8 @@ const useBrowserBackend = () => {
       oldBalance += oldWalletItem.amount;
     }
 
-    oldWalletItem.payer.bilance += oldBalance;
-    await walletUserRepository.current.save(oldWalletItem.payer);
+    payer.bilance += oldBalance;
+    await walletUserRepository.current.save(payer);
 
     // Remove Wallet Total of payer
     // Remove old total and apply new total
@@ -949,6 +979,16 @@ const useBrowserBackend = () => {
 
     // Remove old bliance from old recievers
     for (const receiver of oldWalletItem.recievers) {
+      const oldReceiver = await walletUserRepository.current.findOne({
+        where: {
+          id: receiver.reciever.id,
+        },
+      });
+
+      if (!oldReceiver) {
+        throw new Error("WalletUser not found");
+      }
+
       let oldBilance = 0;
       let oldTotal = 0;
       if (oldWalletItem.type === "expense") {
@@ -963,9 +1003,9 @@ const useBrowserBackend = () => {
         oldBilance += receiver.amount;
       }
 
-      receiver.reciever.bilance += oldBilance;
-      receiver.reciever.total += oldTotal;
-      await walletUserRepository.current.save(receiver.reciever);
+      oldReceiver.bilance += oldBilance;
+      oldReceiver.total += oldTotal;
+      await walletUserRepository.current.save(oldReceiver);
     }
 
     // Delete wallet item
@@ -1086,7 +1126,7 @@ const useBrowserBackend = () => {
 
   const applyUpdateToLocalDB = async (input: any) => {
     for (const wallet of input) {
-      console.log("wallet", wallet);
+      // console.log("wallet", wallet);
 
       const walletToUpdate = await walletsRepository.current.findOne({
         where: {
@@ -1095,7 +1135,7 @@ const useBrowserBackend = () => {
       });
 
       if (!walletToUpdate) {
-        console.log("wallet not found creating new one");
+        // console.log("wallet not found creating new one");
         const walletNew = new Wallets();
         walletNew.id = wallet.id;
         walletNew.name = wallet.name;
@@ -1159,9 +1199,9 @@ const useBrowserBackend = () => {
               throw new Error("WalletUser not found");
             }
 
-            console.log("receiver", receiver);
-            console.log("walletItem", walletItem);
-            console.log("walletUser", walletUser);
+            // console.log("receiver", receiver);
+            // console.log("walletItem", walletItem);
+            // console.log("walletUser", walletUser);
 
             const recieverData = new RecieverData();
             recieverData.id = receiver.id;
@@ -1175,8 +1215,7 @@ const useBrowserBackend = () => {
           }
         }
       } else {
-        console.log("wallet found updating");
-
+        // console.log("wallet found updating");
         walletToUpdate.name = wallet.name;
         walletToUpdate.description = wallet.description;
         walletToUpdate.currency = wallet.currency;
@@ -1198,7 +1237,7 @@ const useBrowserBackend = () => {
           );
 
           if (!walletUserToUpdate) {
-            console.log("walletUser not found creating new one");
+            // console.log("walletUser not found creating new one");
             const walletUserNew = new WalletUser();
             walletUserNew.id = user.id;
             walletUserNew.name = user.name;
@@ -1210,7 +1249,7 @@ const useBrowserBackend = () => {
             walletUserNew.deleted = user.deleted;
             await walletUserRepository.current.save(walletUserNew);
           } else {
-            console.log("walletUser found updating");
+            // console.log("walletUser found updating");
             walletUserToUpdate.name = user.name;
             walletUserToUpdate.bilance = user.bilance;
             walletUserToUpdate.total = user.total;
@@ -1279,8 +1318,7 @@ const useBrowserBackend = () => {
               await recieverDataRepository.current.save(recieverData);
             }
           } else {
-            console.log("walletItem found updating");
-
+            // console.log("walletItem found updating");
             walletItemToUpdate.name = walletItem.name;
             walletItemToUpdate.tags = walletItem.tags;
             walletItemToUpdate.amount = walletItem.amount;
@@ -1313,7 +1351,7 @@ const useBrowserBackend = () => {
               }
 
               if (!receiverToUpdate) {
-                console.log("walletItem not found creating new one");
+                // console.log("walletItem not found creating new one");
                 const recieverData = new RecieverData();
                 recieverData.id = receiver.id;
                 recieverData.reciever = walletUser;
@@ -1324,7 +1362,7 @@ const useBrowserBackend = () => {
                 recieverData.deleted = receiver.deleted;
                 await recieverDataRepository.current.save(recieverData);
               } else {
-                console.log("walletItem found updating");
+                // console.log("walletItem found updating");
                 receiverToUpdate.reciever = walletUser;
                 receiverToUpdate.amount = receiver.amount;
                 receiverToUpdate.WalletItem = walletItem;

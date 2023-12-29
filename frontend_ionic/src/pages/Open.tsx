@@ -91,13 +91,6 @@ export default function Open() {
           sortType
         );
 
-      console.log("open useEffect", {
-        walletItem,
-        walletUser,
-        walletItemPrev,
-        walletItemNext,
-      });
-
       walletItem != undefined && setWalletItem(walletItem);
       walletUser != undefined && setCurrentWalletUser(walletUser);
       walletItemPrev != undefined && setPrevWalletItem(walletItemPrev);

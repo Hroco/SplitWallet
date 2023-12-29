@@ -90,7 +90,7 @@ export default function useDBHandler() {
       })();*/
     (async () => {
       // We should sync walelts records in global and local dbs here
-      console.log("refreshing");
+      //console.log("refreshing");
       await syncWallets();
       // console.log("synced wallets");
       const user = await getLocalUser();
@@ -102,7 +102,7 @@ export default function useDBHandler() {
       if (wallets === undefined) return;
 
       const nonDeletedWallets = wallets.filter((item: any) => !item.deleted);
-      console.log("wallets", wallets);
+
       nonDeletedWallets.sort((a: any, b: any) => {
         return a.date > b.date ? 1 : -1;
       });
@@ -153,7 +153,7 @@ export default function useDBHandler() {
       // console.log('res', res);
       if (res.status === 201 || res.status === 200) {
         // Wallet created successfully on server
-        console.log("Wallet created successfully on server");
+        //console.log("Wallet created successfully on server");
         return true;
       }
     } catch (error: any) {
@@ -161,7 +161,7 @@ export default function useDBHandler() {
         console.error("error from online server", error);
         throw error;
       }
-      console.log("Server is offline");
+      //console.log("Server is offline");
 
       return false;
     }
@@ -169,17 +169,17 @@ export default function useDBHandler() {
 
   const syncWallets = async () => {
     // sync wallets here
-    console.log("syncWallets TBD");
+    //console.log("syncWallets TBD");
 
     // Upload local changes to the server
     const unsyncedWallets = await getUnsyncedWallets();
     const unsyncedWalletItems = await getUnsyncedWalletItems();
 
-    console.log("unsyncedWallets", unsyncedWallets);
-    console.log("unsyncedWalletItems", unsyncedWalletItems);
+    //console.log("unsyncedWallets", unsyncedWallets);
+    //console.log("unsyncedWalletItems", unsyncedWalletItems);
 
     if (unsyncedWallets.length === 0) {
-      console.log("No unsynced wallets");
+      //console.log("No unsynced wallets");
     } else {
       const isSynced = await sendAndReturnStatus(() =>
         axios.put("/api/wallets/updateWallets/", unsyncedWallets)
@@ -193,21 +193,21 @@ export default function useDBHandler() {
     }
 
     if (unsyncedWalletItems.length === 0) {
-      console.log("No unsynced wallet Items");
+      //console.log("No unsynced wallet Items");
     } else {
       const isSynced = await sendAndReturnStatus(() =>
         axios.put("/api/wallets/updateWalletItems/", unsyncedWalletItems)
       );
 
       if (isSynced) {
-        console.log("markWalletItemsAsSynced");
+        //console.log("markWalletItemsAsSynced");
         await markWalletItemsAsSynced(unsyncedWalletItems);
       }
       // console.log('isSynced', isSynced);
     }
 
     // Download updates from the server
-    console.log("Download updates from the server");
+    //console.log("Download updates from the server");
     try {
       // const lastSyncTime = await getLastSyncTime(); // Implement this function to get the last sync timestamp
       // const serverUpdates = await axios.get(`/api/wallets/updates?since=${lastSyncTime}`);
@@ -215,17 +215,17 @@ export default function useDBHandler() {
       const serverUpdates = await axios.get(
         `/api/wallets/updatesForEmail/${email}`
       );
-      console.log("serverUpdates", serverUpdates);
+      //console.log("serverUpdates", serverUpdates);
       await applyUpdateToLocalDB(serverUpdates.data.wallets);
       /* for (const update of serverUpdates.data) {
         await applyUpdateToLocalDB(update); // Implement this function to apply updates to your local DB
       }
       await setLastSyncTime(new Date()); // Update the last sync timestamp*/
     } catch (error) {
-      console.log("Error fetching updates from server:", error);
+      //console.log("Error fetching updates from server:", error);
     }
 
-    console.log("Sync process completed");
+    //console.log("Sync process completed");
   };
 
   const addWallet = async (input: z.infer<typeof WalletSchema>) => {
@@ -235,13 +235,13 @@ export default function useDBHandler() {
     // If user is not logged in then jsut create Local wallet probably with unsynced flag ?
     //console.log("addWallet", input);
 
-    console.log("addWallet", input);
+    //console.log("addWallet", input);
 
     const isOnline = await sendAndReturnStatus(() =>
       axios.post("/api/wallets/addWallet/", input)
     );
 
-    console.log("isOnline", isOnline);
+    //console.log("isOnline", isOnline);
     let newWallet;
     if (isOnline) {
       newWallet = await addWalletLocal({ ...input, isSynced: true });
@@ -249,7 +249,7 @@ export default function useDBHandler() {
       // Add Wallet to local db with unsynced flag
       newWallet = await addWalletLocal({ ...input, isSynced: false });
     }
-    console.log("setting new wallet", newWallet);
+    //console.log("setting new wallet", newWallet);
     setNewWallet(newWallet);
   };
 
@@ -258,7 +258,7 @@ export default function useDBHandler() {
       axios.post("/api/wallets/addWalletItem/", input)
     );
 
-    console.log("isOnline", isOnline);
+    //console.log("isOnline", isOnline);
     let newWalletItem;
     if (isOnline) {
       newWalletItem = await addWalletItemLocal({ ...input, isSynced: true });
@@ -266,7 +266,7 @@ export default function useDBHandler() {
       // Add Wallet to local db with unsynced flag
       newWalletItem = await addWalletItemLocal({ ...input, isSynced: false });
     }
-    console.log("setting new walletItem", newWalletItem);
+    //console.log("setting new walletItem", newWalletItem);
     setNewWalletItem(newWalletItem);
   };
 
@@ -278,7 +278,7 @@ export default function useDBHandler() {
       axios.put(`/api/wallets/editWalletItem/${id}`, input)
     );
 
-    console.log("isOnline", isOnline);
+    //console.log("isOnline", isOnline);
     let editedId;
     if (isOnline) {
       editedId = await editWalletItemLocal(id, { ...input, isSynced: true });
@@ -297,7 +297,7 @@ export default function useDBHandler() {
       axios.put(`/api/wallets/editWallet/${id}`, input)
     );
 
-    console.log("isOnline", isOnline);
+    //console.log("isOnline", isOnline);
     let editedId;
     if (isOnline) {
       editedId = await editWalletLocal(id, { ...input, isSynced: true });
@@ -313,7 +313,7 @@ export default function useDBHandler() {
       axios.delete(`/api/wallets/deleteWalletItemById/${id}`)
     );
 
-    console.log("isOnline", isOnline);
+    //console.log("isOnline", isOnline);
     let deletedId;
     if (isOnline) {
       deletedId = await deleteWalletItemByIdLocal(id, { isSynced: true });
@@ -329,7 +329,7 @@ export default function useDBHandler() {
       axios.delete(`/api/wallets/deleteWalletById/${id}`)
     );
 
-    console.log("isOnline", isOnline);
+    //console.log("isOnline", isOnline);
     let deletedId;
     if (isOnline) {
       deletedId = await deleteWalletByIdLocal(id, { isSynced: true });
