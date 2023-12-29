@@ -93,6 +93,14 @@ export default function NewWallet() {
           id: uuidv4(),
           name: "Isi",
         },
+        {
+          id: uuidv4(),
+          name: "Jakub",
+        },
+        {
+          id: uuidv4(),
+          name: "Claudia",
+        },
       ],
       deleted: false,
     };

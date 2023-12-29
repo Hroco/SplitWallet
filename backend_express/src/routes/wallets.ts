@@ -43,7 +43,9 @@ const WalletSchemaSync = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   isSynced: z.number(),
-  walletUsers: z.array(WalletUserSchemaSync),
+  walletUsers: z.array(z.unknown()),
+  walletItems: z.array(z.unknown()),
+  deleted: z.boolean(),
 });
 
 const WalletItemSchema = z.object({
@@ -728,7 +730,7 @@ router.put("/editWalletItem/:id", async (req: Request, res: Response) => {
     // Update bliance of recievers
     for (const receiver of input.recieversData) {
       const walletUser = await prisma.walletUser.findFirst({
-        where: { id: receiver.id },
+        where: { id: receiver.walletUserId },
       });
 
       if (!walletUser) {
@@ -1056,7 +1058,7 @@ router.put("/updateWalletItems/", async (req: Request, res: Response) => {
                 id: receiver.id,
                 amount: receiver.cutFromAmount,
                 reciever: {
-                  connect: { id: receiver.id },
+                  connect: { id: receiver.walletUserId },
                 },
               })),
             },

@@ -137,6 +137,7 @@ export default function Edit() {
     if (participants.length == 0) {
       const newParticipants = [...participants];
       for (let i = 0; i < walletUsers.length; i++) {
+        if (walletUsers[i].deleted) continue;
         const walletUser = walletUsers[i];
         if (walletUser == undefined) throw new Error("User is undefined.");
 
@@ -327,11 +328,13 @@ export default function Edit() {
   if (wallet == undefined) return <LoadingScreen />;
   if (participants == undefined) return <LoadingScreen />;
 
-  const walletUsers = wallet.walletUsers;
+  const notDeletedwalletUsers = wallet.walletUsers.filter(
+    (item: any) => !item.deleted
+  );
 
   const participantElements = [];
-  for (let i = 0; i < walletUsers.length; i++) {
-    const user = walletUsers[i];
+  for (let i = 0; i < notDeletedwalletUsers.length; i++) {
+    const user = notDeletedwalletUsers[i];
     if (user == undefined) throw new Error("User is undefined.");
 
     const state = getCheckedStatus(i);
@@ -438,8 +441,8 @@ export default function Edit() {
               value={payerId as string}
               onIonChange={(e) => setPayerId(e.detail.value as string)}
             >
-              {walletUsers &&
-                walletUsers.map((walletUser: any, index: number) => (
+              {notDeletedwalletUsers &&
+                notDeletedwalletUsers.map((walletUser: any, index: number) => (
                   <IonSelectOption key={walletUser.id} value={walletUser.id}>
                     {walletUser.name}
                   </IonSelectOption>

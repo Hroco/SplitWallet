@@ -152,9 +152,9 @@ const useBrowserBackend = () => {
     return true;
   };
 
-  const logDB = () => {
+  const logDB = (prefix?: string) => {
     listOfTables().then((lists) => {
-      console.log("DB Debug Output ------------", lists);
+      console.log(`${prefix} DB Debug Output ------------`, lists);
     });
   };
 
@@ -185,7 +185,7 @@ const useBrowserBackend = () => {
     const listOfWalletItems = await walletItemsRepository.current.find({
       relations: {
         payer: true,
-        recievers: true,
+        recievers: { reciever: true },
         Wallets: true,
       },
     });
@@ -716,6 +716,16 @@ const useBrowserBackend = () => {
 
     // Remove old bilance from old receivers
     for (const receiver of oldWalletItem.recievers) {
+      const oldReceiver = await walletUserRepository.current.findOne({
+        where: {
+          id: receiver.reciever.id,
+        },
+      });
+
+      if (!oldReceiver) {
+        throw new Error("WalletUser not found");
+      }
+
       let oldBalance = 0;
       let oldTotal = 0;
       if (oldWalletItem.type === "expense") {
@@ -730,9 +740,10 @@ const useBrowserBackend = () => {
         oldBalance += receiver.amount;
       }
 
-      receiver.reciever.bilance += oldBalance;
-      receiver.reciever.total += oldTotal;
-      await walletUserRepository.current.save(receiver.reciever);
+      oldReceiver.bilance += oldBalance;
+      oldReceiver.total += oldTotal;
+
+      await walletUserRepository.current.save(oldReceiver);
     }
 
     // Update bliance of recievers
@@ -754,7 +765,7 @@ const useBrowserBackend = () => {
 
       const newReceiver = await walletUserRepository.current.findOne({
         where: {
-          id: receiver.id,
+          id: receiver.walletUserId,
         },
       });
 
@@ -764,12 +775,12 @@ const useBrowserBackend = () => {
 
       newReceiver.bilance += newBilance;
       newReceiver.total += newTotal;
+
       await walletUserRepository.current.save(newReceiver);
     }
 
     await saveToStore();
 
-    console.log("edit walletItem return value", walletItem);
     return walletItem;
   };
 

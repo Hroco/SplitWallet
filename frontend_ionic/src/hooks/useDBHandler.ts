@@ -222,7 +222,7 @@ export default function useDBHandler() {
       }
       await setLastSyncTime(new Date()); // Update the last sync timestamp*/
     } catch (error) {
-      console.error("Error fetching updates from server:", error);
+      console.log("Error fetching updates from server:", error);
     }
 
     console.log("Sync process completed");

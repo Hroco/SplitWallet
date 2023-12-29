@@ -86,7 +86,6 @@ export default function EditWallet() {
     (async () => {
       const id = walletId;
       const response = await axios.get(`/api/wallets/getWalletById/${id}`);
-      console.log('response', response);
       setPostResponse(response.data);
     })();
   }, []);
@@ -97,13 +96,11 @@ export default function EditWallet() {
   }, [postResponse]);*/
 
   useEffect(() => {
-    console.log("wallet", wallet);
     if (wallet == undefined) return;
     setTitle(wallet.name);
     setDecription(wallet.description);
     setCurrency(wallet.currency);
     setCategory(wallet.category);
-    console.log("participants", participants);
 
     const walletUsers = wallet.walletUsers;
 
@@ -114,13 +111,9 @@ export default function EditWallet() {
 
         const walletUser = walletUsers[i];
         if (walletUser == undefined) throw new Error("User is undefined.");
-        console.log("walletUser", walletUser);
         const user = walletUser.users;
         const walletItems = walletUser.walletItems;
         const recieverData = walletUser.recieverData;
-        console.log("user", user);
-        console.log("walletItems", walletItems);
-        console.log("recieverData", recieverData);
 
         const canBeDeleted =
           walletItems.length == 0 && recieverData.length == 0;
@@ -213,7 +206,7 @@ export default function EditWallet() {
   }
 
   const participantElements = [];
-  console.log("participants", participants);
+
   for (let i = 0; i < participants.length + 1; i++) {
     if (participants[i] != undefined && participants[i].deleted) continue;
     participantElements.push(
